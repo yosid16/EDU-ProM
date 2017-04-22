@@ -1,0 +1,132 @@
+2017-04-22 14:06:51 INFO org.eduprom.Main main started application
+2017-04-22 14:06:52 INFO org.eduprom.Models.AbstractModel Train Started training the log file: EventLogs\sample.xes using the algorithm: InductiveMiner
+2017-04-22 14:06:52 FINE org.eduprom.Utils.LogHelper PrintLog Log: register request -> examine casually -> check ticket -> decide -> reinitiate request -> examine thoroughly -> check ticket -> decide -> pay compensation,register request -> check ticket -> examine casually -> decide -> pay compensation,register request -> examine thoroughly -> check ticket -> decide -> reject request,register request -> examine casually -> check ticket -> decide -> pay compensation,register request -> examine casually -> check ticket -> decide -> reinitiate request -> check ticket -> examine casually -> decide -> reinitiate request -> examine casually -> check ticket -> decide -> reject request,register request -> check ticket -> examine thoroughly -> decide -> reject request
+2017-04-22 14:06:52 INFO org.eduprom.Models.AbstractModel Train Read event log successfully
+2017-04-22 14:06:52 INFO org.eduprom.Models.InductiveMiner TrainPetrinet Started mining a petri nets using inductive miner
+2017-04-22 14:06:52 INFO org.eduprom.Models.AbstractModel Train Training the log file: EventLogs\sample.xes using the algorithm: InductiveMiner has completed successfully
+2017-04-22 14:06:52 FINE sun.awt.windows.WToolkit <clinit> Win version: 0x295a000a = 693764106 (Windows Vista)
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setIntegerProperty win.properties.version=3
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setFontProperty win.frame.captionFont=java.awt.Font[family=Segoe UI,name=Segoe UI,style=plain,size=15]
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setFontProperty win.frame.captionFont.height=15
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setIntegerProperty win.frame.captionHeight=28
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setIntegerProperty win.frame.captionButtonWidth=46
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setIntegerProperty win.frame.captionButtonHeight=28
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setFontProperty win.frame.smallCaptionFont=java.awt.Font[family=Segoe UI,name=Segoe UI,style=plain,size=15]
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setFontProperty win.frame.smallCaptionFont.height=15
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setIntegerProperty win.frame.smallCaptionHeight=28
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setIntegerProperty win.frame.smallCaptionButtonWidth=28
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setIntegerProperty win.frame.smallCaptionButtonHeight=28
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setIntegerProperty win.frame.sizingBorderWidth=6
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setFontProperty win.menu.font=java.awt.Font[family=Segoe UI,name=Segoe UI,style=plain,size=15]
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setFontProperty win.menu.font.height=15
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setIntegerProperty win.menu.height=24
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setIntegerProperty win.menu.buttonWidth=24
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setIntegerProperty win.scrollbar.width=21
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setIntegerProperty win.scrollbar.height=21
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setFontProperty win.status.font=java.awt.Font[family=Segoe UI,name=Segoe UI,style=plain,size=15]
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setFontProperty win.status.font.height=15
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setFontProperty win.tooltip.font=java.awt.Font[family=Segoe UI,name=Segoe UI,style=plain,size=15]
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setFontProperty win.tooltip.font.height=15
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setFontProperty win.messagebox.font=java.awt.Font[family=Segoe UI,name=Segoe UI,style=plain,size=15]
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setFontProperty win.messagebox.font.height=15
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setIntegerProperty win.icon.hspacing=94
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setIntegerProperty win.icon.vspacing=94
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setBooleanProperty win.icon.titleWrappingOn=true
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setFontProperty win.icon.font=java.awt.Font[family=Segoe UI,name=Segoe UI,style=plain,size=15]
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setFontProperty win.icon.font.height=15
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setColorProperty win.frame.activeCaptionGradientColor=java.awt.Color[r=185,g=209,b=234]
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setColorProperty win.frame.inactiveCaptionGradientColor=java.awt.Color[r=215,g=228,b=242]
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setColorProperty win.item.hotTrackedColor=java.awt.Color[r=0,g=102,b=204]
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setColorProperty win.3d.darkShadowColor=java.awt.Color[r=105,g=105,b=105]
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setColorProperty win.3d.backgroundColor=java.awt.Color[r=240,g=240,b=240]
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setColorProperty win.3d.highlightColor=java.awt.Color[r=255,g=255,b=255]
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setColorProperty win.3d.lightColor=java.awt.Color[r=227,g=227,b=227]
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setColorProperty win.3d.shadowColor=java.awt.Color[r=160,g=160,b=160]
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setColorProperty win.button.textColor=java.awt.Color[r=0,g=0,b=0]
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setColorProperty win.desktop.backgroundColor=java.awt.Color[r=0,g=0,b=0]
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setColorProperty win.frame.activeCaptionColor=java.awt.Color[r=153,g=180,b=209]
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setColorProperty win.frame.activeBorderColor=java.awt.Color[r=180,g=180,b=180]
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setColorProperty win.frame.color=java.awt.Color[r=100,g=100,b=100]
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setColorProperty win.frame.backgroundColor=java.awt.Color[r=255,g=255,b=255]
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setColorProperty win.frame.captionTextColor=java.awt.Color[r=0,g=0,b=0]
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setColorProperty win.frame.inactiveBorderColor=java.awt.Color[r=244,g=247,b=252]
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setColorProperty win.frame.inactiveCaptionColor=java.awt.Color[r=191,g=205,b=219]
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setColorProperty win.frame.inactiveCaptionTextColor=java.awt.Color[r=0,g=0,b=0]
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setColorProperty win.frame.textColor=java.awt.Color[r=0,g=0,b=0]
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setColorProperty win.item.highlightColor=java.awt.Color[r=51,g=153,b=255]
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setColorProperty win.item.highlightTextColor=java.awt.Color[r=255,g=255,b=255]
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setColorProperty win.mdi.backgroundColor=java.awt.Color[r=171,g=171,b=171]
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setColorProperty win.menu.backgroundColor=java.awt.Color[r=240,g=240,b=240]
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setColorProperty win.menu.textColor=java.awt.Color[r=0,g=0,b=0]
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setColorProperty win.menubar.backgroundColor=java.awt.Color[r=240,g=240,b=240]
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setColorProperty win.scrollbar.backgroundColor=java.awt.Color[r=200,g=200,b=200]
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setColorProperty win.text.grayedTextColor=java.awt.Color[r=109,g=109,b=109]
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setColorProperty win.tooltip.backgroundColor=java.awt.Color[r=255,g=255,b=225]
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setColorProperty win.tooltip.textColor=java.awt.Color[r=0,g=0,b=0]
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setIntegerProperty win.caret.width=1
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setBooleanProperty win.frame.fullWindowDragsOn=true
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setBooleanProperty win.text.fontSmoothingOn=true
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setIntegerProperty win.text.fontSmoothingType=2
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setIntegerProperty win.text.fontSmoothingContrast=1200
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setIntegerProperty win.text.fontSmoothingOrientation=1
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setIntegerProperty win.drag.width=4
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setIntegerProperty win.drag.height=4
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setIntegerProperty DnD.gestureMotionThreshold=2
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setIntegerProperty awt.mouse.numButtons=5
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setIntegerProperty awt.multiClickInterval=550
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setBooleanProperty awt.dynamicLayoutSupported=true
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setBooleanProperty awt.wheelMousePresent=true
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setBooleanProperty win.frame.captionGradientsOn=true
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setBooleanProperty win.item.hotTrackingOn=true
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setBooleanProperty win.menu.keyboardCuesOn=false
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setBooleanProperty win.highContrast.on=false
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setBooleanProperty awt.file.showHiddenFiles=true
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setBooleanProperty awt.file.showAttribCol=false
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setSoundProperty win.sound.default=WinPlaySound(.Default)
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setSoundProperty win.sound.close=WinPlaySound(Close)
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setSoundProperty win.sound.maximize=WinPlaySound(Maximize)
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setSoundProperty win.sound.minimize=WinPlaySound(Minimize)
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setSoundProperty win.sound.menuCommand=WinPlaySound(MenuCommand)
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setSoundProperty win.sound.menuPopup=WinPlaySound(MenuPopup)
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setSoundProperty win.sound.open=WinPlaySound(Open)
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setSoundProperty win.sound.restoreDown=WinPlaySound(RestoreDown)
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setSoundProperty win.sound.restoreUp=WinPlaySound(RestoreUp)
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setSoundProperty win.sound.asterisk=WinPlaySound(SystemAsterisk)
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setSoundProperty win.sound.exclamation=WinPlaySound(SystemExclamation)
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setSoundProperty win.sound.exit=WinPlaySound(SystemExit)
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setSoundProperty win.sound.hand=WinPlaySound(SystemHand)
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setSoundProperty win.sound.question=WinPlaySound(SystemQuestion)
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setSoundProperty win.sound.start=WinPlaySound(SystemStart)
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setFontProperty win.ansiFixed.font=java.awt.Font[family=Courier New,name=Courier New,style=plain,size=9]
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setFontProperty win.ansiFixed.font.height=9
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setFontProperty win.ansiVar.font=java.awt.Font[family=Microsoft Sans Serif,name=Microsoft Sans Serif,style=plain,size=11]
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setFontProperty win.ansiVar.font.height=11
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setFontProperty win.deviceDefault.font=java.awt.Font[family=Dialog,name=Dialog,style=bold,size=16]
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setFontProperty win.deviceDefault.font.height=16
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setFontProperty win.defaultGUI.font=java.awt.Font[family=Tahoma,name=Tahoma,style=plain,size=13]
+2017-04-22 14:06:52 FINE sun.awt.windows.WDesktopProperties setFontProperty win.defaultGUI.font.height=13
+2017-04-22 14:06:53 FINE sun.awt.windows.WDesktopProperties setFontProperty win.oemFixed.font=java.awt.Font[family=Dialog,name=8514oem,style=plain,size=18]
+2017-04-22 14:06:53 FINE sun.awt.windows.WDesktopProperties setFontProperty win.oemFixed.font.height=18
+2017-04-22 14:06:53 FINE sun.awt.windows.WDesktopProperties setFontProperty win.system.font=java.awt.Font[family=Dialog,name=Dialog,style=bold,size=16]
+2017-04-22 14:06:53 FINE sun.awt.windows.WDesktopProperties setFontProperty win.system.font.height=16
+2017-04-22 14:06:53 FINE sun.awt.windows.WDesktopProperties setFontProperty win.systemFixed.font=java.awt.Font[family=Dialog,name=Fixedsys,style=plain,size=18]
+2017-04-22 14:06:53 FINE sun.awt.windows.WDesktopProperties setFontProperty win.systemFixed.font.height=18
+2017-04-22 14:06:53 FINE sun.awt.windows.WDesktopProperties setBooleanProperty win.xpstyle.themeActive=true
+2017-04-22 14:06:53 FINE sun.awt.windows.WDesktopProperties setStringProperty win.xpstyle.dllName=C:\windows\resources\themes\Aero\Aero.msstyles
+2017-04-22 14:06:53 FINE sun.awt.windows.WDesktopProperties setStringProperty win.xpstyle.sizeName=NormalSize
+2017-04-22 14:06:53 FINE sun.awt.windows.WDesktopProperties setStringProperty win.xpstyle.colorName=NormalColor
+2017-04-22 14:06:53 FINE java.awt.Container mixOnReshaping this = org.processmining.plugins.graphviz.visualisation.DotPanel[,0,0,1078x1153,invalid,layout=java.awt.FlowLayout,alignmentX=0.0,alignmentY=0.0,border=,flags=16777601,maximumSize=,minimumSize=,preferredSize=]
+2017-04-22 14:06:53 FINE java.awt.Component isMixingNeeded this = org.processmining.plugins.graphviz.visualisation.DotPanel[,0,0,1078x1153,invalid,layout=java.awt.FlowLayout,alignmentX=0.0,alignmentY=0.0,border=,flags=16777601,maximumSize=,minimumSize=,preferredSize=]; containing window is null
+2017-04-22 14:06:53 INFO org.eduprom.Models.AbstractPetrinetModel Evaluate Checking conformance
+2017-04-22 14:06:53 INFO org.eduprom.Utils.PetrinetHelper PrintResults Alignment checking: key= Calculation Time (ms), value= 2.0
+2017-04-22 14:06:53 INFO org.eduprom.Utils.PetrinetHelper PrintResults Alignment checking: key= Raw Fitness Cost, value= 0.0
+2017-04-22 14:06:53 INFO org.eduprom.Utils.PetrinetHelper PrintResults Alignment checking: key= Num. States, value= 12.5
+2017-04-22 14:06:53 INFO org.eduprom.Utils.PetrinetHelper PrintResults Alignment checking: key= Trace Fitness, value= 1.0
+2017-04-22 14:06:53 INFO org.eduprom.Utils.PetrinetHelper PrintResults Alignment checking: key= Move-Model Fitness, value= 1.0
+2017-04-22 14:06:53 INFO org.eduprom.Utils.PetrinetHelper PrintResults Alignment checking: key= Move-Log Fitness, value= 1.0
+2017-04-22 14:06:53 INFO org.eduprom.Utils.PetrinetHelper PrintResults Alignment checking: key= Trace Length, value= 7.0
+2017-04-22 14:06:53 INFO org.eduprom.Utils.PetrinetHelper PrintResults Alignment checking: key= Queued States, value= 34.0
+2017-04-22 14:06:53 INFO org.eduprom.Utils.PetrinetHelper PrintResults Conformance checking, precision 0.837302
+2017-04-22 14:06:53 INFO org.eduprom.Utils.PetrinetHelper PrintResults Conformance checking, generalization 0.825340
+2017-04-22 14:06:53 INFO org.eduprom.Models.AbstractPetrinetModel Evaluate Structuredness: 40.0
+2017-04-22 14:06:53 INFO org.eduprom.Main main ended application

@@ -1,0 +1,123 @@
+buildscript {
+	repositories {
+		jcenter()
+		maven { url 'https://maven.rapidminer.com/content/groups/public/' }
+	}	
+}
+
+
+plugins { id 'com.rapidminer.extension' version '0.8.2' }
+
+// Define Maven artifact repositories
+repositories {
+    jcenter()
+	maven { url 'https://maven.rapidminer.com/content/groups/public/' }
+	ivy {
+		url "https://github.com/rapidprom/rapidprom-libraries/raw/${project.properties["version"]}/prom/"
+		layout "pattern", {
+			artifact "[module]-[revision]/[module]-[revision].[ext]"
+			artifact "[module]-[revision]/[artifact].[ext]"
+			ivy "[module]-[revision]/ivy-[module]-[revision].xml"
+		}
+	}
+	ivy {
+		url "https://github.com/rapidprom/rapidprom-libraries/raw/${project.properties["version"]}/thirdparty/lib/"
+		layout "pattern", {
+			artifact "[module]-[revision]/[module]-[revision].[ext]"
+			ivy "[module]-[revision]/ivy-[module]-[revision].xml"
+		}
+	}
+	ivy {
+		url "https://github.com/rapidprom/rapidprom-libraries/raw/${project.properties["version"]}/thirdparty/resource/"
+		layout "pattern", {
+			artifact "[module]-[revision]/[module]-[revision].[ext]"
+			ivy "[module]-[revision]/ivy-[module]-[revision].xml"
+		}
+	}	
+}
+
+extensionConfig {
+
+    // The extension name
+    name 'RapidProM'
+
+    /*
+     * The artifact group which will be used when publishing the extensions Jar
+     * and for package customization when initializing the project repository.
+     *
+     */
+    groupId = 'org.rapidprom'
+
+    /*
+     * The extension vendor which will be displayed in the extensions about box
+     * and for customizing the license headers when initializing the project repository.
+     *
+     */
+    vendor = "Eindhoven University of Technology"
+
+    /*
+     * The vendor homepage which will be displayed in the extensions about box
+     * and for customizing the license headers when initializing the project repository.
+     *
+     */
+    homepage = "www.rapidprom.org"
+
+	// enable shadowJar before rapidminer dependency (otherwise build fails)
+    shadowJar {
+    	zip64 true
+	}
+	
+    // define RapidMiner version and extension dependencies
+    dependencies {
+        rapidminer '7.2.0'
+        //extension namespace: 'text', version: '7.2.0'
+    }
+}
+
+// Define third party library dependencies
+dependencies {
+	
+	compile group:"org.rapidprom", name:"ProM-Framework", version:"31245"
+	compile "org.rapidprom:AcceptingPetriNet:6.7.93"
+	compile "org.rapidprom:AlphaMiner:6.5.47"
+	compile "org.rapidprom:Animation:6.5.50"
+	compile "org.rapidprom:ApacheUtils:6.7.88"
+	compile "org.rapidprom:BasicUtils:6.7.104"
+	compile "org.rapidprom:BPMN:6.5.56"
+	compile "org.rapidprom:BPMNConversions:6.5.48"
+	compile "org.rapidprom:CPNet:6.5.84"
+	compile "org.rapidprom:DataAwareReplayer:6.7.563"
+	compile "org.rapidprom:DataPetriNets:6.5.291"
+	compile "org.rapidprom:DottedChart:6.5.17"
+	compile "org.rapidprom:EvolutionaryTreeMiner:6.7.154"
+	compile "org.rapidprom:EventStream:6.5.72"
+	compile "org.rapidprom:FeaturePrediction:6.5.61"
+	compile "org.rapidprom:Fuzzy:6.5.33"
+	compile "org.rapidprom:GraphViz:6.7.185"
+	compile "org.rapidprom:GuideTreeMiner:6.5.18"
+	compile "org.rapidprom:HeuristicsMiner:6.5.49"
+	compile "org.rapidprom:HybridILPMiner:6.7.116"
+	compile "org.rapidprom:InductiveMiner:6.7.297"
+	compile "org.rapidprom:InductiveVisualMiner:6.7.413"
+	compile "org.rapidprom:Log:6.7.293"
+	compile "org.rapidprom:LogDialog:6.5.42"
+	compile "org.rapidprom:LogProjection:6.5.38"
+	compile "org.rapidprom:ModelRepair:6.5.12"
+	compile "org.rapidprom:Murata:6.5.54"
+	compile "org.rapidprom:PetriNets:6.7.95"
+	compile "org.rapidprom:PNetAlignmentAnalysis:6.5.35"
+	compile "org.rapidprom:PNAnalysis:6.7.122"
+	compile "org.rapidprom:PNetReplayer:6.7.99"
+	compile "org.rapidprom:PTConversions:6.5.3"
+	compile "org.rapidprom:PomPomView:6.5.36"
+	compile "org.rapidprom:SocialNetwork:6.5.35"
+	compile "org.rapidprom:StreamAlphaMiner:6.5.15"
+	compile "org.rapidprom:StreamAnalysis:6.5.38"
+	compile "org.rapidprom:StreamInductiveMiner:6.5.42"
+	compile "org.rapidprom:TransitionSystems:6.7.71"
+	compile "org.rapidprom:TSPetriNet:6.5.35"
+	compile "org.rapidprom:Uma:6.5.46"
+	compile "org.rapidprom:Woflan:6.7.59"
+	compile "org.rapidprom:XESLite:6.7.217"
+	compile "org.rapidprom:Weka:6.7.3"
+}
