@@ -8,7 +8,11 @@ These instructions will get you a copy of the project up and running on your loc
 
 ### Prerequisites
 
-What things you need to install the software and how to install them
+1.	Install JDK (version > 1.8): https://www3.ntu.edu.sg/home/ehchua/programming/howto/JDK_Howto.html
+2.	Install Intellij-IDEA (free to students).
+3.	Install Git: https://git-scm.com/downloads
+4.	Install Gradle (version <= 3.3, careful NOT to install 3.4): https://gradle.org/install
+
 
 ```
 Give examples
