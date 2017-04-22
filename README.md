@@ -17,20 +17,17 @@ These instructions will get you a copy of the project up and running on your loc
 
 
 Configurations: 
-```
 1.	Open the repository in IntelliJ-IDEA, by choosing the gradle file. When asked, select to open as a project. When asked, choose. auto-import for gradle, and specify the gradle home path. Wait several moments, as long as the dependency import is in progress.
 2.	Make sure that the general compiler settings are set to java >=1.8, and that the project settings are also set correctly
 3.	Try to build the project (Ctrl+F9), if there are any compilation errors, try to open terminal and run: gradle clean build
 4.	After the build is successful, the main program should be set. That can be done via running it once manually:
-``` 
+ 
 Sanity checks:
-```
 1.	The program should produce debugging log at \Logs\bpm.log
 2.	Alignment and conformance measurements should be printed to console.
 3.	The exit code should be 0.
 4.	An image, describing the process model should be at \Output\sample.png
 
-```
 ## Built With
 
 * [GRADLE](https://gradle.org) 
