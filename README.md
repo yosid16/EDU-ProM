@@ -8,54 +8,30 @@ These instructions will get you a copy of the project up and running on your loc
 
 ### Prerequisites
 
+```
 1.	Install JDK (version > 1.8): https://www3.ntu.edu.sg/home/ehchua/programming/howto/JDK_Howto.html
 2.	Install Intellij-IDEA: https://www.jetbrains.com/idea/
 3.	Install Git: https://git-scm.com/downloads
 4.	Install Gradle (version <= 3.3, careful NOT to install 3.4): https://gradle.org/install
-
-
 ```
-Give examples
-```
-
 ### Installing
 
-A step by step series of examples that tell you have to get a development env running
 
-Say what the step will be
+Configurations: 
+```
+1.	Open the repository in IntelliJ-IDEA, by choosing the gradle file. When asked, select to open as a project. When asked, choose. auto-import for gradle, and specify the gradle home path. Wait several moments, as long as the dependency import is in progress.
+2.	Make sure that the general compiler settings are set to java >=1.8, and that the project settings are also set correctly
+3.	Try to build the project (Ctrl+F9), if there are any compilation errors, try to open terminal and run: gradle clean build
+4.	After the build is successful, the main program should be set. That can be done via running it once manually:
+``` 
+Sanity checks:
+```
+1.	The program should produce debugging log at \Logs\bpm.log
+2.	Alignment and conformance measurements should be printed to console.
+3.	The exit code should be 0.
+4.	An image, describing the process model should be at \Output\sample.png
 
 ```
-Give the example
-```
-
-And repeat
-
-```
-until finished
-```
-
-End with an example of getting some data out of the system or using it for a little demo
-
-## Running the tests
-
-Explain how to run the automated tests for this system
-
-### Break down into end to end tests
-
-Explain what these tests test and why
-
-```
-Give an example
-```
-
-### And coding style tests
-
-Explain what these tests test and why
-
-```
-Give an example
-```
-
 ## Built With
 
 * [GRADLE](https://gradle.org) 
