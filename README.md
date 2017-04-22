@@ -1,6 +1,6 @@
 # EDU-ProM
 
-An library for working with ProM capabilities in a non-interactive approach. Enables running common mining task from the ProM framework as well as extending them. Also supports additional capabilitied based on ProM such as - image exporting, conversions etc.
+A library for working with ProM capabilities in a non-interactive approach. Enables running common mining task from the ProM framework as well as extending them. Also supports additional capabilitied based on ProM such as - image exporting, conversions etc.
 
 ## Getting Started
 
@@ -8,12 +8,11 @@ These instructions will get you a copy of the project up and running on your loc
 
 ### Prerequisites
 
-```
 1.	Install JDK (version > 1.8): https://www3.ntu.edu.sg/home/ehchua/programming/howto/JDK_Howto.html
 2.	Install Intellij-IDEA: https://www.jetbrains.com/idea/
 3.	Install Git: https://git-scm.com/downloads
 4.	Install Gradle (version <= 3.3, careful NOT to install 3.4): https://gradle.org/install
-```
+
 ### Installing
 
 
