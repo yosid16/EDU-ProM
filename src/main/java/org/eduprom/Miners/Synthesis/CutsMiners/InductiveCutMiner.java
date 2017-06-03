@@ -1,8 +1,7 @@
-package org.eduprom.Models.Synthesis.CutsMiners;
+package org.eduprom.Miners.Synthesis.CutsMiners;
 
-import org.eduprom.Models.AbstractModel;
-import org.eduprom.Models.AbstractPetrinetModel;
-import org.eduprom.Models.Synthesis.Entities.ProcessTreeCuts;
+import org.eduprom.Miners.AbstractPetrinetMiner;
+import org.eduprom.Miners.Synthesis.Entities.ProcessTreeCuts;
 import org.deckfour.xes.classification.XEventNameClassifier;
 import org.deckfour.xes.model.XLog;
 import org.processmining.framework.packages.PackageManager;
@@ -35,7 +34,7 @@ import java.util.Iterator;
 /**
  * Created by ydahari on 4/13/2017.
  */
-public class InductiveCutMiner extends AbstractPetrinetModel implements ICutsProcessTreeMiner {
+public class InductiveCutMiner extends AbstractPetrinetMiner implements ICutsProcessTreeMiner {
 
     private MiningParametersIM _parameters = new MiningParametersIM();
 

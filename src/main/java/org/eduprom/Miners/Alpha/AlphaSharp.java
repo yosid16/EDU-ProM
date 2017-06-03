@@ -1,4 +1,4 @@
-package org.eduprom.Models.Alpha;
+package org.eduprom.Miners.Alpha;
 
 import org.processmining.alphaminer.parameters.AlphaVersion;
 

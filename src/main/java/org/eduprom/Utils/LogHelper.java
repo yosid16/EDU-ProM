@@ -5,6 +5,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.Map;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -124,6 +126,24 @@ public class LogHelper {
 			}
 		}).filter(x->x != null).collect (Collectors.joining (","));
 
+		logger.log(level, String.format("Log: %s", s));
+	}
+
+	public void PrintLogGrouped(Level level, XLog log){
+
+		Map<String, Long> s =
+				log.stream().map(x -> {
+					try {
+						return new Trace(x).FullTrace;
+					} catch (Exception e) {
+						e.printStackTrace();
+						return null;
+					}
+				}).filter(x->x != null).collect(
+						Collectors.groupingBy(
+								Function.identity(), Collectors.counting()
+						)
+				);
 		logger.log(level, String.format("Log: %s", s));
 	}
 }

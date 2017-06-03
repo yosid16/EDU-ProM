@@ -1,6 +1,5 @@
-package org.eduprom.Models;
+package org.eduprom.Miners;
 
-import org.eduprom.Models.AbstractModel;
 import org.processmining.models.graphbased.directed.petrinet.impl.PetrinetImpl;
 import org.processmining.models.heuristics.HeuristicsNet;
 import org.processmining.models.semantics.petrinet.Marking;
@@ -13,7 +12,7 @@ import static org.processmining.ptconversions.pn.ProcessTree2Petrinet.PetrinetWi
 /**
  * Created by ydahari on 4/12/2017.
  */
-public class HeuristicMiner extends AbstractPetrinetModel {
+public class HeuristicMiner extends AbstractPetrinetMiner {
     public HeuristicMiner(String filename) throws Exception {
         super(filename);
     }

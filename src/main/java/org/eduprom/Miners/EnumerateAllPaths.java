@@ -1,4 +1,4 @@
-package org.eduprom.Models;
+package org.eduprom.Miners;
 
 import org.deckfour.xes.model.XLog;
 import org.deckfour.xes.model.XTrace;
@@ -13,7 +13,7 @@ import static org.processmining.ptconversions.pn.ProcessTree2Petrinet.PetrinetWi
 /**
  * Created by ydahari on 22/10/2016.
  */
-public class EnumerateAllPaths extends AbstractPetrinetModel implements IProcessTreeMiner {
+public class EnumerateAllPaths extends AbstractPetrinetMiner implements IProcessTreeMiner {
 
     public EnumerateAllPaths(String filename) throws Exception {
 		super(filename);

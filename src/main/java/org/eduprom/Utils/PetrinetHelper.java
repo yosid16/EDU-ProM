@@ -1,6 +1,6 @@
 package org.eduprom.Utils;
 
-import org.eduprom.Models.AbstractModel;
+import org.eduprom.Miners.AbstractMiner;
 import nl.tue.astar.AStarException;
 import org.deckfour.xes.classification.XEventClass;
 import org.deckfour.xes.classification.XEventClassifier;
@@ -37,7 +37,7 @@ import java.util.logging.Logger;
  * Created by ydahari on 4/12/2017.
  */
 public class PetrinetHelper {
-    protected final static Logger logger = Logger.getLogger(AbstractModel.class.getName());
+    protected final static Logger logger = Logger.getLogger(AbstractMiner.class.getName());
 
     private XEventClassifier _classifier;
     private PluginContext _pluginContext;

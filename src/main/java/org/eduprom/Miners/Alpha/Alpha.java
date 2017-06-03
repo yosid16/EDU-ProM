@@ -1,7 +1,6 @@
-package org.eduprom.Models.Alpha;
+package org.eduprom.Miners.Alpha;
 
-import org.eduprom.Models.AbstractModel;
-import org.eduprom.Models.AbstractPetrinetModel;
+import org.eduprom.Miners.AbstractPetrinetMiner;
 import org.deckfour.xes.classification.XEventClass;
 import org.deckfour.xes.model.XLog;
 import org.processmining.alphaminer.abstractions.AlphaClassicAbstraction;
@@ -18,7 +17,7 @@ import org.processmining.ptconversions.pn.ProcessTree2Petrinet;
 /**
  * Created by ydahari on 4/12/2017.
  */
-public class Alpha extends AbstractPetrinetModel {
+public class Alpha extends AbstractPetrinetMiner {
 
     public Alpha(String filename) throws Exception {
         super(filename);

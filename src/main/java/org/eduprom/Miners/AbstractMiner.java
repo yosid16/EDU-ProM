@@ -1,15 +1,8 @@
-package org.eduprom.Models;
+package org.eduprom.Miners;
 
 import org.eduprom.Entities.Trace;
 import org.eduprom.Utils.LogHelper;
 import org.eduprom.Utils.TraceHelper;
-//import guru.nidi.graphviz.engine.*;
-//import guru.nidi.graphviz.engine.Graphviz;
-//import guru.nidi.graphviz.model.Graph;
-
-//import static guru.nidi.graphviz.model.Factory.graph;
-//import static guru.nidi.graphviz.model.Factory.node;
-
 import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.logging.Level;
@@ -20,25 +13,14 @@ import org.deckfour.xes.classification.XEventNameClassifier;
 import org.processmining.contexts.cli.CLIContext;
 import org.processmining.contexts.cli.CLIPluginContext;
 import org.processmining.framework.packages.PackageManager.Canceller;
-//import org.processmining.log.csv.CSVFileReferenceOpenCSVImpl;
-//import org.processmining.log.csv.config.CSVConfig;
-//import org.processmining.log.csvimport.CSVConversion.ConversionResult;
-//import org.processmining.log.csvimport.config.CSVConversionConfig;
-//import org.processmining.log.csvimport.exception.CSVConversionConfigException;
-//import org.processmining.log.csvimport.exception.CSVConversionException;
 import org.deckfour.xes.model.XLog;
-//import static guru.nidi.graphviz.model.Factory.graph;
-//import static guru.nidi.graphviz.model.Factory.node;
-//import guru.nidi.graphviz.engine.Format;
-//import guru.nidi.graphviz.engine.Graphviz;
-//import guru.nidi.graphviz.model.Graph;
 
 /**
  * Created by ydahari on 22/10/2016.
  */
-public abstract class AbstractModel implements IModel {
+public abstract class AbstractMiner implements IMiner {
 	
-	protected final static Logger logger = Logger.getLogger(AbstractModel.class.getName());
+	protected final static Logger logger = Logger.getLogger(AbstractMiner.class.getName());
 
     protected String _filename;
     protected boolean _trained;
@@ -67,7 +49,7 @@ public abstract class AbstractModel implements IModel {
     }
 
 
-    public AbstractModel(String filename) throws Exception
+    public AbstractMiner(String filename) throws Exception
     {
         _trained = false;
         _name = getClass().getSimpleName();
@@ -91,7 +73,7 @@ public abstract class AbstractModel implements IModel {
         	logger.info(String.format("Started training the log file: %s using the algorithm: %s", 
         			_filename, _name));
             ReadLog();
-            _logHelper.PrintLog(Level.FINE, _log);
+            _logHelper.PrintLogGrouped(Level.FINE, _log);
             logger.info("Read event log successfully");
 
 			TrainSpecific();

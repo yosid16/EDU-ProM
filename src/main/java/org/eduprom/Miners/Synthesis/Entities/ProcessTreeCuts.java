@@ -1,4 +1,4 @@
-package org.eduprom.Models.Synthesis.Entities;
+package org.eduprom.Miners.Synthesis.Entities;
 
 import org.deckfour.xes.model.XLog;
 import org.processmining.processtree.ProcessTree;

@@ -1,4 +1,4 @@
-package org.eduprom.Models;
+package org.eduprom.Miners;
 
 import org.eduprom.Utils.PetrinetHelper;
 import org.processmining.plugins.petrinet.replayresult.PNRepResult;
@@ -11,13 +11,13 @@ import java.io.IOException;
 /**
  * Created by ydahari on 4/15/2017.
  */
-public abstract class AbstractPetrinetModel extends AbstractModel {
+public abstract class AbstractPetrinetMiner extends AbstractMiner {
 
     private PetrinetWithMarkings _petrinet;
     private PNRepResult _alignment;
     protected PetrinetHelper _petrinetHelper;
 
-    public AbstractPetrinetModel(String filename) throws Exception {
+    public AbstractPetrinetMiner(String filename) throws Exception {
         super(filename);
         _petrinetHelper = new PetrinetHelper(_promPluginContext, GetClassifier());
     }

@@ -1,12 +1,11 @@
-package org.eduprom.Models.Synthesis.Algorithms;
+package org.eduprom.Miners.Synthesis.Algorithms;
 
-import org.eduprom.Models.AbstractModel;
-import org.eduprom.Models.AbstractPetrinetModel;
-import org.eduprom.Models.EnumerateAllPaths;
-import org.eduprom.Models.IProcessTreeMiner;
-import org.eduprom.Models.Synthesis.CutsMiners.ICutsProcessTreeMiner;
-import org.eduprom.Models.Synthesis.CutsMiners.InductiveCutMiner;
-import org.eduprom.Models.Synthesis.Entities.ProcessTreeCuts;
+import org.eduprom.Miners.AbstractPetrinetMiner;
+import org.eduprom.Miners.EnumerateAllPaths;
+import org.eduprom.Miners.IProcessTreeMiner;
+import org.eduprom.Miners.Synthesis.CutsMiners.ICutsProcessTreeMiner;
+import org.eduprom.Miners.Synthesis.CutsMiners.InductiveCutMiner;
+import org.eduprom.Miners.Synthesis.Entities.ProcessTreeCuts;
 import javafx.util.Pair;
 
 import java.util.concurrent.locks.Lock;
@@ -30,7 +29,7 @@ import static org.processmining.ptconversions.pn.ProcessTree2Petrinet.PetrinetWi
 
 import java.util.*;
 
-public class ConformanceTraversal extends AbstractPetrinetModel {
+public class ConformanceTraversal extends AbstractPetrinetMiner {
 
 	public ConformanceTraversal(String filename) throws Exception {
 		super(filename);
