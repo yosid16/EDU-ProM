@@ -31,9 +31,15 @@ import java.util.*;
 
 public class ConformanceTraversal extends AbstractPetrinetMiner {
 
-	public ConformanceTraversal(String filename) throws Exception {
+	private ICutsProcessTreeMiner baseline;
+	private IProcessTreeMiner[] optimizers;
+
+	public ConformanceTraversal(String filename, ICutsProcessTreeMiner baseline, IProcessTreeMiner... optimizers)
+			throws Exception {
 		super(filename);
 		_parameters = new MiningParametersIM();
+		this.baseline = baseline;
+		this.optimizers = optimizers;
 	}
 	private final Lock lock = new ReentrantLock();
 	private MiningParametersIM _parameters;
@@ -46,9 +52,10 @@ public class ConformanceTraversal extends AbstractPetrinetMiner {
 	protected PetrinetWithMarkings TrainPetrinet() throws Exception {
 
 		logger.info("Started mining a petri nets using ConformanceTraversale");
-		ProcessTree synthesizedTree = ConformanceTraversale(new InductiveCutMiner(_filename),
-				new IProcessTreeMiner[] { new EnumerateAllPaths(_filename) },
-				_log);
+		ProcessTree synthesizedTree = ConformanceTraversale(baseline, optimizers, _log);
+		//ProcessTree synthesizedTree = ConformanceTraversale(new InductiveCutMiner(_filename),
+		//		new IProcessTreeMiner[] { new EnumerateAllPaths(_filename) },
+		//		_log);
 		logger.info("Completed mining a petri nets using ConformanceTraversale");
 
 		return _petrinetHelper.ConvertToPetrinet(synthesizedTree);
@@ -150,7 +157,7 @@ public class ConformanceTraversal extends AbstractPetrinetMiner {
 	public double Psi(XLog log, ProcessTree pt) throws Exception {
 		ProcessTree2Petrinet.PetrinetWithMarkings res = _petrinetHelper.ConvertToPetrinet(pt);
 		PNRepResult alignment = _petrinetHelper.getAlignment(log, res.petrinet, res.initialMarking, res.finalMarking);
-		AlignmentPrecGenRes conformance = _petrinetHelper.getConformance(log, res.petrinet, alignment, res.initialMarking, res.finalMarking);
+		//AlignmentPrecGenRes conformance = _petrinetHelper.getConformance(log, res.petrinet, alignment, res.initialMarking, res.finalMarking);
 		PetriNetMetrics metrics = new PetriNetMetrics(_promPluginContext, res.petrinet, res.initialMarking);
 
 		//double pCount = metrics.getMetricValue(PetriNetNofPlacesMetric.NAME);
@@ -163,10 +170,9 @@ public class ConformanceTraversal extends AbstractPetrinetMiner {
 		//		metrics.getMetricValue(PetriNetNofPlacesMetric.NAME),
 		//		metrics.getMetricValue(PetriNetNofTransitionsMetric.NAME),
 		//		metrics.getMetricValue(PetriNetNofArcsMetric.NAME)));
-		logger.info(String.format("Simplicity: %s", simplicity));
-
-		return 0.4 * conformance.getPrecision() + 0.4 *conformance.getGeneralization() + 0.2 * simplicity;
-		//return Double.parseDouble(res.getInfo().get("Move-Model Fitness").toString());
+		//logger.info(String.format("Simplicity: %s", simplicity));
+		//return 0.4 * conformance.getPrecision() + 0.4 *conformance.getGeneralization() + 0.2 * simplicity;
+		return Double.parseDouble(alignment.getInfo().get("Move-Model Fitness").toString());
 	}
 
 	public Pair<ProcessTree, Double> ArgMax(XLog log, IProcessTreeMiner[] optimizers) throws Exception {

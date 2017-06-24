@@ -1,11 +1,15 @@
 package org.eduprom.Miners;
 
 import org.eduprom.Utils.PetrinetHelper;
+import org.processmining.datapetrinets.DataPetriNet;
+import org.processmining.petrinets.PetriNetFileFormat;
 import org.processmining.plugins.petrinet.replayresult.PNRepResult;
 import org.processmining.plugins.pnalignanalysis.conformance.AlignmentPrecGenRes;
 import org.processmining.pnanalysis.metrics.impl.PetriNetStructurednessMetric;
 
 import static org.processmining.ptconversions.pn.ProcessTree2Petrinet.PetrinetWithMarkings;
+
+import java.io.File;
 import java.io.IOException;
 
 /**
@@ -27,8 +31,9 @@ public abstract class AbstractPetrinetMiner extends AbstractMiner {
         _petrinet = TrainPetrinet();
     }
 
-    public void Export() throws IOException {
+    public void Export() throws Exception {
         _petrinetHelper.Export(_petrinet.petrinet, GetOutputPath());
+        _petrinetHelper.ExportPnml(_petrinet.petrinet, GetOutputPath());
     }
 
     protected abstract PetrinetWithMarkings TrainPetrinet() throws Exception;

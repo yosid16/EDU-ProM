@@ -1,5 +1,6 @@
 package org.eduprom.Miners;
 
+import org.apache.commons.io.FilenameUtils;
 import org.eduprom.Entities.Trace;
 import org.eduprom.Utils.LogHelper;
 import org.eduprom.Utils.TraceHelper;
@@ -105,8 +106,8 @@ public abstract class AbstractMiner implements IMiner {
 
 
     
-    public String GetOutputPath(){    	
-    	String name = String.format("./Output/%s_%s.png" , GetName(), Paths.get(_filename).getFileName());
+    public String GetOutputPath(){
+    	String name = String.format("./Output/%s_%s" , GetName(), FilenameUtils.removeExtension(Paths.get(_filename).getFileName().toString()));
     	return name;
     }
 

@@ -116,7 +116,7 @@ public class LogHelper {
     	}
     }
 
-	public void PrintLog(Level level, XLog log){
+	public String toString(XLog log){
 		String s = log.stream().map(x -> {
 			try {
 				return new Trace(x).FullTrace;
@@ -125,7 +125,11 @@ public class LogHelper {
 				return null;
 			}
 		}).filter(x->x != null).collect (Collectors.joining (","));
+		return s;
+	}
 
+	public void PrintLog(Level level, XLog log){
+		String s = toString(log);
 		logger.log(level, String.format("Log: %s", s));
 	}
 
