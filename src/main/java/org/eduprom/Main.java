@@ -1,5 +1,6 @@
 package org.eduprom;
 
+import org.eduprom.Miners.Alpha.AlphaPlus;
 import org.eduprom.Miners.IMiner;
 import org.eduprom.Miners.InductiveMiner;
 
@@ -16,7 +17,7 @@ public class Main {
 	
     public static void main(String[] args) throws Exception {
 
-		String filename = "EventLogs\\sample.xes";
+		String filename = "EventLogs\\log_noise.xes";
 
     	logManager.readConfiguration(new FileInputStream("./app.properties"));
     	logger.info("started application");

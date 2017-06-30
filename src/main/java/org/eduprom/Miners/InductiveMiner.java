@@ -12,10 +12,14 @@ import org.processmining.plugins.InductiveMiner.plugins.IMProcessTree;
 import org.processmining.processtree.ProcessTree;
 
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static org.processmining.ptconversions.pn.ProcessTree2Petrinet.PetrinetWithMarkings;
 
 public class InductiveMiner extends AbstractPetrinetMiner implements IProcessTreeMiner {
-	
+
+
 	public InductiveMiner(String filename) throws Exception {
 		super(filename);
 		_parameters = new MiningParametersIM();
@@ -50,5 +54,13 @@ public class InductiveMiner extends AbstractPetrinetMiner implements IProcessTre
 		MiningParametersIM parametersIM = new MiningParametersIM();
 		parametersIM.setNoiseThreshold(noiseThreshold);
 		return new InductiveMiner(filename, parametersIM);
+	}
+
+	public static List<InductiveMiner> WithNoiseThresholds(String filename, float... noiseThreshold) throws Exception {
+		ArrayList<InductiveMiner> miners = new ArrayList<>();
+		for (float threshold: noiseThreshold){
+			miners.add(WithNoiseThreshold(filename, threshold));
+		}
+		return miners;
 	}
 }

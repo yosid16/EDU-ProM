@@ -7,6 +7,7 @@ import org.deckfour.xes.classification.XEventClassifier;
 import org.deckfour.xes.info.XLogInfo;
 import org.deckfour.xes.info.XLogInfoFactory;
 import org.deckfour.xes.model.XLog;
+import org.processmining.datapetrinets.DataPetriNet;
 import org.processmining.framework.plugin.PluginContext;
 import org.processmining.graphvisualizers.plugins.GraphVisualizerPlugin;
 import org.processmining.models.graphbased.directed.petrinet.Petrinet;
@@ -91,6 +92,7 @@ public class PetrinetHelper {
         //    SyncReplayResult r = it.next();
         //    r.setReliable(true);
         //}
+        //org.processmining.pnanalysis.metrics.PetriNetMetricManager.getInstance().getMetrics().get(0).compute()
 
         AlignmentPrecGen alignmentPrecGen = new AlignmentPrecGen();
         TransEvClassMapping mapping = constructMapping(net, log, _classifier);
@@ -140,7 +142,7 @@ public class PetrinetHelper {
         return costMOT;
     }
 
-    private static TransEvClassMapping constructMapping(PetrinetGraph net, XLog log, XEventClassifier eventClassifier) {
+    public static TransEvClassMapping constructMapping(PetrinetGraph net, XLog log, XEventClassifier eventClassifier) {
         TransEvClassMapping mapping = new TransEvClassMapping(eventClassifier, new XEventClass("DUMMY", 99999));
 
         XLogInfo summary = XLogInfoFactory.createLogInfo(log, eventClassifier);
@@ -165,6 +167,12 @@ public class PetrinetHelper {
         GraphVisualizerPlugin p = new GraphVisualizerPlugin();
         DotPanel panel = (DotPanel)p.apply(_pluginContext, petrinet);
         Dot dot = panel.getDot();
-        new DotPNGExportPlugin().exportAsPNG(_pluginContext, dot, new File(path));
+        new DotPNGExportPlugin().exportAsPNG(_pluginContext, dot, new File(String.format("%s.png", path)));
     }
+
+    public void ExportPnml(Petrinet petrinet, String path) throws Exception {
+        new org.processmining.datapetrinets.io.DataPetriNetExporter().exportPetriNetToPNMLFile(_pluginContext,
+                DataPetriNet.Factory.fromPetrinet(petrinet), new File(String.format("%s.pnml", path)));
+    }
+
 }
