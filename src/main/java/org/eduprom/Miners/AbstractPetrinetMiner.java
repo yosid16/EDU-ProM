@@ -2,7 +2,11 @@ package org.eduprom.Miners;
 
 import org.eduprom.Utils.PetrinetHelper;
 import org.processmining.datapetrinets.DataPetriNet;
+import org.processmining.models.connections.petrinets.EvClassLogPetrinetConnection;
 import org.processmining.petrinets.PetriNetFileFormat;
+import org.processmining.plugins.alignetc.AlignETCPlugin;
+import org.processmining.plugins.alignetc.result.AlignETCResult;
+import org.processmining.plugins.etm.CentralRegistry;
 import org.processmining.plugins.petrinet.replayresult.PNRepResult;
 import org.processmining.plugins.pnalignanalysis.conformance.AlignmentPrecGenRes;
 import org.processmining.pnanalysis.metrics.impl.PetriNetStructurednessMetric;
@@ -17,8 +21,8 @@ import java.io.IOException;
  */
 public abstract class AbstractPetrinetMiner extends AbstractMiner {
 
-    private PetrinetWithMarkings _petrinet;
-    private PNRepResult _alignment;
+    protected PetrinetWithMarkings _petrinet;
+    protected PNRepResult _alignment;
     protected PetrinetHelper _petrinetHelper;
 
     public AbstractPetrinetMiner(String filename) throws Exception {

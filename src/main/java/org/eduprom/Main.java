@@ -1,7 +1,7 @@
 package org.eduprom;
 
-import org.eduprom.Miners.Alpha.AlphaPlus;
 import org.eduprom.Miners.IMiner;
+import org.eduprom.Miners.AdaptiveNoise.RecursiveScan;
 import org.eduprom.Miners.InductiveMiner;
 
 import java.io.FileInputStream;
@@ -17,7 +17,7 @@ public class Main {
 	
     public static void main(String[] args) throws Exception {
 
-		String filename = "EventLogs\\log_noise.xes";
+        String filename = "EventLogs\\sample.xes";
 
     	logManager.readConfiguration(new FileInputStream("./app.properties"));
     	logger.info("started application");
@@ -29,7 +29,7 @@ public class Main {
         	miner.Evaluate();
 
         } catch (Exception ex) {
-        	logger.log(Level.SEVERE, "exception when trying to train/evaluate the miner", ex);;
+        	logger.log(Level.SEVERE, "exception when trying to train/evaluate the miner", ex);
         }
         
         logger.info("ended application");

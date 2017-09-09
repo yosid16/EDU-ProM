@@ -1,7 +1,7 @@
 package org.eduprom.Tasks;
 
 import org.eduprom.Miners.IMiner;
-import org.eduprom.Miners.InductiveMiner;
+import org.eduprom.Miners.AdaptiveNoise.RecursiveScan;
 
 import java.io.FileInputStream;
 import java.util.Arrays;
@@ -19,7 +19,8 @@ public class LogSeries {
 	
     public static void main(String[] args) throws Exception {
 
-		String filenameFormat = "EventLogs\\contest_2017\\log%s.xes";
+		//String filenameFormat = "EventLogs\\contest_2017\\log%s.xes";
+		String filenameFormat = "EventLogs\\contest_dataset\\test_log_may_%s.xes";
 		Integer[] fileNumbers = new Integer[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 		List<String> files = Arrays.stream(fileNumbers).map(x -> String.format(filenameFormat, x)).collect(Collectors.toList());
 
@@ -29,10 +30,10 @@ public class LogSeries {
         try {
 
         	for(String filename : files){
-				IMiner miner = new InductiveMiner(filename);
+				IMiner miner = new RecursiveScan(filename);
 				miner.Train();
 				miner.Export();
-				miner.Evaluate();
+				//miner.Evaluate();
 			}
         	/*
         	IMiner miner = new ConformanceTraversal(filename,
