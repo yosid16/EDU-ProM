@@ -1,7 +1,7 @@
-package org.eduprom.miners.Synthesis.CutsMiners;
+package org.eduprom.miners.synthesis.CutsMiners;
 
 import org.eduprom.miners.IMiner;
-import org.eduprom.miners.Synthesis.Entities.ProcessTreeCuts;
+import org.eduprom.miners.synthesis.Entities.ProcessTreeCuts;
 import org.deckfour.xes.model.XLog;
 
 /**

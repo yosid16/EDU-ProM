@@ -1,11 +1,11 @@
-package org.eduprom.miners.AdaptiveNoise;
+package org.eduprom.miners.adaptiveNoise;
 
 import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
 import com.google.common.base.Stopwatch;
 import org.deckfour.xes.model.XLog;
 import org.eduprom.miners.AbstractPetrinetMiner;
-import org.eduprom.miners.AdaptiveNoise.IntermediateMiners.NoiseInductiveMiner;
+import org.eduprom.miners.adaptiveNoise.IntermediateMiners.NoiseInductiveMiner;
 import org.eduprom.partitioning.ILogSplitter;
 import org.eduprom.partitioning.InductiveLogSplitting;
 import org.eduprom.partitioning.Partitioning;
@@ -132,7 +132,7 @@ public class RecursiveScan extends AbstractPetrinetMiner {
         public boolean Add(Node node, NoiseInductiveMiner inductiveMiner) throws Exception {
             if (pratitioning.getLogs().containsKey(node)){
                 changes.put(node, inductiveMiner);
-                ProcessTree pt = inductiveMiner.Mine(pratitioning.getLogs().get(node));
+                ProcessTree pt = inductiveMiner.mineProcessTree(pratitioning.getLogs().get(node));
                 Merge(modifiedProcessTree.getRoot(), pt.getRoot());
                 return true;
             }

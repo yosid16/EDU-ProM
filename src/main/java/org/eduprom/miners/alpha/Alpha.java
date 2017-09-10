@@ -1,4 +1,4 @@
-package org.eduprom.miners.Alpha;
+package org.eduprom.miners.alpha;
 
 import org.eduprom.miners.AbstractPetrinetMiner;
 import org.deckfour.xes.classification.XEventClass;

@@ -1,4 +1,4 @@
-package org.eduprom.miners.Alpha;
+package org.eduprom.miners.alpha;
 
 import org.processmining.alphaminer.parameters.AlphaVersion;
 
@@ -11,6 +11,7 @@ public class AlphaPlusPlus extends Alpha {
         super(filename);
     }
 
+    @Override
     public AlphaVersion GetVersion(){
         return AlphaVersion.PLUS_PLUS;
     }

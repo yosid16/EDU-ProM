@@ -103,7 +103,7 @@ public class InductiveLogSplitting implements ILogSplitter {
         IMLogInfo logInfo = minerState.parameters.getLog2LogInfo().createLogInfo(log);
 
         //output information about the log
-        debug("\nMine epsilon=" + logInfo.getDfg().getNumberOfEmptyTraces() + ", " + logInfo.getActivities(),
+        debug("\nmineProcessTree epsilon=" + logInfo.getDfg().getNumberOfEmptyTraces() + ", " + logInfo.getActivities(),
                 minerState);
         //debug(log, minerState);
 

@@ -1,4 +1,4 @@
-package org.eduprom.miners.AdaptiveNoise.IntermediateMiners;
+package org.eduprom.miners.adaptiveNoise.IntermediateMiners;
 
 import org.deckfour.xes.model.XLog;
 import org.eduprom.miners.IProcessTreeMiner;
@@ -24,7 +24,7 @@ public class NoiseInductiveMiner extends InductiveMiner implements IProcessTreeM
 	}
 
 	@Override
-	public ProcessTree Mine(XLog log) throws Exception {
+	public ProcessTree mineProcessTree(XLog log) throws Exception {
 		LowFrequencyFilterParameters params = new LowFrequencyFilterParameters(log);
 		params.setThreshold(Math.round(getNoiseThreshold()));
 		XLog filteredLog = (new LowFrequencyFilterAlgorithm()).apply(getPromPluginContext(), log, params);

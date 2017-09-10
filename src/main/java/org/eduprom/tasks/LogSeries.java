@@ -1,7 +1,7 @@
 package org.eduprom.tasks;
 
 import org.eduprom.miners.IMiner;
-import org.eduprom.miners.AdaptiveNoise.RecursiveScan;
+import org.eduprom.miners.adaptiveNoise.RecursiveScan;
 
 import java.io.FileInputStream;
 import java.util.Arrays;

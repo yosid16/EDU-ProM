@@ -1,5 +1,6 @@
 package org.eduprom;
 
+import org.eduprom.miners.EnumeratePaths;
 import org.eduprom.miners.IMiner;
 import org.eduprom.miners.InductiveMiner;
 
@@ -22,7 +23,7 @@ public class Main {
     	logger.info("started application");
     	    	    	
         try {
-        	IMiner miner = new InductiveMiner(filename);
+        	IMiner miner = new EnumeratePaths(filename);
         	miner.mine();
         	miner.export();
         	miner.evaluate();

@@ -19,21 +19,16 @@ public class EnumerateAllPaths extends AbstractPetrinetMiner implements IProcess
 		super(filename);
 	}
 
-
-	public PetrinetWithMarkings MinePetrinet(XLog log) throws Exception {
-		return petrinetHelper.ConvertToPetrinet(Mine(log));
-	}
-
 	@Override
     protected PetrinetWithMarkings minePetrinet() throws Exception {
 		logger.info("Started mining a petri nets using enumerate paths miner");
 
-		ProcessTree2Petrinet.PetrinetWithMarkings pn = MinePetrinet(log);
+		ProcessTree2Petrinet.PetrinetWithMarkings pn = petrinetHelper.ConvertToPetrinet(mineProcessTree(log));
 		return pn;
     }
 
 	@Override
-	public ProcessTree Mine(XLog log) throws Exception {
+	public ProcessTree mineProcessTree(XLog log) throws Exception {
 		ProcessTree pt = new ProcessTreeImpl();
 		AbstractBlock.Xor root = new AbstractBlock.Xor("root");
 		pt.addNode(root);

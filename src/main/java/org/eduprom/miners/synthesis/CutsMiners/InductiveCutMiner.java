@@ -1,7 +1,7 @@
-package org.eduprom.miners.Synthesis.CutsMiners;
+package org.eduprom.miners.synthesis.CutsMiners;
 
 import org.eduprom.miners.AbstractPetrinetMiner;
-import org.eduprom.miners.Synthesis.Entities.ProcessTreeCuts;
+import org.eduprom.miners.synthesis.Entities.ProcessTreeCuts;
 import org.deckfour.xes.classification.XEventNameClassifier;
 import org.deckfour.xes.model.XLog;
 import org.processmining.framework.packages.PackageManager;
@@ -116,7 +116,7 @@ public class InductiveCutMiner extends AbstractPetrinetMiner implements ICutsPro
         IMLogInfo logInfo = minerState.parameters.getLog2LogInfo().createLogInfo(log);
 
         //output information about the log
-        debug("\nMine epsilon=" + logInfo.getDfg().getNumberOfEmptyTraces() + ", " + logInfo.getActivities(),
+        debug("\nmineProcessTree epsilon=" + logInfo.getDfg().getNumberOfEmptyTraces() + ", " + logInfo.getActivities(),
                 minerState);
         //debug(log, minerState);
 
