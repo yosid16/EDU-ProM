@@ -1,7 +1,7 @@
-package org.eduprom;
+package org.eduprom.tasks;
 
+import org.eduprom.miners.AdaptiveNoise.RecursiveScan;
 import org.eduprom.miners.IMiner;
-import org.eduprom.miners.InductiveMiner;
 
 import java.io.FileInputStream;
 import java.util.logging.Level;
@@ -9,23 +9,22 @@ import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
 
-public class Main {
+public class Matching {
 	
 	private static final LogManager logManager = LogManager.getLogManager();
-	final static Logger logger = Logger.getLogger(Main.class.getName());
+	final static Logger logger = Logger.getLogger(Matching.class.getName());
 	
     public static void main(String[] args) throws Exception {
 
-        String filename = "EventLogs\\sample.xes";
+		String filename = "EventLogs\\sample.xes";
 
     	logManager.readConfiguration(new FileInputStream("./app.properties"));
     	logger.info("started application");
     	    	    	
         try {
-        	IMiner miner = new InductiveMiner(filename);
-        	miner.mine();
-        	miner.export();
-        	miner.evaluate();
+            IMiner miner = new RecursiveScan(filename, 0.0f, 0.1f, 0.2f, 0.3f);
+            miner.mine();
+            miner.export();
 
         } catch (Exception ex) {
         	logger.log(Level.SEVERE, "exception when trying to train/evaluate the miner", ex);
