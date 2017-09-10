@@ -14,6 +14,8 @@ import org.processmining.models.semantics.petrinet.Marking;
 
 import org.processmining.ptconversions.pn.ProcessTree2Petrinet;
 
+import java.util.stream.Collectors;
+
 /**
  * Created by ydahari on 4/12/2017.
  */
@@ -30,6 +32,7 @@ public class Alpha extends AbstractPetrinetMiner {
         ProcessTree2Petrinet.PetrinetWithMarkings pn = new ProcessTree2Petrinet.PetrinetWithMarkings();
         pn.petrinet = runResult.getFirst();
         pn.initialMarking = runResult.getSecond();
+        pn.finalMarking = new Marking(pn.petrinet.getPlaces().stream().filter(x->x.getLabel() == "End").collect(Collectors.toList()));
 
         return pn;
     }

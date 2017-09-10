@@ -58,5 +58,9 @@ public abstract class AbstractPetrinetMiner extends AbstractMiner {
         logger.info(String.format("Structuredness: %s", v));
     }
 
+    public PetrinetWithMarkings getDiscoveredPetriNet(){
+        return this.petrinetWithMarkings;
+    }
+
     //endregion
 }

@@ -1,8 +1,9 @@
-package org.eduprom.miners;
+package org.eduprom.miners.demo;
 
 import org.deckfour.xes.model.XEvent;
 import org.deckfour.xes.model.XTrace;
-import org.eduprom.entities.Trace;
+import org.eduprom.miners.AbstractPetrinetMiner;
+import org.eduprom.utils.PetrinetHelper;
 import org.processmining.processtree.ProcessTree;
 import org.processmining.processtree.impl.AbstractBlock;
 import org.processmining.processtree.impl.AbstractTask;
@@ -10,20 +11,9 @@ import org.processmining.processtree.impl.ProcessTreeImpl;
 
 import static org.processmining.ptconversions.pn.ProcessTree2Petrinet.PetrinetWithMarkings;
 
-public class EnumeratePaths extends AbstractPetrinetMiner {
+public class EnumeratePathsDemo extends AbstractPetrinetMiner {
 
-    private String[] getActivities(XTrace trace){
-        String[] activities = new String[trace.size()];
-        for(int i = 0; i < activities.length; i++){
-            XEvent event = trace.get(i);
-            String activity = event.getAttributes().get("concept:name").toString();
-            activities[i] = activity;
-        }
-
-        return activities;
-    }
-
-    public EnumeratePaths(String filename) throws Exception {
+    public EnumeratePathsDemo(String filename) throws Exception {
 		super(filename);
 	}
 
@@ -39,16 +29,17 @@ public class EnumeratePaths extends AbstractPetrinetMiner {
             pt.addNode(seq);
             root.addChild(seq);
 
-            for(String a : getActivities(trace)){
-                AbstractTask.Manual task = new AbstractTask.Manual(a);
+            int length = trace.size();
+            for(int i = 0; i < length; i++){
+                XEvent event = trace.get(i);
+                String activity = event.getAttributes().get("concept:name").toString();
+
+                AbstractTask.Manual task = new AbstractTask.Manual(activity);
                 pt.addNode(task);
                 seq.addChild(task);
             }
         }
 
-        PetrinetWithMarkings petrinetWithMarkings =  petrinetHelper.ConvertToPetrinet(pt);
-        return petrinetWithMarkings;
+        return PetrinetHelper.ConvertToPetrinet(pt);
     }
-
-
 }

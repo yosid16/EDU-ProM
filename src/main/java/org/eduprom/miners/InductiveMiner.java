@@ -38,12 +38,4 @@ public class InductiveMiner extends AbstractPetrinetMiner {
 
 		return pn;
 	}
-
-	@Override
-	protected void readLog() throws Exception {
-		XLog log = logHelper.Read(filename);
-		LowFrequencyFilterParameters params = new LowFrequencyFilterParameters(log);
-		params.setThreshold(20);
-		this.log = (new LowFrequencyFilterAlgorithm()).apply(getPromPluginContext(), log, params);
-	}
 }
