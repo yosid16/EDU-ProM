@@ -1,15 +1,23 @@
 package org.eduprom.Miners.AdaptiveNoise.IntermediateMiners;
 
 import org.deckfour.xes.model.XLog;
+import org.deckfour.xes.model.XTrace;
+import org.deckfour.xes.model.impl.XLogImpl;
 import org.eduprom.Miners.AbstractPetrinetMiner;
 import org.eduprom.Miners.IProcessTreeMiner;
 import org.eduprom.Miners.InductiveMiner;
 import org.eduprom.Utils.PetrinetHelper;
+import org.processmining.log.algorithms.LowFrequencyFilterAlgorithm;
+import org.processmining.log.parameters.LowFrequencyFilterParameters;
 import org.processmining.models.graphbased.directed.petrinet.impl.PetrinetImpl;
 import org.processmining.models.semantics.petrinet.Marking;
+import org.processmining.plugins.InductiveMiner.efficienttree.EfficientTreeReduceParameters;
+import org.processmining.plugins.InductiveMiner.mining.MiningParameters;
 import org.processmining.plugins.InductiveMiner.mining.MiningParametersIM;
 import org.processmining.plugins.InductiveMiner.plugins.IMPetriNet;
 import org.processmining.plugins.InductiveMiner.plugins.IMProcessTree;
+import org.processmining.plugins.log.logfilters.LogFilter;
+import org.processmining.plugins.log.logfilters.XTraceCondition;
 import org.processmining.processtree.ProcessTree;
 
 import java.util.ArrayList;
@@ -24,28 +32,27 @@ public class NoiseInductiveMiner extends InductiveMiner implements IProcessTreeM
 	protected ProcessTree processTree;
 
 
-	public NoiseInductiveMiner(String filename) throws Exception {
-		super(filename);
-		_parameters = new MiningParametersIM();
-	}
-
 	public NoiseInductiveMiner(String filename, MiningParametersIM parameters) throws Exception {
-		super(filename);
-		_parameters = parameters;
+		super(filename, parameters);
 	}
 
 	@Override
 	public ProcessTree Mine(XLog log) throws Exception {
-		_log = log;
-		logger.info("Started mining a petri nets using inductive miner");
-		processTree = IMProcessTree.mineProcessTree(log, _parameters, _canceller);
-		_petrinet = PetrinetHelper.ConvertToPetrinet(processTree);
+		LowFrequencyFilterParameters params = new LowFrequencyFilterParameters(log);
+		params.setThreshold(Math.round(getNoiseThreshold()));
+		XLog filteredLog = (new LowFrequencyFilterAlgorithm()).apply(_promPluginContext, log, params);
+		//org.processmining.plugins.log.logfilters.LogFilter.filter()
+
+		logger.info(String.format("Started mining a petri nets using inductive miner, noise: %f", getNoiseThreshold()));
+		processTree = IMProcessTree.mineProcessTree(filteredLog, _parameters, _canceller);
+		//_petrinet = PetrinetHelper.ConvertToPetrinet(processTree);
 		return processTree;
 	}
 
 	public static NoiseInductiveMiner WithNoiseThreshold(String filename, float noiseThreshold) throws Exception {
 		MiningParametersIM parametersIM = new MiningParametersIM();
 		parametersIM.setNoiseThreshold(noiseThreshold);
+		//parametersIM.setRepairLifeCycle(true);
 		return new NoiseInductiveMiner(filename, parametersIM);
 	}
 

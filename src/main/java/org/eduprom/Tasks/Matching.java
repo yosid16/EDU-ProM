@@ -22,7 +22,7 @@ public class Matching {
     	logger.info("started application");
     	    	    	
         try {
-            IMiner miner = new RecursiveScan(filename);
+            IMiner miner = new RecursiveScan(filename, 0.0f, 0.1f, 0.2f, 0.3f);
             miner.Train();
             miner.Export();
 

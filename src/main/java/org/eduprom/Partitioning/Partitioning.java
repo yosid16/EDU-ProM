@@ -34,6 +34,8 @@ public class Partitioning
 
     @Override
     public String toString() {
+        return String.format("Partitioning has: %d sublogs", getLogs().size());
+        /*
         String s = "";
 
         for(Map.Entry<Node, XLog> entry : getExclusiveLogs().entrySet()){
@@ -42,6 +44,7 @@ public class Partitioning
             s += "\nend log for node - " + entry.getKey().toString() + ":\n";
         }
         return s;
+        */
     }
 
     public HashMap<Node, XLog> getLogs() {
