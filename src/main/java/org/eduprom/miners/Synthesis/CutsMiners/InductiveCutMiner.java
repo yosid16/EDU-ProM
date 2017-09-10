@@ -53,10 +53,10 @@ public class InductiveCutMiner extends AbstractPetrinetMiner implements ICutsPro
     }
 
     @Override
-    protected PetrinetWithMarkings TrainPetrinet() throws Exception {
+    protected PetrinetWithMarkings minePetrinet() throws Exception {
         logger.info("Started mining a petri nets using inductive cut miner");
         ProcessTreeCuts pt = Mine(log);
-        ProcessTree2Petrinet.PetrinetWithMarkings pn = _petrinetHelper.ConvertToPetrinet(pt.processTree);
+        ProcessTree2Petrinet.PetrinetWithMarkings pn = petrinetHelper.ConvertToPetrinet(pt.processTree);
         return pn;
 
     }

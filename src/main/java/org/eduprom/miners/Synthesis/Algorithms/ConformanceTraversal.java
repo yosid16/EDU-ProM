@@ -46,7 +46,7 @@ public class ConformanceTraversal extends AbstractPetrinetMiner {
 	private PetrinetWithMarkings _res;
 
 	@Override
-	protected PetrinetWithMarkings TrainPetrinet() throws Exception {
+	protected PetrinetWithMarkings minePetrinet() throws Exception {
 
 		logger.info("Started mining a petri nets using ConformanceTraversale");
 		ProcessTree synthesizedTree = ConformanceTraversale(baseline, optimizers, log);
@@ -55,14 +55,14 @@ public class ConformanceTraversal extends AbstractPetrinetMiner {
 		//		log);
 		logger.info("Completed mining a petri nets using ConformanceTraversale");
 
-		return _petrinetHelper.ConvertToPetrinet(synthesizedTree);
+		return petrinetHelper.ConvertToPetrinet(synthesizedTree);
 	}
 
 	public ProcessTree ConformanceTraversale(ICutsProcessTreeMiner baseline,
 											 IProcessTreeMiner[] optimizers,
 											 XLog log) throws Exception {
 		ProcessTreeCuts processTreeCuts = baseline.Mine(log);
-		_res = _petrinetHelper.ConvertToPetrinet(processTreeCuts.processTree);
+		_res = petrinetHelper.ConvertToPetrinet(processTreeCuts.processTree);
 		logger.info(String.format("Performed baseline mining using %s", baseline.getName()));
 
 		logger.info(String.format("Psi: %s for baseline", Psi(this.log, processTreeCuts.processTree)));
@@ -152,9 +152,9 @@ public class ConformanceTraversal extends AbstractPetrinetMiner {
 
 
 	public double Psi(XLog log, ProcessTree pt) throws Exception {
-		ProcessTree2Petrinet.PetrinetWithMarkings res = _petrinetHelper.ConvertToPetrinet(pt);
-		PNRepResult alignment = _petrinetHelper.getAlignment(log, res.petrinet, res.initialMarking, res.finalMarking);
-		//AlignmentPrecGenRes conformance = _petrinetHelper.getConformance(log, res.petrinet, alignment, res.initialMarking, res.finalMarking);
+		ProcessTree2Petrinet.PetrinetWithMarkings res = petrinetHelper.ConvertToPetrinet(pt);
+		PNRepResult alignment = petrinetHelper.getAlignment(log, res.petrinet, res.initialMarking, res.finalMarking);
+		//AlignmentPrecGenRes conformance = petrinetHelper.getConformance(log, res.petrinet, alignment, res.initialMarking, res.finalMarking);
 		PetriNetMetrics metrics = new PetriNetMetrics(getPromPluginContext(), res.petrinet, res.initialMarking);
 
 		//double pCount = metrics.getMetricValue(PetriNetNofPlacesMetric.NAME);

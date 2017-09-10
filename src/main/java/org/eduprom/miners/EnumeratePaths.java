@@ -19,7 +19,7 @@ public class EnumeratePaths extends AbstractPetrinetMiner {
 	}
 
     @Override
-    protected PetrinetWithMarkings TrainPetrinet() throws Exception {
+    protected PetrinetWithMarkings minePetrinet() throws Exception {
         ProcessTree pt = new ProcessTreeImpl();
         AbstractBlock.Xor root = new AbstractBlock.Xor("root");
         pt.addNode(root);
@@ -39,7 +39,7 @@ public class EnumeratePaths extends AbstractPetrinetMiner {
             }
         }
 
-        PetrinetWithMarkings petrinetWithMarkings =  _petrinetHelper.ConvertToPetrinet(pt);
+        PetrinetWithMarkings petrinetWithMarkings =  petrinetHelper.ConvertToPetrinet(pt);
         return petrinetWithMarkings;
     }
 }

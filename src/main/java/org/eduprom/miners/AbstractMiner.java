@@ -22,7 +22,6 @@ public abstract class AbstractMiner implements IMiner {
 	protected static final Logger logger = Logger.getLogger(AbstractMiner.class.getName());
 
     private String name;
-    private TraceHelper traceHelper;
     private CLIContext promContext;
     private CLIPluginContext promPluginContext;
     private Canceller canceller = ()-> false;
@@ -38,7 +37,6 @@ public abstract class AbstractMiner implements IMiner {
         name = getClass().getSimpleName();
         this.filename = filename;
         logHelper = new LogHelper();
-        traceHelper = new TraceHelper();
         promContext = new org.processmining.contexts.cli.CLIContext();
         promPluginContext = new CLIPluginContext(promContext, getName());
 
@@ -62,9 +60,9 @@ public abstract class AbstractMiner implements IMiner {
             logger.info(String.format("Training the log file: %s using the algorithm: %s has completed successfully"
                     , filename, getName()));
         } catch (Exception e) {
-            logger.info(String.format("Training the log file: %s using the algorithm: %s has failed"
-                    , filename, getName()));
-            e.printStackTrace();
+            String message = String.format("Training the log file: %s using the algorithm: %s has failed"
+                    , filename, getName());
+            logger.log(Level.SEVERE, message, e);
         }
     }
 

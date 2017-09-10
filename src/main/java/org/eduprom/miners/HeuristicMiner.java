@@ -18,7 +18,7 @@ public class HeuristicMiner extends AbstractPetrinetMiner {
     }
 
     @Override
-    protected PetrinetWithMarkings TrainPetrinet() throws Exception {
+    protected PetrinetWithMarkings minePetrinet() throws Exception {
         logger.info("Started mining a petri nets using heuristic miner");
         HeuristicsMinerSettings settings = new HeuristicsMinerSettings();
         settings.setClassifier(getClassifier());

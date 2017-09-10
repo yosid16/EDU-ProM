@@ -12,37 +12,51 @@ import static org.processmining.ptconversions.pn.ProcessTree2Petrinet.PetrinetWi
  */
 public abstract class AbstractPetrinetMiner extends AbstractMiner {
 
-    protected PetrinetWithMarkings _petrinet;
-    protected PNRepResult _alignment;
-    protected PetrinetHelper _petrinetHelper;
+    //region protected members
+    protected PetrinetWithMarkings petrinetWithMarkings;
+    protected PNRepResult alignment;
+    protected PetrinetHelper petrinetHelper;
+    //endregion
+
+    //region constructors
 
     public AbstractPetrinetMiner(String filename) throws Exception {
         super(filename);
-        _petrinetHelper = new PetrinetHelper(getPromPluginContext(), getClassifier());
+        petrinetHelper = new PetrinetHelper(getPromPluginContext(), getClassifier());
     }
+
+    //endregion
+
+    //region protected methods
 
     @Override
     protected void mineSpecific() throws Exception {
-        _petrinet = TrainPetrinet();
+        petrinetWithMarkings = minePetrinet();
     }
+
+    protected abstract PetrinetWithMarkings minePetrinet() throws Exception;
+
+    //endregion
+
+    //region public methods
 
     public void export() throws Exception {
-        _petrinetHelper.Export(_petrinet.petrinet, getOutputPath());
-        _petrinetHelper.ExportPnml(_petrinet.petrinet, getOutputPath());
+        petrinetHelper.Export(petrinetWithMarkings.petrinet, getOutputPath());
+        petrinetHelper.ExportPnml(petrinetWithMarkings.petrinet, getOutputPath());
     }
-
-    protected abstract PetrinetWithMarkings TrainPetrinet() throws Exception;
 
     @Override
     public void evaluate() throws Exception {
         logger.info("Checking conformance");
-        _alignment = _petrinetHelper.getAlignment(log, _petrinet.petrinet, _petrinet.initialMarking, _petrinet.finalMarking);
-        _petrinetHelper.PrintResults(_alignment);
+        alignment = petrinetHelper.getAlignment(log, petrinetWithMarkings.petrinet, petrinetWithMarkings.initialMarking, petrinetWithMarkings.finalMarking);
+        petrinetHelper.PrintResults(alignment);
 
-        AlignmentPrecGenRes conformance = _petrinetHelper.getConformance(log, _petrinet.petrinet, _alignment, _petrinet.initialMarking, _petrinet.finalMarking);
-        _petrinetHelper.PrintResults(conformance);
+        AlignmentPrecGenRes conformance = petrinetHelper.getConformance(log, petrinetWithMarkings.petrinet, alignment, petrinetWithMarkings.initialMarking, petrinetWithMarkings.finalMarking);
+        petrinetHelper.PrintResults(conformance);
 
-        double v = new PetriNetStructurednessMetric().compute(getPromPluginContext(), _petrinet.petrinet, _petrinet.finalMarking);
+        double v = new PetriNetStructurednessMetric().compute(getPromPluginContext(), petrinetWithMarkings.petrinet, petrinetWithMarkings.finalMarking);
         logger.info(String.format("Structuredness: %s", v));
     }
+
+    //endregion
 }

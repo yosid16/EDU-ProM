@@ -47,7 +47,7 @@ public class RecursiveScan extends AbstractPetrinetMiner {
     }
 
     @Override
-    protected ProcessTree2Petrinet.PetrinetWithMarkings TrainPetrinet() throws Exception {
+    protected ProcessTree2Petrinet.PetrinetWithMarkings minePetrinet() throws Exception {
         Stopwatch stopwatch = Stopwatch.createStarted();
         ILogSplitter logSplitter = new InductiveLogSplitting();
         LogHelper helper = new LogHelper();
@@ -73,7 +73,7 @@ public class RecursiveScan extends AbstractPetrinetMiner {
             }
         }
         TreeChanges baseline = changes.stream().filter(x->x.isBaseline()).findAny().get();
-        ProcessTree2Petrinet.PetrinetWithMarkings res = _petrinetHelper.ConvertToPetrinet(bestModel.modifiedProcessTree);
+        ProcessTree2Petrinet.PetrinetWithMarkings res = petrinetHelper.ConvertToPetrinet(bestModel.modifiedProcessTree);
 
         logger.info("BASELINE MODEL: " + baseline.toString());
         logger.info("BEST MODEL: " + bestModel.toString());
@@ -85,7 +85,7 @@ public class RecursiveScan extends AbstractPetrinetMiner {
         this.elapsedSeconds = stopwatch.elapsed(TimeUnit.SECONDS);
         this.optionsScanned = changes.size();
 
-        this._petrinet = _petrinetHelper.ConvertToPetrinet(bestModel.modifiedProcessTree);
+        this.petrinetWithMarkings = petrinetHelper.ConvertToPetrinet(bestModel.modifiedProcessTree);
 
         export();
 
@@ -237,17 +237,17 @@ public class RecursiveScan extends AbstractPetrinetMiner {
     }
 
     public void ModifyPsi(TreeChanges changes, XLog log, double precisionWeight, double fitnessWeight) throws Exception {
-        ProcessTree2Petrinet.PetrinetWithMarkings res = _petrinetHelper.ConvertToPetrinet(changes.modifiedProcessTree);
+        ProcessTree2Petrinet.PetrinetWithMarkings res = petrinetHelper.ConvertToPetrinet(changes.modifiedProcessTree);
 
         //String path = String.format("./Output/%s_%s_%s" , getName(),
         //        FilenameUtils.removeExtension(Paths.get(filename).getFileName().toString()), changes.id.toString());
-        //_petrinetHelper.export(res.petrinet, path);
+        //petrinetHelper.export(res.petrinet, path);
 
-        PNRepResult alignment = _petrinetHelper.getAlignment(log, res.petrinet, res.initialMarking, res.finalMarking);
+        PNRepResult alignment = petrinetHelper.getAlignment(log, res.petrinet, res.initialMarking, res.finalMarking);
         double fitness = Double.parseDouble(alignment.getInfo().get("Move-Model Fitness").toString());
         changes.fitness = fitness;
 
-        double precision = _petrinetHelper.getPrecision(log, res.petrinet, alignment, res.initialMarking, res.finalMarking);
+        double precision = petrinetHelper.getPrecision(log, res.petrinet, alignment, res.initialMarking, res.finalMarking);
         changes.precision = precision;
 
         changes.psi = precisionWeight * fitness + fitnessWeight * precision;

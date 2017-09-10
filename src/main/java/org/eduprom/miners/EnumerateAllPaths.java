@@ -21,11 +21,11 @@ public class EnumerateAllPaths extends AbstractPetrinetMiner implements IProcess
 
 
 	public PetrinetWithMarkings MinePetrinet(XLog log) throws Exception {
-		return _petrinetHelper.ConvertToPetrinet(Mine(log));
+		return petrinetHelper.ConvertToPetrinet(Mine(log));
 	}
 
 	@Override
-    protected PetrinetWithMarkings TrainPetrinet() throws Exception {
+    protected PetrinetWithMarkings minePetrinet() throws Exception {
 		logger.info("Started mining a petri nets using enumerate paths miner");
 
 		ProcessTree2Petrinet.PetrinetWithMarkings pn = MinePetrinet(log);

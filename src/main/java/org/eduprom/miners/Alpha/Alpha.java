@@ -24,7 +24,7 @@ public class Alpha extends AbstractPetrinetMiner {
     }
 
     @Override
-    protected ProcessTree2Petrinet.PetrinetWithMarkings TrainPetrinet() throws Exception {
+    protected ProcessTree2Petrinet.PetrinetWithMarkings minePetrinet() throws Exception {
         Pair<Petrinet, Marking> runResult = Mine(log);
 
         ProcessTree2Petrinet.PetrinetWithMarkings pn = new ProcessTree2Petrinet.PetrinetWithMarkings();

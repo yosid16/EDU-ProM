@@ -32,7 +32,7 @@ public class NoiseInductiveMiner extends InductiveMiner implements IProcessTreeM
 
 		logger.info(String.format("Started mining a petri nets using inductive miner, noise: %f", getNoiseThreshold()));
 		processTree = IMProcessTree.mineProcessTree(filteredLog, _parameters, getCanceller());
-		//_petrinet = PetrinetHelper.ConvertToPetrinet(processTree);
+		//petrinetWithMarkings = PetrinetHelper.ConvertToPetrinet(processTree);
 		return processTree;
 	}
 
@@ -54,21 +54,21 @@ public class NoiseInductiveMiner extends InductiveMiner implements IProcessTreeM
 	@Override
 	public void evaluate() throws Exception {
 		logger.info("Checking alignment");
-		_alignment = _petrinetHelper.getAlignment(log, _petrinet.petrinet, _petrinet.initialMarking, _petrinet.finalMarking);
-		_petrinetHelper.PrintResults(_alignment);
+		alignment = petrinetHelper.getAlignment(log, petrinetWithMarkings.petrinet, petrinetWithMarkings.initialMarking, petrinetWithMarkings.finalMarking);
+		petrinetHelper.PrintResults(alignment);
 
-		this.fitness = Double.parseDouble(_alignment.getInfo().get("Move-Model Fitness").toString());
+		this.fitness = Double.parseDouble(alignment.getInfo().get("Move-Model Fitness").toString());
 
 		logger.info("Checking precision");
-		this.precision = _petrinetHelper.getPrecision(log, _petrinet.petrinet, _alignment, _petrinet.initialMarking, _petrinet.finalMarking);
+		this.precision = petrinetHelper.getPrecision(log, petrinetWithMarkings.petrinet, alignment, petrinetWithMarkings.initialMarking, petrinetWithMarkings.finalMarking);
 
 		logger.info(String.format("Precision: %S", precision));
 
-		//AlignmentPrecGenRes conformance = _petrinetHelper.getConformance(log, _petrinet.petrinet, _alignment, _petrinet.initialMarking, _petrinet.finalMarking);
-		//_petrinetHelper.PrintResults(conformance);
+		//AlignmentPrecGenRes conformance = petrinetHelper.getConformance(log, petrinetWithMarkings.petrinet, alignment, petrinetWithMarkings.initialMarking, petrinetWithMarkings.finalMarking);
+		//petrinetHelper.PrintResults(conformance);
 
 		//logger.info("Checking Structuredness");
-		//double v = new PetriNetStructurednessMetric().compute(promPluginContext, _petrinet.petrinet, _petrinet.finalMarking);
+		//double v = new PetriNetStructurednessMetric().compute(promPluginContext, petrinetWithMarkings.petrinet, petrinetWithMarkings.finalMarking);
 		//logger.info(String.format("Structuredness: %s", v));
 	}
 
