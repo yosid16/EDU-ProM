@@ -1,4 +1,4 @@
-package org.eduprom.miners.synthesis.CutsMiners;
+package org.eduprom.miners.synthesis.cutsMiners;
 
 import org.eduprom.miners.AbstractPetrinetMiner;
 import org.eduprom.miners.synthesis.entities.ProcessTreeCuts;

@@ -22,10 +22,6 @@ import org.processmining.plugins.alignetc.result.AlignETCResult;
 import org.processmining.plugins.astar.petrinet.AbstractPetrinetReplayer;
 import org.processmining.plugins.astar.petrinet.PetrinetReplayerWithoutILP;
 import org.processmining.plugins.connectionfactories.logpetrinet.TransEvClassMapping;
-import org.processmining.plugins.etm.CentralRegistry;
-import org.processmining.plugins.etm.fitness.TreeFitness;
-import org.processmining.plugins.etm.model.narytree.NAryTree;
-import org.processmining.plugins.etm.model.narytree.conversion.ProcessTreeToNAryTree;
 import org.processmining.plugins.graphviz.dot.Dot;
 import org.processmining.plugins.graphviz.dot.plugins.DotPNGExportPlugin;
 import org.processmining.plugins.graphviz.visualisation.DotPanel;
@@ -50,10 +46,17 @@ import java.util.logging.Logger;
  * Created by ydahari on 4/12/2017.
  */
 public class PetrinetHelper {
-    protected final static Logger logger = Logger.getLogger(AbstractMiner.class.getName());
 
-    private XEventClassifier _classifier;
-    private PluginContext _pluginContext;
+    protected static final Logger logger = Logger.getLogger(AbstractMiner.class.getName());
+
+    //region private members
+
+    private XEventClassifier eventClassifier;
+    private PluginContext pluginContext;
+
+    //endregion
+
+    //region private methods
 
     private void validateDirectory(File file){
         File directory = file.getParentFile();
@@ -62,88 +65,7 @@ public class PetrinetHelper {
         }
     }
 
-    public PetrinetHelper(PluginContext pluginContext, XEventClassifier classifier){
-        _classifier = classifier;
-        _pluginContext = pluginContext;
-    }
-
-    public PNRepResult getAlignment(XLog log, PetrinetGraph net, Marking initialMarking, Marking finalMarking) throws Exception {
-
-        Map<Transition, Integer> costMOS = constructMOSCostFunction(net);
-        XEventClassifier eventClassifier = _classifier;
-        Map<XEventClass, Integer> costMOT = constructMOTCostFunction(net, log, eventClassifier);
-        TransEvClassMapping mapping = constructMapping(net, log, eventClassifier);
-
-        AbstractPetrinetReplayer<?, ?> replayEngine = new PetrinetReplayerWithoutILP();
-
-        IPNReplayParameter parameters = new CostBasedCompleteParam(costMOT, costMOS);
-        parameters.setInitialMarking(initialMarking);
-
-        if (finalMarking != null){
-            parameters.setFinalMarkings(finalMarking);
-        }
-
-        parameters.setGUIMode(false);
-        parameters.setCreateConn(false);
-        parameters.setNumThreads(3);
-        ((CostBasedCompleteParam) parameters).setMaxNumOfStates(5000);
-
-        PNRepResult result = null;
-        try {
-            result = replayEngine.replayLog(_pluginContext, net, log, mapping, parameters);
-
-        } catch (AStarException e) {
-            e.printStackTrace();
-        }
-
-        return result;
-    }
-
-    public PNRepResult getAlignment(XLog log, ProcessTree processTree) throws Exception {
-        ProcessTree2Petrinet.PetrinetWithMarkings pt = ConvertToPetrinet(processTree);
-        return getAlignment(log, pt.petrinet, pt.initialMarking, pt.finalMarking);
-
-    }
-    public AlignmentPrecGenRes getConformance(XLog log, Petrinet net, PNRepResult alignment, Marking initialMarking, Marking finalMarking) throws Exception{
-        //Iterator<SyncReplayResult> it = alignment.iterator();
-        //while(it.hasNext()){
-        //    SyncReplayResult r = it.next();
-        //    r.setReliable(true);
-        //}
-        //org.processmining.pnanalysis.metrics.PetriNetMetricManager.getInstance().getMetrics().get(0).compute()
-
-        AlignmentPrecGen alignmentPrecGen = new AlignmentPrecGen();
-        TransEvClassMapping mapping = constructMapping(net, log, _classifier);
-        AlignmentPrecGenRes result = alignmentPrecGen.measureConformanceAssumingCorrectAlignment(_pluginContext, mapping, alignment,
-                net, initialMarking, false);
-        return result;
-    }
-
-    public double getPrecision(XLog log, Petrinet net, PNRepResult alignment, Marking initialMarking, Marking finalMarking) throws IllegalTransitionException, ConnectionCannotBeObtained {
-
-        AlignETCPlugin etcPlugin = new AlignETCPlugin();
-        TransEvClassMapping mapping = constructMapping(net, log, _classifier);
-        EvClassLogPetrinetConnection connection = new EvClassLogPetrinetConnection("", net, log, _classifier, mapping);
-        PNMatchInstancesRepResult pNMatchInstancesRepResult = ToPNMatchInstancesRepResult(alignment);
-        AlignETCResult res = etcPlugin.checkAlignETCSilent(_pluginContext, log,
-                net, initialMarking, finalMarking, connection, pNMatchInstancesRepResult, null, null);
-        return res.ap;
-    }
-
-    public double getTreeFitness(XLog log, ProcessTree tree){
-        CentralRegistry centralRegistry = new CentralRegistry(_pluginContext, log, _classifier,
-                new Random());
-        NAryTree nAryTree = new ProcessTreeToNAryTree().convert(tree);
-        TreeFitness a = centralRegistry.getFitness(nAryTree);
-        return 1;
-
-
-        //FitnessRegistry registry = new FitnessRegistry(_pluginContext);
-        //registry.getAllMetricInfos().forEach(x -> x.);
-
-    }
-
-    public PNMatchInstancesRepResult ToPNMatchInstancesRepResult(PNRepResult alignment){
+    private PNMatchInstancesRepResult toPNMatchInstancesRepResult(PNRepResult alignment){
         Collection<AllSyncReplayResult> col = new ArrayList<AllSyncReplayResult>();
         for (SyncReplayResult rep : alignment) {
 
@@ -164,23 +86,6 @@ public class PetrinetHelper {
         }
         return new PNMatchInstancesRepResult(col);
     }
-
-    public void PrintResults(PNRepResult results){
-        for(String key : results.getInfo().keySet()) {
-            logger.info(String.format("Alignment checking: key= %s, value= %s", key, results.getInfo().get(key)));
-        }
-    }
-
-    public void PrintResults(AlignmentPrecGenRes conformance){
-        logger.info(String.format("Conformance checking, precision %f", conformance.getPrecision()));
-        logger.info(String.format("Conformance checking, generalization %f", conformance.getGeneralization()));
-    }
-
-    public static ProcessTree2Petrinet.PetrinetWithMarkings ConvertToPetrinet(ProcessTree processTree) throws Exception {
-        ProcessTree2Petrinet.PetrinetWithMarkings pn = ProcessTree2Petrinet.convert(processTree);
-        return pn;
-    }
-
 
     private static Map<Transition, Integer> constructMOSCostFunction(PetrinetGraph net) {
         Map<Transition, Integer> costMOS = new HashMap<Transition, Integer>();
@@ -206,7 +111,7 @@ public class PetrinetHelper {
         return costMOT;
     }
 
-    public static TransEvClassMapping constructMapping(PetrinetGraph net, XLog log, XEventClassifier eventClassifier) {
+    private static TransEvClassMapping constructMapping(PetrinetGraph net, XLog log, XEventClassifier eventClassifier) {
         TransEvClassMapping mapping = new TransEvClassMapping(eventClassifier, new XEventClass("DUMMY", 99999));
 
         XLogInfo summary = XLogInfoFactory.createLogInfo(log, eventClassifier);
@@ -226,21 +131,103 @@ public class PetrinetHelper {
         return mapping;
     }
 
+
+    //endregion
+
+    //region constructors
+
+    public PetrinetHelper(PluginContext pluginContext, XEventClassifier classifier){
+        this.eventClassifier = classifier;
+        this.pluginContext = pluginContext;
+    }
+
+    //endregion
+
+    //region public methods
+
+    public PNRepResult getAlignment(XLog log, PetrinetGraph net, Marking initialMarking, Marking finalMarking) throws Exception {
+
+        Map<Transition, Integer> costMOS = constructMOSCostFunction(net);
+        XEventClassifier eventClassifier = this.eventClassifier;
+        Map<XEventClass, Integer> costMOT = constructMOTCostFunction(net, log, eventClassifier);
+        TransEvClassMapping mapping = constructMapping(net, log, eventClassifier);
+
+        AbstractPetrinetReplayer<?, ?> replayEngine = new PetrinetReplayerWithoutILP();
+
+        IPNReplayParameter parameters = new CostBasedCompleteParam(costMOT, costMOS);
+        parameters.setInitialMarking(initialMarking);
+
+        if (finalMarking != null){
+            parameters.setFinalMarkings(finalMarking);
+        }
+
+        parameters.setGUIMode(false);
+        parameters.setCreateConn(false);
+        parameters.setNumThreads(3);
+        ((CostBasedCompleteParam) parameters).setMaxNumOfStates(5000);
+
+        PNRepResult result = null;
+        try {
+            result = replayEngine.replayLog(pluginContext, net, log, mapping, parameters);
+
+        } catch (AStarException e) {
+            e.printStackTrace();
+        }
+
+        return result;
+    }
+
+    public AlignmentPrecGenRes getConformance(XLog log, Petrinet net, PNRepResult alignment, Marking initialMarking, Marking finalMarking) throws Exception{
+        AlignmentPrecGen alignmentPrecGen = new AlignmentPrecGen();
+        TransEvClassMapping mapping = constructMapping(net, log, eventClassifier);
+        return alignmentPrecGen.measureConformanceAssumingCorrectAlignment(pluginContext, mapping, alignment,
+                net, initialMarking, false);
+    }
+
+    public double getPrecision(XLog log, Petrinet net, PNRepResult alignment, Marking initialMarking, Marking finalMarking) throws IllegalTransitionException, ConnectionCannotBeObtained {
+
+        AlignETCPlugin etcPlugin = new AlignETCPlugin();
+        TransEvClassMapping mapping = constructMapping(net, log, eventClassifier);
+        EvClassLogPetrinetConnection connection = new EvClassLogPetrinetConnection("", net, log, eventClassifier, mapping);
+        PNMatchInstancesRepResult pNMatchInstancesRepResult = toPNMatchInstancesRepResult(alignment);
+        AlignETCResult res = etcPlugin.checkAlignETCSilent(pluginContext, log,
+                net, initialMarking, finalMarking, connection, pNMatchInstancesRepResult, null, null);
+        return res.ap;
+    }
+
+    public void PrintResults(PNRepResult results){
+        for(String key : results.getInfo().keySet()) {
+            logger.info(String.format("Alignment checking: key= %s, value= %s", key, results.getInfo().get(key)));
+        }
+    }
+
+    public void PrintResults(AlignmentPrecGenRes conformance){
+        logger.info(String.format("Conformance checking, precision %f", conformance.getPrecision()));
+        logger.info(String.format("Conformance checking, generalization %f", conformance.getGeneralization()));
+    }
+
+    public static ProcessTree2Petrinet.PetrinetWithMarkings ConvertToPetrinet(ProcessTree processTree) throws Exception {
+        ProcessTree2Petrinet.PetrinetWithMarkings pn = ProcessTree2Petrinet.convert(processTree);
+        return pn;
+    }
+
     public void Export(Petrinet petrinet, String path) throws IOException {
         //fake export from prom plugin :)
         GraphVisualizerPlugin p = new GraphVisualizerPlugin();
-        DotPanel panel = (DotPanel)p.apply(_pluginContext, petrinet);
+        DotPanel panel = (DotPanel)p.apply(pluginContext, petrinet);
         Dot dot = panel.getDot();
         File file = new File(String.format("%s.png", path));
         validateDirectory(file);
 
-        new DotPNGExportPlugin().exportAsPNG(_pluginContext, dot, file);
+        new DotPNGExportPlugin().exportAsPNG(pluginContext, dot, file);
     }
 
     public void ExportPnml(Petrinet petrinet, String path) throws Exception {
         File file = new File(String.format("%s.pnml", path));
         validateDirectory(file);
-        new org.processmining.datapetrinets.io.DataPetriNetExporter().exportPetriNetToPNMLFile(_pluginContext,
+        new org.processmining.datapetrinets.io.DataPetriNetExporter().exportPetriNetToPNMLFile(pluginContext,
                 DataPetriNet.Factory.fromPetrinet(petrinet), file);
     }
+
+    //endregion
 }
