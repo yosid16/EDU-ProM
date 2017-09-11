@@ -1,9 +1,6 @@
 package org.eduprom.miners;
 
 
-import org.deckfour.xes.model.XLog;
-import org.processmining.log.algorithms.LowFrequencyFilterAlgorithm;
-import org.processmining.log.parameters.LowFrequencyFilterParameters;
 import org.processmining.plugins.InductiveMiner.mining.*;
 import org.processmining.plugins.InductiveMiner.plugins.IMPetriNet;
 import org.processmining.models.graphbased.directed.petrinet.impl.PetrinetImpl;
@@ -13,16 +10,16 @@ import static org.processmining.ptconversions.pn.ProcessTree2Petrinet.PetrinetWi
 
 public class InductiveMiner extends AbstractPetrinetMiner {
 
-	protected MiningParametersIM _parameters;
+	protected MiningParametersIM parameters;
 
 	public InductiveMiner(String filename) throws Exception {
 		super(filename);
-		_parameters = new MiningParametersIM();
+		this.parameters = new MiningParametersIM();
 	}
 
 	public InductiveMiner(String filename, MiningParametersIM parameters) throws Exception {
 		super(filename);
-		_parameters = parameters;
+		this.parameters = parameters;
 	}
 
 
@@ -30,7 +27,7 @@ public class InductiveMiner extends AbstractPetrinetMiner {
 	@Override
 	protected PetrinetWithMarkings minePetrinet() throws Exception {
 		logger.info("Started mining a petri nets using inductive miner");
-		Object[] res = IMPetriNet.minePetriNet(log, _parameters, getCanceller());
+		Object[] res = IMPetriNet.minePetriNet(log, parameters, getCanceller());
 		PetrinetWithMarkings pn = new PetrinetWithMarkings();
 		pn.petrinet = (PetrinetImpl)res[0];
 		pn.initialMarking = (Marking)res[1];

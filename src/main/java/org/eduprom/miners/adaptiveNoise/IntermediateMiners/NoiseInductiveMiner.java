@@ -31,7 +31,7 @@ public class NoiseInductiveMiner extends InductiveMiner implements IProcessTreeM
 		//org.processmining.plugins.log.logfilters.LogFilter.filter()
 
 		logger.info(String.format("Started mining a petri nets using inductive miner, noise: %f", getNoiseThreshold()));
-		processTree = IMProcessTree.mineProcessTree(filteredLog, _parameters, getCanceller());
+		processTree = IMProcessTree.mineProcessTree(filteredLog, parameters, getCanceller());
 		//petrinetWithMarkings = PetrinetHelper.ConvertToPetrinet(processTree);
 		return processTree;
 	}
@@ -86,7 +86,7 @@ public class NoiseInductiveMiner extends InductiveMiner implements IProcessTreeM
 	}
 
 	public float getNoiseThreshold() {
-		return _parameters.getNoiseThreshold();
+		return parameters.getNoiseThreshold();
 	}
 
 	@Override

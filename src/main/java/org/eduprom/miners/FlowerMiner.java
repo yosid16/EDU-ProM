@@ -5,9 +5,6 @@ import org.processmining.models.semantics.petrinet.Marking;
 
 import static org.processmining.ptconversions.pn.ProcessTree2Petrinet.PetrinetWithMarkings;
 
-/**
- * Created by ydahari on 22/10/2016.
- */
 public class FlowerMiner extends AbstractPetrinetMiner {
 
 	public FlowerMiner(String filename) throws Exception {

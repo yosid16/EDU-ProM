@@ -9,9 +9,6 @@ import org.processmining.plugins.heuristicsnet.miner.heuristics.miner.settings.H
 
 import static org.processmining.ptconversions.pn.ProcessTree2Petrinet.PetrinetWithMarkings;
 
-/**
- * Created by ydahari on 4/12/2017.
- */
 public class HeuristicMiner extends AbstractPetrinetMiner {
     public HeuristicMiner(String filename) throws Exception {
         super(filename);

@@ -14,21 +14,30 @@ import org.processmining.contexts.cli.CLIPluginContext;
 import org.processmining.framework.packages.PackageManager.Canceller;
 import org.deckfour.xes.model.XLog;
 
-/**
- * Created by ydahari on 22/10/2016.
+/***
+ * First layer of miner abstraction.
+ * Responsible for general mining tasks such as reading the event log etc.
  */
 public abstract class AbstractMiner implements IMiner {
 	
 	protected static final Logger logger = Logger.getLogger(AbstractMiner.class.getName());
 
+	//region private members
+
     private String name;
     private CLIContext promContext;
     private CLIPluginContext promPluginContext;
-    private Canceller canceller = ()-> false;
+
+    //endregion
+
+    //region protected members
 
     protected String filename;
     protected LogHelper logHelper;
     protected XLog log;
+    protected Canceller canceller = ()-> false;
+
+    //endregion
 
     //region constructors
 
@@ -71,8 +80,6 @@ public abstract class AbstractMiner implements IMiner {
         return name;
     }
 
-
-
     //endregion
 
     //region protected methods
@@ -88,6 +95,7 @@ public abstract class AbstractMiner implements IMiner {
     protected Canceller getCanceller(){
         return canceller;
     }
+
     protected void readLog() throws Exception{
         if (this.log == null){
             this.log = logHelper.Read(filename);
@@ -108,4 +116,3 @@ public abstract class AbstractMiner implements IMiner {
 
     //endregion
 }
-

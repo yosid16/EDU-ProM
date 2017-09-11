@@ -7,15 +7,22 @@ import org.processmining.pnanalysis.metrics.impl.PetriNetStructurednessMetric;
 
 import static org.processmining.ptconversions.pn.ProcessTree2Petrinet.PetrinetWithMarkings;
 
-/**
- * Created by ydahari on 4/15/2017.
+/***
+ * Abstraction layer specifically for petri-nets.
+ *
+ * Provides exporting capabilities as well as quality metrics.
+ *
+ * When deriving from this class, the major (if not only)
+ * missing piece is to map the log to a petri net.
  */
 public abstract class AbstractPetrinetMiner extends AbstractMiner {
 
     //region protected members
+
     protected PetrinetWithMarkings petrinetWithMarkings;
     protected PNRepResult alignment;
     protected PetrinetHelper petrinetHelper;
+
     //endregion
 
     //region constructors

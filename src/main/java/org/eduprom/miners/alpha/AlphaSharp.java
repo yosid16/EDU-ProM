@@ -2,9 +2,6 @@ package org.eduprom.miners.alpha;
 
 import org.processmining.alphaminer.parameters.AlphaVersion;
 
-/**
- * Created by ydahari on 4/12/2017.
- */
 public class AlphaSharp extends Alpha {
 
     public AlphaSharp(String filename) throws Exception {
@@ -12,7 +9,7 @@ public class AlphaSharp extends Alpha {
     }
 
     @Override
-    public AlphaVersion GetVersion(){
+    public AlphaVersion getVersion(){
         return AlphaVersion.SHARP;
     }
 }

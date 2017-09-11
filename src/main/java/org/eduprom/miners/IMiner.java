@@ -1,8 +1,5 @@
 package org.eduprom.miners;
 
-/**
- * Created by ydahari on 22/10/2016.
- */
 public interface IMiner {
     /***
      * Get the name of the miner
