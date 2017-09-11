@@ -2,6 +2,9 @@ package org.eduprom.miners.demo;
 
 
 import org.deckfour.xes.model.XLog;
+import org.eduprom.exceptions.ConformanceCheckException;
+import org.eduprom.exceptions.LogFileNotFoundException;
+import org.eduprom.exceptions.ParsingException;
 import org.eduprom.miners.InductiveMiner;
 import org.processmining.log.algorithms.LowFrequencyFilterAlgorithm;
 import org.processmining.log.parameters.LowFrequencyFilterParameters;
@@ -10,12 +13,12 @@ import org.processmining.ptconversions.pn.ProcessTree2Petrinet;
 
 public class InductiveVariationDemo extends InductiveMiner {
 
-    public InductiveVariationDemo(String filename) throws Exception {
+    public InductiveVariationDemo(String filename) throws LogFileNotFoundException {
         super(filename);
     }
 
     @Override
-    protected void readLog() throws Exception {
+    protected void readLog() throws ParsingException {
         XLog log = logHelper.Read(filename);
         LowFrequencyFilterParameters params = new LowFrequencyFilterParameters(log);
         params.setThreshold(20);
@@ -23,7 +26,7 @@ public class InductiveVariationDemo extends InductiveMiner {
     }
 
     @Override
-    public void evaluate() throws Exception {
+    public void evaluate() throws ConformanceCheckException {
         super.evaluate();
         ProcessTree2Petrinet.PetrinetWithMarkings res = getDiscoveredPetriNet();
 

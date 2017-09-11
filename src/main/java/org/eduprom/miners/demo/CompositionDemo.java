@@ -1,7 +1,9 @@
 package org.eduprom.miners.demo;
 
+import org.eduprom.exceptions.ConformanceCheckException;
+import org.eduprom.exceptions.LogFileNotFoundException;
+import org.eduprom.exceptions.MiningException;
 import org.eduprom.miners.AbstractPetrinetMiner;
-import org.eduprom.miners.HeuristicMiner;
 import org.eduprom.miners.InductiveMiner;
 import org.eduprom.miners.alpha.AlphaPlus;
 import org.processmining.plugins.petrinet.replayresult.PNRepResult;
@@ -9,12 +11,12 @@ import org.processmining.ptconversions.pn.ProcessTree2Petrinet.PetrinetWithMarki
 
 
 public class CompositionDemo extends AbstractPetrinetMiner {
-    public CompositionDemo(String filename) throws Exception {
+    public CompositionDemo(String filename) throws LogFileNotFoundException {
         super(filename);
     }
 
     @Override
-    protected PetrinetWithMarkings minePetrinet() throws Exception {
+    protected PetrinetWithMarkings minePetrinet() throws MiningException {
         InductiveMiner inductiveMiner = new InductiveMiner(filename);
         AlphaPlus alphaPlusMiner = new AlphaPlus(filename);
 
@@ -37,7 +39,7 @@ public class CompositionDemo extends AbstractPetrinetMiner {
         }
     }
 
-    public double myScore(PetrinetWithMarkings petrinet) throws Exception {
+    public double myScore(PetrinetWithMarkings petrinet) throws ConformanceCheckException {
         PNRepResult alignment = petrinetHelper.getAlignment(log, petrinet.petrinet, petrinet.initialMarking, petrinet.finalMarking);
         double fitness = Double.parseDouble(alignment.getInfo().get("Move-Model Fitness").toString());
         double precision = petrinetHelper.getPrecision(log, petrinet.petrinet, alignment, petrinet.initialMarking, petrinet.finalMarking);

@@ -2,7 +2,6 @@ package org.eduprom.tasks.demo;
 
 import org.eduprom.miners.IMiner;
 import org.eduprom.miners.demo.CompositionDemo;
-import org.eduprom.miners.demo.EnumeratePathsDemo;
 
 import java.io.FileInputStream;
 import java.util.logging.Level;

@@ -1,7 +1,6 @@
 package org.eduprom.tasks.demo;
 
 import org.eduprom.miners.IMiner;
-import org.eduprom.miners.InductiveMiner;
 import org.eduprom.miners.demo.InductiveVariationDemo;
 
 import java.io.FileInputStream;

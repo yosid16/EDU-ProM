@@ -1,5 +1,6 @@
 package org.eduprom.miners.alpha;
 
+import org.eduprom.exceptions.LogFileNotFoundException;
 import org.eduprom.miners.AbstractPetrinetMiner;
 import org.deckfour.xes.classification.XEventClass;
 import org.processmining.alphaminer.abstractions.AlphaClassicAbstraction;
@@ -19,12 +20,12 @@ import java.util.stream.Collectors;
 
 public class Alpha extends AbstractPetrinetMiner {
 
-    public Alpha(String filename) throws Exception {
+    public Alpha(String filename) throws LogFileNotFoundException {
         super(filename);
     }
 
     @Override
-    protected ProcessTree2Petrinet.PetrinetWithMarkings minePetrinet() throws Exception {
+    protected ProcessTree2Petrinet.PetrinetWithMarkings minePetrinet() {
         AlphaMinerParameters p = new AlphaMinerParameters();
         p.setVersion(getVersion());
         AlphaMiner<XEventClass, ? extends AlphaClassicAbstraction<XEventClass>, ? extends AlphaMinerParameters> alphaMiner

@@ -1,6 +1,5 @@
 package org.eduprom.tasks.demo;
 
-import org.eduprom.miners.EnumeratePaths;
 import org.eduprom.miners.IMiner;
 import org.eduprom.miners.InductiveMiner;
 

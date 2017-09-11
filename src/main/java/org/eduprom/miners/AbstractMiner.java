@@ -1,8 +1,10 @@
 package org.eduprom.miners;
 
 import org.apache.commons.io.FilenameUtils;
+import org.eduprom.exceptions.LogFileNotFoundException;
+import org.eduprom.exceptions.MiningException;
+import org.eduprom.exceptions.ParsingException;
 import org.eduprom.utils.LogHelper;
-import org.eduprom.utils.TraceHelper;
 import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -41,8 +43,7 @@ public abstract class AbstractMiner implements IMiner {
 
     //region constructors
 
-    public AbstractMiner(String filename) throws Exception
-    {
+    public AbstractMiner(String filename) throws LogFileNotFoundException {
         name = getClass().getSimpleName();
         this.filename = filename;
         logHelper = new LogHelper();
@@ -68,7 +69,7 @@ public abstract class AbstractMiner implements IMiner {
             mineSpecific();
             logger.info(String.format("Training the log file: %s using the algorithm: %s has completed successfully"
                     , filename, getName()));
-        } catch (Exception e) {
+        } catch (MiningException | ParsingException e) {
             String message = String.format("Training the log file: %s using the algorithm: %s has failed"
                     , filename, getName());
             logger.log(Level.SEVERE, message, e);
@@ -96,13 +97,13 @@ public abstract class AbstractMiner implements IMiner {
         return canceller;
     }
 
-    protected void readLog() throws Exception{
+    protected void readLog() throws ParsingException {
         if (this.log == null){
             this.log = logHelper.Read(filename);
         }
     }
 
-    protected abstract void mineSpecific() throws Exception;
+    protected abstract void mineSpecific() throws MiningException;
 
     protected String getOutputPath(){
         return String.format("./Output/%s_%s" ,

@@ -1,6 +1,7 @@
 package org.eduprom.utils;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -15,6 +16,8 @@ import org.eduprom.entities.Trace;
 import org.apache.commons.io.FilenameUtils;
 import org.deckfour.xes.in.XUniversalParser;
 import org.deckfour.xes.model.XLog;
+import org.eduprom.exceptions.LogFileNotFoundException;
+import org.eduprom.exceptions.ParsingException;
 import org.processmining.log.csv.CSVFileReferenceOpenCSVImpl;
 import org.processmining.log.csv.config.CSVConfig;
 import org.processmining.log.csvimport.CSVConversion.ConversionResult;
@@ -32,11 +35,11 @@ public class LogHelper {
 	 * @return indication if the file exists
 	 * @throws Exception 
 	 */
-	public void CheckFile(String filename) throws Exception{
+	public void CheckFile(String filename) throws LogFileNotFoundException {
 		
 		Path path = Paths.get(filename);
 		if (Files.notExists(path)) {
-			throw new Exception("File does not exists");
+			throw new LogFileNotFoundException(String.format("File does not exists, path: %s", path));
 		}
 				
 		//File file = new File(filename);
@@ -52,22 +55,25 @@ public class LogHelper {
 	 * Loads a csv file to an in-memory object compatible with ProM algorithms
 	 * @param filename A valid full/relative path to a file
 	 * @return In-memory object compatible with ProM algorithms
-	 * @throws CSVConversionConfigException In cases where configuration is not valid
-	 * @throws CSVConversionException In cases where conversion failed
+	 * @throws ParsingException In case that the log file cannot be parsed
 	 */
-    public XLog ReadCsv(String filename) throws CSVConversionConfigException, CSVConversionException
-    {
-		Path path = Paths.get(filename);
-		CSVFileReferenceOpenCSVImpl csvFile = new org.processmining.log.csv.CSVFileReferenceOpenCSVImpl(path);
-		CSVConfig cf = new CSVConfig();
-		CSVConversionConfig config = new CSVConversionConfig(csvFile, cf);
-		config.autoDetect();
-		ConversionResult<XLog> cr = new org.processmining.log.csvimport.CSVConversion().doConvertCSVToXES(csvFile, cf, config);
-		if (cr.hasConversionErrors()){
-			throw new CSVConversionException("Conversion failed: {0}".format(cr.getConversionErrors()));
+    public XLog ReadCsv(String filename) throws ParsingException {
+    	try{
+			Path path = Paths.get(filename);
+			CSVFileReferenceOpenCSVImpl csvFile = new org.processmining.log.csv.CSVFileReferenceOpenCSVImpl(path);
+			CSVConfig cf = new CSVConfig();
+			CSVConversionConfig config = new CSVConversionConfig(csvFile, cf);
+			config.autoDetect();
+			ConversionResult<XLog> cr = new org.processmining.log.csvimport.CSVConversion().doConvertCSVToXES(csvFile, cf, config);
+			if (cr.hasConversionErrors()){
+				throw new CSVConversionException("Conversion failed: {0}".format(cr.getConversionErrors()));
+			}
+
+			return cr.getResult();
 		}
-		
-		return cr.getResult();
+		catch (Exception ex){
+    		throw new ParsingException(ex);
+		}
     }
     
     /**
@@ -77,18 +83,24 @@ public class LogHelper {
      * @return In-memory object compatible with ProM algorithms
      * @throws Exception In cases where parsing failed
      */
-    public XLog ReadXes(String filename) throws Exception
-    {
+    public XLog ReadXes(String filename) throws ParsingException {
     	XUniversalParser uParser = new org.deckfour.xes.in.XUniversalParser();
     	File file = new File(filename);
     	if (!uParser.canParse(file))
     	{
-    		throw new Exception("the given file could not be parsed");
+    		throw new ParsingException("the given file could not be parsed");
     	}
-    	Collection<XLog> logs = uParser.parse(file);
-    	
+
+		Collection<XLog> logs;
+    	try{
+			logs = uParser.parse(file);
+		}
+		catch (Exception ex){
+    		throw new ParsingException(ex);
+		}
+
     	if (logs.size() > 1){
-    		throw new Exception("the xes format contains multiple logs");
+    		throw new ParsingException("the xes format contains multiple logs");
     	}
     	
     	return logs.iterator().next();
@@ -101,8 +113,7 @@ public class LogHelper {
      * @return In-memory object compatible with ProM algorithms
      * @throws Exception In cases where parsing failed
      */
-    public XLog Read(String filename) throws Exception
-    {
+    public XLog Read(String filename) throws ParsingException {
     	String extention = FilenameUtils.getExtension(filename);    	
     	
     	if (extention.equalsIgnoreCase("csv")){
@@ -112,7 +123,7 @@ public class LogHelper {
     		return ReadXes(filename);
     	
     	} else {
-    		throw new Exception("the given file extention isn't supported");
+    		throw new ParsingException("the given file extention isn't supported");
     	}
     }
 

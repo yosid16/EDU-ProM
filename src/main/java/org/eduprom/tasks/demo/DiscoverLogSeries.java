@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 public class DiscoverLogSeries {
 	
 	private static final LogManager logManager = LogManager.getLogManager();
-	final static Logger logger = Logger.getLogger(DiscoverLogSeries.class.getName());
+	private static final Logger logger = Logger.getLogger(DiscoverLogSeries.class.getName());
 	
     public static void main(String[] args) throws Exception {
 
@@ -36,7 +36,7 @@ public class DiscoverLogSeries {
 			}
 
         } catch (Exception ex) {
-        	logger.log(Level.SEVERE, "exception when trying to train/evaluate the miner", ex);;
+        	logger.log(Level.SEVERE, "exception when trying to train/evaluate the miner", ex);
         }
         
         logger.info("ended application");

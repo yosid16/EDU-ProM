@@ -2,7 +2,9 @@ package org.eduprom.miners;
 
 import org.deckfour.xes.model.XEvent;
 import org.deckfour.xes.model.XTrace;
-import org.eduprom.entities.Trace;
+import org.eduprom.exceptions.LogFileNotFoundException;
+import org.eduprom.exceptions.MiningException;
+import org.eduprom.utils.PetrinetHelper;
 import org.processmining.processtree.ProcessTree;
 import org.processmining.processtree.impl.AbstractBlock;
 import org.processmining.processtree.impl.AbstractTask;
@@ -23,12 +25,12 @@ public class EnumeratePaths extends AbstractPetrinetMiner {
         return activities;
     }
 
-    public EnumeratePaths(String filename) throws Exception {
+    public EnumeratePaths(String filename) throws LogFileNotFoundException {
 		super(filename);
 	}
 
     @Override
-    protected PetrinetWithMarkings minePetrinet() throws Exception {
+    protected PetrinetWithMarkings minePetrinet() throws MiningException {
         ProcessTree pt = new ProcessTreeImpl();
         AbstractBlock.Xor root = new AbstractBlock.Xor("root");
         pt.addNode(root);
@@ -46,9 +48,6 @@ public class EnumeratePaths extends AbstractPetrinetMiner {
             }
         }
 
-        PetrinetWithMarkings petrinetWithMarkings =  petrinetHelper.ConvertToPetrinet(pt);
-        return petrinetWithMarkings;
+        return  PetrinetHelper.ConvertToPetrinet(pt);
     }
-
-
 }

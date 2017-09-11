@@ -1,6 +1,8 @@
 package org.eduprom.miners;
 
 
+import org.eduprom.exceptions.LogFileNotFoundException;
+import org.eduprom.exceptions.MiningException;
 import org.processmining.plugins.InductiveMiner.mining.*;
 import org.processmining.plugins.InductiveMiner.plugins.IMPetriNet;
 import org.processmining.models.graphbased.directed.petrinet.impl.PetrinetImpl;
@@ -12,12 +14,12 @@ public class InductiveMiner extends AbstractPetrinetMiner {
 
 	protected MiningParametersIM parameters;
 
-	public InductiveMiner(String filename) throws Exception {
+	public InductiveMiner(String filename) throws LogFileNotFoundException {
 		super(filename);
 		this.parameters = new MiningParametersIM();
 	}
 
-	public InductiveMiner(String filename, MiningParametersIM parameters) throws Exception {
+	public InductiveMiner(String filename, MiningParametersIM parameters) throws LogFileNotFoundException {
 		super(filename);
 		this.parameters = parameters;
 	}
@@ -25,7 +27,7 @@ public class InductiveMiner extends AbstractPetrinetMiner {
 
 
 	@Override
-	protected PetrinetWithMarkings minePetrinet() throws Exception {
+	protected PetrinetWithMarkings minePetrinet() throws MiningException {
 		logger.info("Started mining a petri nets using inductive miner");
 		Object[] res = IMPetriNet.minePetriNet(log, parameters, getCanceller());
 		PetrinetWithMarkings pn = new PetrinetWithMarkings();

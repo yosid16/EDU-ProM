@@ -4,12 +4,18 @@ import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
 import com.google.common.base.Stopwatch;
 import org.deckfour.xes.model.XLog;
+import org.eduprom.exceptions.ExportFailedException;
+import org.eduprom.exceptions.MiningException;
+import org.eduprom.exceptions.ParsingException;
+import org.eduprom.exceptions.ProcessTreeConversionException;
 import org.eduprom.miners.AbstractPetrinetMiner;
 import org.eduprom.miners.adaptiveNoise.IntermediateMiners.NoiseInductiveMiner;
 import org.eduprom.partitioning.ILogSplitter;
 import org.eduprom.partitioning.InductiveLogSplitting;
 import org.eduprom.partitioning.Partitioning;
 import org.eduprom.utils.LogHelper;
+import org.processmining.framework.connections.ConnectionCannotBeObtained;
+import org.processmining.models.semantics.IllegalTransitionException;
 import org.processmining.plugins.petrinet.replayresult.PNRepResult;
 import org.processmining.processtree.Block;
 import org.processmining.processtree.Edge;
@@ -20,6 +26,7 @@ import org.processmining.ptconversions.pn.ProcessTree2Petrinet;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.util.*;
@@ -47,16 +54,21 @@ public class RecursiveScan extends AbstractPetrinetMiner {
     }
 
     @Override
-    protected ProcessTree2Petrinet.PetrinetWithMarkings minePetrinet() throws Exception {
+    protected ProcessTree2Petrinet.PetrinetWithMarkings minePetrinet() throws MiningException {
         Stopwatch stopwatch = Stopwatch.createStarted();
         ILogSplitter logSplitter = new InductiveLogSplitting();
         LogHelper helper = new LogHelper();
-        XLog log = helper.Read(filename);
+        XLog log = null;
+        try {
+            log = helper.Read(filename);
+        } catch (ParsingException e) {
+            throw new MiningException(e);
+        }
         org.eduprom.partitioning.Partitioning pratitioning = logSplitter.split(log);
         logger.info(pratitioning.toString());
 
-        List<NoiseInductiveMiner> miners = NoiseInductiveMiner.WithNoiseThresholds(filename, this.noiseThresholds)
-                .stream().map(x->(NoiseInductiveMiner)x).collect(Collectors.toList());
+        List<NoiseInductiveMiner> miners = miners = NoiseInductiveMiner.WithNoiseThresholds(filename, this.noiseThresholds)
+                    .stream().map(x->(NoiseInductiveMiner)x).collect(Collectors.toList());
         List<TreeChanges> changes = TraverseChildren(miners, new TreeChanges(pratitioning), pratitioning.getProcessTree().getRoot());
 
         double bestPsi = 0;
@@ -73,7 +85,12 @@ public class RecursiveScan extends AbstractPetrinetMiner {
             }
         }
         TreeChanges baseline = changes.stream().filter(x->x.isBaseline()).findAny().get();
-        ProcessTree2Petrinet.PetrinetWithMarkings res = petrinetHelper.ConvertToPetrinet(bestModel.modifiedProcessTree);
+        ProcessTree2Petrinet.PetrinetWithMarkings res = null;
+        try {
+            res = petrinetHelper.ConvertToPetrinet(bestModel.modifiedProcessTree);
+        } catch (ProcessTreeConversionException e) {
+            throw new MiningException(e);
+        }
 
         logger.info("BASELINE MODEL: " + baseline.toString());
         logger.info("BEST MODEL: " + bestModel.toString());
@@ -85,15 +102,23 @@ public class RecursiveScan extends AbstractPetrinetMiner {
         this.elapsedSeconds = stopwatch.elapsed(TimeUnit.SECONDS);
         this.optionsScanned = changes.size();
 
-        this.petrinetWithMarkings = petrinetHelper.ConvertToPetrinet(bestModel.modifiedProcessTree);
+        try {
+            this.petrinetWithMarkings = petrinetHelper.ConvertToPetrinet(bestModel.modifiedProcessTree);
+        } catch (ProcessTreeConversionException e) {
+            throw new MiningException(e);
+        }
 
-        export();
+        try {
+            export();
+        } catch (ExportFailedException e) {
+            throw new MiningException(e);
+        }
 
 
         return res;
     }
 
-    private List<TreeChanges> TraverseChildren(List<NoiseInductiveMiner> miners, TreeChanges changes, Node node) throws Exception {
+    private List<TreeChanges> TraverseChildren(List<NoiseInductiveMiner> miners, TreeChanges changes, Node node) throws MiningException {
         ArrayList<TreeChanges> allChanges = new ArrayList<>();
         for(NoiseInductiveMiner miner : miners){
             TreeChanges newSln = changes.ToTreeChanges();
@@ -129,7 +154,7 @@ public class RecursiveScan extends AbstractPetrinetMiner {
             id = UUID.randomUUID();
         }
 
-        public boolean Add(Node node, NoiseInductiveMiner inductiveMiner) throws Exception {
+        public boolean Add(Node node, NoiseInductiveMiner inductiveMiner) {
             if (pratitioning.getLogs().containsKey(node)){
                 changes.put(node, inductiveMiner);
                 ProcessTree pt = inductiveMiner.mineProcessTree(pratitioning.getLogs().get(node));
@@ -166,12 +191,16 @@ public class RecursiveScan extends AbstractPetrinetMiner {
             }
         }
 
-        public TreeChanges ToTreeChanges() throws Exception {
+        public TreeChanges ToTreeChanges() throws MiningException {
             TreeChanges treeChanges = new TreeChanges(pratitioning);
             treeChanges.modifiedProcessTree = modifiedProcessTree.toTree();
 
             for(Map.Entry<Node, NoiseInductiveMiner> entry : this.changes.entrySet()){
-                treeChanges.Add(entry.getKey(), entry.getValue());
+                try {
+                    treeChanges.Add(entry.getKey(), entry.getValue());
+                } catch (Exception e) {
+                    throw new MiningException("Failed to clone tree changes");
+                }
             }
 
             return treeChanges;
@@ -204,40 +233,49 @@ public class RecursiveScan extends AbstractPetrinetMiner {
     }
 
     @Override
-    public void export() throws Exception {
+    public void export() throws ExportFailedException {
         super.export();
-        String path = String.format("./Output/RecursiveScan.csv", getOutputPath());
-        boolean appendSchema = true;
+        try{
+            String path = String.format("./Output/RecursiveScan.csv", getOutputPath());
+            boolean appendSchema = true;
             if (new File(path).isFile()){
-            FileReader fileReader = new FileReader(path);
-            CSVReader reader = new CSVReader(fileReader);
+                FileReader fileReader = new FileReader(path);
+                CSVReader reader = new CSVReader(fileReader);
 
-            if (reader.readAll().size() > 0){
-                appendSchema = false;
+                if (reader.readAll().size() > 0){
+                    appendSchema = false;
+                }
+                fileReader.close();
+                reader.close();
             }
-            fileReader.close();
-            reader.close();
+
+            CSVWriter csvWriter = new CSVWriter(new FileWriter(path, true));
+            String[] schema = new String[] { "filename", "duration", "options_scanned", "noise_thresholds",
+                    "best_psi", "best_fitness", "best_precision", "best_sublogs_changed",
+                    "baseline_psi", "baseline_fitness", "baseline_precision" };
+
+            String[] data = new String[] {filename, String.valueOf(elapsedSeconds), String.valueOf(optionsScanned), StringUtils.join(this.noiseThresholds, ',') ,
+                    String.valueOf(bestModel.psi), String.valueOf(bestModel.fitness), String.valueOf(bestModel.precision), String.valueOf(bestModel.changes.size()),
+                    String.valueOf(baseline.psi), String.valueOf(baseline.fitness), String.valueOf(baseline.precision) };
+
+            if (appendSchema){
+                csvWriter.writeNext(schema);
+            }
+            csvWriter.writeNext(data);
+            csvWriter.close();
         }
-
-
-        CSVWriter csvWriter = new CSVWriter(new FileWriter(path, true));
-        String[] schema = new String[] { "filename", "duration", "options_scanned", "noise_thresholds",
-                "best_psi", "best_fitness", "best_precision", "best_sublogs_changed",
-                "baseline_psi", "baseline_fitness", "baseline_precision" };
-
-        String[] data = new String[] {filename, String.valueOf(elapsedSeconds), String.valueOf(optionsScanned), StringUtils.join(this.noiseThresholds, ',') ,
-                String.valueOf(bestModel.psi), String.valueOf(bestModel.fitness), String.valueOf(bestModel.precision), String.valueOf(bestModel.changes.size()),
-                String.valueOf(baseline.psi), String.valueOf(baseline.fitness), String.valueOf(baseline.precision) };
-
-        if (appendSchema){
-            csvWriter.writeNext(schema);
+        catch (Exception e){
+            throw new ExportFailedException(e);
         }
-        csvWriter.writeNext(data);
-        csvWriter.close();
     }
 
-    public void ModifyPsi(TreeChanges changes, XLog log, double precisionWeight, double fitnessWeight) throws Exception {
-        ProcessTree2Petrinet.PetrinetWithMarkings res = petrinetHelper.ConvertToPetrinet(changes.modifiedProcessTree);
+    public void ModifyPsi(TreeChanges changes, XLog log, double precisionWeight, double fitnessWeight) throws MiningException {
+        ProcessTree2Petrinet.PetrinetWithMarkings res = null;
+        try {
+            res = petrinetHelper.ConvertToPetrinet(changes.modifiedProcessTree);
+        } catch (ProcessTreeConversionException e) {
+            throw new MiningException(e);
+        }
 
         //String path = String.format("./Output/%s_%s_%s" , getName(),
         //        FilenameUtils.removeExtension(Paths.get(filename).getFileName().toString()), changes.id.toString());
@@ -247,7 +285,8 @@ public class RecursiveScan extends AbstractPetrinetMiner {
         double fitness = Double.parseDouble(alignment.getInfo().get("Move-Model Fitness").toString());
         changes.fitness = fitness;
 
-        double precision = petrinetHelper.getPrecision(log, res.petrinet, alignment, res.initialMarking, res.finalMarking);
+        double precision = 0;
+        precision = petrinetHelper.getPrecision(log, res.petrinet, alignment, res.initialMarking, res.finalMarking);
         changes.precision = precision;
 
         changes.psi = precisionWeight * fitness + fitnessWeight * precision;

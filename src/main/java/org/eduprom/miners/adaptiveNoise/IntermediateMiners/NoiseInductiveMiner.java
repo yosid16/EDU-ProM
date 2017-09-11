@@ -1,6 +1,9 @@
 package org.eduprom.miners.adaptiveNoise.IntermediateMiners;
 
 import org.deckfour.xes.model.XLog;
+import org.eduprom.exceptions.ConformanceCheckException;
+import org.eduprom.exceptions.LogFileNotFoundException;
+import org.eduprom.exceptions.ParsingException;
 import org.eduprom.miners.IProcessTreeMiner;
 import org.eduprom.miners.InductiveMiner;
 import org.processmining.log.algorithms.LowFrequencyFilterAlgorithm;
@@ -9,6 +12,7 @@ import org.processmining.plugins.InductiveMiner.mining.MiningParametersIM;
 import org.processmining.plugins.InductiveMiner.plugins.IMProcessTree;
 import org.processmining.processtree.ProcessTree;
 
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,12 +23,12 @@ public class NoiseInductiveMiner extends InductiveMiner implements IProcessTreeM
 	protected ProcessTree processTree;
 
 
-	public NoiseInductiveMiner(String filename, MiningParametersIM parameters) throws Exception {
+	public NoiseInductiveMiner(String filename, MiningParametersIM parameters) throws LogFileNotFoundException {
 		super(filename, parameters);
 	}
 
 	@Override
-	public ProcessTree mineProcessTree(XLog log) throws Exception {
+	public ProcessTree mineProcessTree(XLog log) {
 		LowFrequencyFilterParameters params = new LowFrequencyFilterParameters(log);
 		params.setThreshold(Math.round(getNoiseThreshold()));
 		XLog filteredLog = (new LowFrequencyFilterAlgorithm()).apply(getPromPluginContext(), log, params);
@@ -36,14 +40,14 @@ public class NoiseInductiveMiner extends InductiveMiner implements IProcessTreeM
 		return processTree;
 	}
 
-	public static NoiseInductiveMiner WithNoiseThreshold(String filename, float noiseThreshold) throws Exception {
+	public static NoiseInductiveMiner WithNoiseThreshold(String filename, float noiseThreshold) throws LogFileNotFoundException {
 		MiningParametersIM parametersIM = new MiningParametersIM();
 		parametersIM.setNoiseThreshold(noiseThreshold);
 		//parametersIM.setRepairLifeCycle(true);
 		return new NoiseInductiveMiner(filename, parametersIM);
 	}
 
-	public static List<NoiseInductiveMiner> WithNoiseThresholds(String filename, float... noiseThreshold) throws Exception {
+	public static List<NoiseInductiveMiner> WithNoiseThresholds(String filename, float... noiseThreshold) throws LogFileNotFoundException {
 		ArrayList<NoiseInductiveMiner> miners = new ArrayList<>();
 		for (float threshold: noiseThreshold){
 			miners.add(WithNoiseThreshold(filename, threshold));
@@ -52,7 +56,7 @@ public class NoiseInductiveMiner extends InductiveMiner implements IProcessTreeM
 	}
 
 	@Override
-	public void evaluate() throws Exception {
+	public void evaluate() throws ConformanceCheckException {
 		logger.info("Checking alignment");
 		alignment = petrinetHelper.getAlignment(log, petrinetWithMarkings.petrinet, petrinetWithMarkings.initialMarking, petrinetWithMarkings.finalMarking);
 		petrinetHelper.PrintResults(alignment);
@@ -90,7 +94,7 @@ public class NoiseInductiveMiner extends InductiveMiner implements IProcessTreeM
 	}
 
 	@Override
-	protected void readLog() throws Exception {
+	protected void readLog() throws ParsingException {
 		XLog log = logHelper.Read(filename);
 		LowFrequencyFilterParameters params = new LowFrequencyFilterParameters(log);
 		params.setThreshold(20);

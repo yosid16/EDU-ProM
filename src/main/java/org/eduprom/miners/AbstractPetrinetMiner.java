@@ -1,9 +1,14 @@
 package org.eduprom.miners;
 
+import org.eduprom.exceptions.ConformanceCheckException;
+import org.eduprom.exceptions.ExportFailedException;
+import org.eduprom.exceptions.LogFileNotFoundException;
+import org.eduprom.exceptions.MiningException;
 import org.eduprom.utils.PetrinetHelper;
 import org.processmining.plugins.petrinet.replayresult.PNRepResult;
 import org.processmining.plugins.pnalignanalysis.conformance.AlignmentPrecGenRes;
 import org.processmining.pnanalysis.metrics.impl.PetriNetStructurednessMetric;
+
 
 import static org.processmining.ptconversions.pn.ProcessTree2Petrinet.PetrinetWithMarkings;
 
@@ -27,7 +32,7 @@ public abstract class AbstractPetrinetMiner extends AbstractMiner {
 
     //region constructors
 
-    public AbstractPetrinetMiner(String filename) throws Exception {
+    public AbstractPetrinetMiner(String filename) throws LogFileNotFoundException {
         super(filename);
         petrinetHelper = new PetrinetHelper(getPromPluginContext(), getClassifier());
     }
@@ -37,23 +42,23 @@ public abstract class AbstractPetrinetMiner extends AbstractMiner {
     //region protected methods
 
     @Override
-    protected void mineSpecific() throws Exception {
+    protected void mineSpecific() throws MiningException {
         petrinetWithMarkings = minePetrinet();
     }
 
-    protected abstract PetrinetWithMarkings minePetrinet() throws Exception;
+    protected abstract PetrinetWithMarkings minePetrinet() throws MiningException;
 
     //endregion
 
     //region public methods
 
-    public void export() throws Exception {
+    public void export() throws ExportFailedException {
         petrinetHelper.Export(petrinetWithMarkings.petrinet, getOutputPath());
         petrinetHelper.ExportPnml(petrinetWithMarkings.petrinet, getOutputPath());
     }
 
     @Override
-    public void evaluate() throws Exception {
+    public void evaluate() throws ConformanceCheckException {
         logger.info("Checking conformance");
         alignment = petrinetHelper.getAlignment(log, petrinetWithMarkings.petrinet, petrinetWithMarkings.initialMarking, petrinetWithMarkings.finalMarking);
         petrinetHelper.PrintResults(alignment);
