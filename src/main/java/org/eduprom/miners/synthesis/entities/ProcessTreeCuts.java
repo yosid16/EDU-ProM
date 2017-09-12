@@ -7,9 +7,6 @@ import org.processmining.processtree.impl.ProcessTreeImpl;
 import java.util.HashMap;
 import java.util.UUID;
 
-/**
- * Created by ydahari on 4/13/2017.
- */
 public class ProcessTreeCuts
 {
     public ProcessTree processTree;

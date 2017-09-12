@@ -19,7 +19,7 @@ public class InductiveVariationDemo extends InductiveMiner {
 
     @Override
     protected void readLog() throws ParsingException {
-        XLog log = logHelper.Read(filename);
+        XLog log = logHelper.read(filename);
         LowFrequencyFilterParameters params = new LowFrequencyFilterParameters(log);
         params.setThreshold(20);
         this.log = (new LowFrequencyFilterAlgorithm()).apply(getPromPluginContext(), log, params);

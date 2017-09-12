@@ -1,7 +1,6 @@
 package org.eduprom.utils;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -22,32 +21,24 @@ import org.processmining.log.csv.CSVFileReferenceOpenCSVImpl;
 import org.processmining.log.csv.config.CSVConfig;
 import org.processmining.log.csvimport.CSVConversion.ConversionResult;
 import org.processmining.log.csvimport.config.CSVConversionConfig;
-import org.processmining.log.csvimport.exception.CSVConversionConfigException;
 import org.processmining.log.csvimport.exception.CSVConversionException;
 
 
 public class LogHelper {
-	
-	final static Logger logger = Logger.getLogger(LogHelper.class.getName());
+
+	private static final Logger logger = Logger.getLogger(LogHelper.class.getName());
 	/**
 	 * 
 	 * @param filename A valid full/relative path to a file
 	 * @return indication if the file exists
-	 * @throws Exception 
+	 * @throws LogFileNotFoundException in case the log file cannot be found in the path specified
 	 */
-	public void CheckFile(String filename) throws LogFileNotFoundException {
+	public void checkFile(String filename) throws LogFileNotFoundException {
 		
 		Path path = Paths.get(filename);
 		if (Files.notExists(path)) {
 			throw new LogFileNotFoundException(String.format("File does not exists, path: %s", path));
 		}
-				
-		//File file = new File(filename);
-		//if (!file.isDirectory())
-		//   file = file.getParentFile();
-		//if (!file.exists()){
-		//    throw new Exception("File doe not exists");
-		//}
 	}
 	
 	
@@ -57,7 +48,7 @@ public class LogHelper {
 	 * @return In-memory object compatible with ProM algorithms
 	 * @throws ParsingException In case that the log file cannot be parsed
 	 */
-    public XLog ReadCsv(String filename) throws ParsingException {
+    public XLog readCsv(String filename) throws ParsingException {
     	try{
 			Path path = Paths.get(filename);
 			CSVFileReferenceOpenCSVImpl csvFile = new org.processmining.log.csv.CSVFileReferenceOpenCSVImpl(path);
@@ -66,7 +57,7 @@ public class LogHelper {
 			config.autoDetect();
 			ConversionResult<XLog> cr = new org.processmining.log.csvimport.CSVConversion().doConvertCSVToXES(csvFile, cf, config);
 			if (cr.hasConversionErrors()){
-				throw new CSVConversionException("Conversion failed: {0}".format(cr.getConversionErrors()));
+				throw new CSVConversionException(String.format("Conversion failed: %s", cr.getConversionErrors()));
 			}
 
 			return cr.getResult();
@@ -83,7 +74,7 @@ public class LogHelper {
      * @return In-memory object compatible with ProM algorithms
      * @throws Exception In cases where parsing failed
      */
-    public XLog ReadXes(String filename) throws ParsingException {
+    public XLog readXes(String filename) throws ParsingException {
     	XUniversalParser uParser = new org.deckfour.xes.in.XUniversalParser();
     	File file = new File(filename);
     	if (!uParser.canParse(file))
@@ -113,14 +104,14 @@ public class LogHelper {
      * @return In-memory object compatible with ProM algorithms
      * @throws Exception In cases where parsing failed
      */
-    public XLog Read(String filename) throws ParsingException {
+    public XLog read(String filename) throws ParsingException {
     	String extention = FilenameUtils.getExtension(filename);    	
     	
     	if (extention.equalsIgnoreCase("csv")){
-    		return ReadCsv(filename);    		
+    		return readCsv(filename);
     	}    	
     	else if (extention.equalsIgnoreCase("xes")){
-    		return ReadXes(filename);
+    		return readXes(filename);
     	
     	} else {
     		throw new ParsingException("the given file extention isn't supported");
@@ -132,18 +123,18 @@ public class LogHelper {
 			try {
 				return new Trace(x).FullTrace;
 			} catch (Exception e) {
-				e.printStackTrace();
+				logger.log(Level.SEVERE, "Failure to read trace", e);
 				return null;
 			}
 		}).filter(x->x != null).collect (Collectors.joining (","));
 	}
 
-	public void PrintLog(Level level, XLog log){
+	public void printLog(Level level, XLog log){
 		String s = toString(log);
 		logger.log(level, String.format("Log: %s", s));
 	}
 
-	public void PrintLogGrouped(Level level, XLog log){
+	public void printLogGrouped(Level level, XLog log){
 
 		Map<String, Long> s =
 				log.stream().map(x -> {

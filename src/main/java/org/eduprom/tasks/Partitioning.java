@@ -27,7 +27,7 @@ public class Partitioning {
 
 			ILogSplitter logSplitter = new InductiveLogSplitting();
 			LogHelper helper = new LogHelper();
-			XLog log = helper.Read(filename);
+			XLog log = helper.read(filename);
 			org.eduprom.partitioning.Partitioning pratitioning = logSplitter.split(log);
 			logger.info(pratitioning.toString());
 

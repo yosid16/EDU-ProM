@@ -7,7 +7,7 @@ import org.eduprom.entities.Trace;
 
 public class TraceHelper  {
 		
-	public Map<Trace, Integer> traces;
+	private Map<Trace, Integer> traces;
 	
 	public TraceHelper(){
 		traces = new HashMap<>();

@@ -1,6 +1,6 @@
 package org.eduprom.exceptions;
 
-public class ExportFailedException extends Exception {
+public class ExportFailedException extends MiningException {
 
     public ExportFailedException(String message){
         super(message);

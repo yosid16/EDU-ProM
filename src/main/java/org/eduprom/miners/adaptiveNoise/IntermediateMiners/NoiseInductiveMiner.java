@@ -11,8 +11,8 @@ import org.processmining.log.parameters.LowFrequencyFilterParameters;
 import org.processmining.plugins.InductiveMiner.mining.MiningParametersIM;
 import org.processmining.plugins.InductiveMiner.plugins.IMProcessTree;
 import org.processmining.processtree.ProcessTree;
+import org.processmining.ptconversions.pn.ProcessTree2Petrinet;
 
-import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -58,8 +58,9 @@ public class NoiseInductiveMiner extends InductiveMiner implements IProcessTreeM
 	@Override
 	public void evaluate() throws ConformanceCheckException {
 		logger.info("Checking alignment");
+		ProcessTree2Petrinet.PetrinetWithMarkings petrinetWithMarkings = this.getDiscoveredPetriNet();
 		alignment = petrinetHelper.getAlignment(log, petrinetWithMarkings.petrinet, petrinetWithMarkings.initialMarking, petrinetWithMarkings.finalMarking);
-		petrinetHelper.PrintResults(alignment);
+		petrinetHelper.printResults(alignment);
 
 		this.fitness = Double.parseDouble(alignment.getInfo().get("Move-Model Fitness").toString());
 
@@ -69,7 +70,7 @@ public class NoiseInductiveMiner extends InductiveMiner implements IProcessTreeM
 		logger.info(String.format("Precision: %S", precision));
 
 		//AlignmentPrecGenRes conformance = petrinetHelper.getConformance(log, petrinetWithMarkings.petrinet, alignment, petrinetWithMarkings.initialMarking, petrinetWithMarkings.finalMarking);
-		//petrinetHelper.PrintResults(conformance);
+		//petrinetHelper.printResults(conformance);
 
 		//logger.info("Checking Structuredness");
 		//double v = new PetriNetStructurednessMetric().compute(promPluginContext, petrinetWithMarkings.petrinet, petrinetWithMarkings.finalMarking);
@@ -95,7 +96,7 @@ public class NoiseInductiveMiner extends InductiveMiner implements IProcessTreeM
 
 	@Override
 	protected void readLog() throws ParsingException {
-		XLog log = logHelper.Read(filename);
+		XLog log = logHelper.read(filename);
 		LowFrequencyFilterParameters params = new LowFrequencyFilterParameters(log);
 		params.setThreshold(20);
 		this.log = (new LowFrequencyFilterAlgorithm()).apply(getPromPluginContext(), log, params);

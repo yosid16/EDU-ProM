@@ -1,8 +1,8 @@
-package org.eduprom.tasks;
+package org.eduprom.tasks.demo;
 
 import org.eduprom.miners.IMiner;
 import org.eduprom.miners.InductiveMiner;
-import org.eduprom.miners.adaptiveNoise.RecursiveScan;
+import org.eduprom.miners.demo.CompositionDemo;
 
 import java.io.FileInputStream;
 import java.util.Arrays;
@@ -13,10 +13,10 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 
-public class LogSeries {
+public class DiscoverLogSeriesComposition {
 	
 	private static final LogManager logManager = LogManager.getLogManager();
-	private static final Logger logger = Logger.getLogger(LogSeries.class.getName());
+	private static final Logger logger = Logger.getLogger(DiscoverLogSeriesComposition.class.getName());
 	
     public static void main(String[] args) throws Exception {
 
@@ -31,10 +31,9 @@ public class LogSeries {
         try {
 
         	for(String filename : files){
-				IMiner miner = new InductiveMiner(filename);
+				IMiner miner = new CompositionDemo(filename);
 				miner.mine();
 				miner.export();
-				miner.evaluate();
 			}
 
         } catch (Exception ex) {

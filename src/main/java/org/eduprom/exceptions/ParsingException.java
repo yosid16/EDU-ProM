@@ -1,6 +1,6 @@
 package org.eduprom.exceptions;
 
-public class ParsingException extends Exception {
+public class ParsingException extends MiningException {
 
     public ParsingException(String message){
         super(message);

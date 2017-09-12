@@ -5,9 +5,6 @@ import java.util.StringJoiner;
 import org.deckfour.xes.model.XEvent;
 import org.deckfour.xes.model.XTrace;
 
-/**
- * Created by ydahari on 22/10/2016.
- */
 public class Trace {
 	private XTrace _trace;
     public String FullTrace;

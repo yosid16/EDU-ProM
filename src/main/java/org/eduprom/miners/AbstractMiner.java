@@ -50,7 +50,7 @@ public abstract class AbstractMiner implements IMiner {
         promContext = new org.processmining.contexts.cli.CLIContext();
         promPluginContext = new CLIPluginContext(promContext, getName());
 
-        logHelper.CheckFile(filename);
+        logHelper.checkFile(filename);
     }
 
     //endregion
@@ -63,13 +63,13 @@ public abstract class AbstractMiner implements IMiner {
             logger.info(String.format("Started training the log file: %s using the algorithm: %s",
                     filename, getName()));
             readLog();
-            logHelper.PrintLogGrouped(Level.FINE, log);
-            logger.info("Read event log successfully");
+            logHelper.printLogGrouped(Level.FINE, log);
+            logger.info("read event log successfully");
 
             mineSpecific();
             logger.info(String.format("Training the log file: %s using the algorithm: %s has completed successfully"
                     , filename, getName()));
-        } catch (MiningException | ParsingException e) {
+        } catch (MiningException e) {
             String message = String.format("Training the log file: %s using the algorithm: %s has failed"
                     , filename, getName());
             logger.log(Level.SEVERE, message, e);
@@ -99,7 +99,7 @@ public abstract class AbstractMiner implements IMiner {
 
     protected void readLog() throws ParsingException {
         if (this.log == null){
-            this.log = logHelper.Read(filename);
+            this.log = logHelper.read(filename);
         }
     }
 

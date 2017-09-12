@@ -45,9 +45,6 @@ import java.io.IOException;
 import java.util.*;
 import java.util.logging.Logger;
 
-/**
- * Created by ydahari on 4/12/2017.
- */
 public class PetrinetHelper {
 
     protected static final Logger logger = Logger.getLogger(AbstractMiner.class.getName());
@@ -204,13 +201,13 @@ public class PetrinetHelper {
         return res.ap;
     }
 
-    public void PrintResults(PNRepResult results){
+    public void printResults(PNRepResult results){
         for(String key : results.getInfo().keySet()) {
             logger.info(String.format("Alignment checking: key= %s, value= %s", key, results.getInfo().get(key)));
         }
     }
 
-    public void PrintResults(AlignmentPrecGenRes conformance){
+    public void printResults(AlignmentPrecGenRes conformance){
         logger.info(String.format("Conformance checking, precision %f", conformance.getPrecision()));
         logger.info(String.format("Conformance checking, generalization %f", conformance.getGeneralization()));
     }
@@ -223,7 +220,7 @@ public class PetrinetHelper {
         }
     }
 
-    public void Export(Petrinet petrinet, String path) throws ExportFailedException {
+    public void export(Petrinet petrinet, String path) throws ExportFailedException {
         //fake export from prom plugin :)
         GraphVisualizerPlugin p = new GraphVisualizerPlugin();
         DotPanel panel = (DotPanel)p.apply(pluginContext, petrinet);
@@ -238,7 +235,7 @@ public class PetrinetHelper {
         }
     }
 
-    public void ExportPnml(Petrinet petrinet, String path) throws ExportFailedException {
+    public void exportPnml(Petrinet petrinet, String path) throws ExportFailedException {
         File file = new File(String.format("%s.pnml", path));
         validateDirectory(file);
         try {

@@ -53,18 +53,18 @@ public abstract class AbstractPetrinetMiner extends AbstractMiner {
     //region public methods
 
     public void export() throws ExportFailedException {
-        petrinetHelper.Export(petrinetWithMarkings.petrinet, getOutputPath());
-        petrinetHelper.ExportPnml(petrinetWithMarkings.petrinet, getOutputPath());
+        petrinetHelper.export(petrinetWithMarkings.petrinet, getOutputPath());
+        petrinetHelper.exportPnml(petrinetWithMarkings.petrinet, getOutputPath());
     }
 
     @Override
     public void evaluate() throws ConformanceCheckException {
         logger.info("Checking conformance");
         alignment = petrinetHelper.getAlignment(log, petrinetWithMarkings.petrinet, petrinetWithMarkings.initialMarking, petrinetWithMarkings.finalMarking);
-        petrinetHelper.PrintResults(alignment);
+        petrinetHelper.printResults(alignment);
 
         AlignmentPrecGenRes conformance = petrinetHelper.getConformance(log, petrinetWithMarkings.petrinet, alignment, petrinetWithMarkings.initialMarking, petrinetWithMarkings.finalMarking);
-        petrinetHelper.PrintResults(conformance);
+        petrinetHelper.printResults(conformance);
 
         double v = new PetriNetStructurednessMetric().compute(getPromPluginContext(), petrinetWithMarkings.petrinet, petrinetWithMarkings.finalMarking);
         logger.info(String.format("Structuredness: %s", v));
