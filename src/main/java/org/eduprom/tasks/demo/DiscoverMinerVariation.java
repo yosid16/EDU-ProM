@@ -1,8 +1,7 @@
-package org.eduprom;
+package org.eduprom.tasks.demo;
 
-import org.eduprom.miners.EnumeratePaths;
 import org.eduprom.miners.IMiner;
-import org.eduprom.miners.InductiveMiner;
+import org.eduprom.miners.demo.InductiveVariationDemo;
 
 import java.io.FileInputStream;
 import java.util.logging.Level;
@@ -10,10 +9,10 @@ import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
 
-public class Main {
+public class DiscoverMinerVariation {
 	
 	private static final LogManager logManager = LogManager.getLogManager();
-	private static final Logger logger = Logger.getLogger(Main.class.getName());
+	private static final Logger logger = Logger.getLogger(DiscoverMinerVariation.class.getName());
 	
     public static void main(String[] args) throws Exception {
 
@@ -23,7 +22,7 @@ public class Main {
     	logger.info("started application");
     	    	    	
         try {
-        	IMiner miner = new EnumeratePaths(filename);
+        	IMiner miner = new InductiveVariationDemo(filename);
         	miner.mine();
         	miner.export();
         	miner.evaluate();

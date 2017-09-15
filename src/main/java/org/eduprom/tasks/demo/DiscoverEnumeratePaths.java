@@ -1,8 +1,7 @@
-package org.eduprom;
+package org.eduprom.tasks.demo;
 
-import org.eduprom.miners.EnumeratePaths;
 import org.eduprom.miners.IMiner;
-import org.eduprom.miners.InductiveMiner;
+import org.eduprom.miners.demo.EnumeratePathsDemo;
 
 import java.io.FileInputStream;
 import java.util.logging.Level;
@@ -10,10 +9,10 @@ import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
 
-public class Main {
+public class DiscoverEnumeratePaths {
 	
 	private static final LogManager logManager = LogManager.getLogManager();
-	private static final Logger logger = Logger.getLogger(Main.class.getName());
+	private static final Logger logger = Logger.getLogger(DiscoverEnumeratePaths.class.getName());
 	
     public static void main(String[] args) throws Exception {
 
@@ -23,7 +22,7 @@ public class Main {
     	logger.info("started application");
     	    	    	
         try {
-        	IMiner miner = new EnumeratePaths(filename);
+        	IMiner miner = new EnumeratePathsDemo(filename);
         	miner.mine();
         	miner.export();
         	miner.evaluate();
