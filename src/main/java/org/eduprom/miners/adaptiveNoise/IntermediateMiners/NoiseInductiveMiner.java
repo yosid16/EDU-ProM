@@ -15,6 +15,7 @@ import org.processmining.ptconversions.pn.ProcessTree2Petrinet;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 
 public class NoiseInductiveMiner extends InductiveMiner implements IProcessTreeMiner {
 
@@ -27,16 +28,23 @@ public class NoiseInductiveMiner extends InductiveMiner implements IProcessTreeM
 		super(filename, parameters);
 	}
 
-	@Override
-	public ProcessTree mineProcessTree(XLog log) {
-		LowFrequencyFilterParameters params = new LowFrequencyFilterParameters(log);
-		params.setThreshold(Math.round(getNoiseThreshold()));
-		XLog filteredLog = (new LowFrequencyFilterAlgorithm()).apply(getPromPluginContext(), log, params);
-		//org.processmining.plugins.log.logfilters.LogFilter.filter()
+	public NoiseInductiveMiner(String filename, float noiseThreshold) throws LogFileNotFoundException {
+		super(filename);
+		this.parameters.setNoiseThreshold(noiseThreshold);
+	}
 
-		logger.info(String.format("Started mining a petri nets using inductive miner, noise: %f", getNoiseThreshold()));
+	@Override
+	public ProcessTree mineProcessTree(XLog rLog) {
+		XLog filteredLog = filterLog(rLog);
+		int removed = rLog.size() - filteredLog.size();
+
+		//if (removed > 0){
+		//logger.info(String.format("log filtered: original log size: %d, new log size: %d, removed %d traces (threshold: %f)",
+		//		rLog.size(), filteredLog.size(), removed, getNoiseThreshold()));
+		//}
+
+
 		processTree = IMProcessTree.mineProcessTree(filteredLog, parameters, getCanceller());
-		//petrinetWithMarkings = PetrinetHelper.ConvertToPetrinet(processTree);
 		return processTree;
 	}
 
@@ -47,9 +55,9 @@ public class NoiseInductiveMiner extends InductiveMiner implements IProcessTreeM
 		return new NoiseInductiveMiner(filename, parametersIM);
 	}
 
-	public static List<NoiseInductiveMiner> WithNoiseThresholds(String filename, float... noiseThreshold) throws LogFileNotFoundException {
+	public static List<NoiseInductiveMiner> WithNoiseThresholds(String filename, Float... noiseThreshold) throws LogFileNotFoundException {
 		ArrayList<NoiseInductiveMiner> miners = new ArrayList<>();
-		for (float threshold: noiseThreshold){
+		for (Float threshold: noiseThreshold){
 			miners.add(WithNoiseThreshold(filename, threshold));
 		}
 		return miners;
@@ -57,24 +65,6 @@ public class NoiseInductiveMiner extends InductiveMiner implements IProcessTreeM
 
 	@Override
 	public void evaluate() throws ConformanceCheckException {
-		logger.info("Checking alignment");
-		ProcessTree2Petrinet.PetrinetWithMarkings petrinetWithMarkings = this.getDiscoveredPetriNet();
-		alignment = petrinetHelper.getAlignment(log, petrinetWithMarkings.petrinet, petrinetWithMarkings.initialMarking, petrinetWithMarkings.finalMarking);
-		petrinetHelper.printResults(alignment);
-
-		this.fitness = Double.parseDouble(alignment.getInfo().get("Move-Model Fitness").toString());
-
-		logger.info("Checking precision");
-		this.precision = petrinetHelper.getPrecision(log, petrinetWithMarkings.petrinet, alignment, petrinetWithMarkings.initialMarking, petrinetWithMarkings.finalMarking);
-
-		logger.info(String.format("Precision: %S", precision));
-
-		//AlignmentPrecGenRes conformance = petrinetHelper.getConformance(log, petrinetWithMarkings.petrinet, alignment, petrinetWithMarkings.initialMarking, petrinetWithMarkings.finalMarking);
-		//petrinetHelper.printResults(conformance);
-
-		//logger.info("Checking Structuredness");
-		//double v = new PetriNetStructurednessMetric().compute(promPluginContext, petrinetWithMarkings.petrinet, petrinetWithMarkings.finalMarking);
-		//logger.info(String.format("Structuredness: %s", v));
 	}
 
 	public double getFitness(){
@@ -94,11 +84,15 @@ public class NoiseInductiveMiner extends InductiveMiner implements IProcessTreeM
 		return parameters.getNoiseThreshold();
 	}
 
+	private XLog filterLog(XLog rLog){
+		int noiseThreshold = Math.round(this.getNoiseThreshold() * 100);
+		LowFrequencyFilterParameters params = new LowFrequencyFilterParameters(rLog);
+		params.setThreshold(noiseThreshold);
+		//params.setClassifier(getClassifier());
+		return (new LowFrequencyFilterAlgorithm()).apply(getPromPluginContext(), rLog, params);
+	}
+
 	@Override
 	protected void readLog() throws ParsingException {
-		XLog log = logHelper.read(filename);
-		LowFrequencyFilterParameters params = new LowFrequencyFilterParameters(log);
-		params.setThreshold(20);
-		this.log = (new LowFrequencyFilterAlgorithm()).apply(getPromPluginContext(), log, params);
 	}
 }

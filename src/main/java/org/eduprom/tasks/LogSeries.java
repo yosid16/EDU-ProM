@@ -31,10 +31,9 @@ public class LogSeries {
         try {
 
         	for(String filename : files){
-				IMiner miner = new InductiveMiner(filename);
+				IMiner miner = new RecursiveScan(filename, 0.0f, 0.1f, 0.2f, 0.3f);
 				miner.mine();
 				miner.export();
-				miner.evaluate();
 			}
 
         } catch (Exception ex) {

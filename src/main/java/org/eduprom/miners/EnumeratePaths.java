@@ -14,6 +14,8 @@ import static org.processmining.ptconversions.pn.ProcessTree2Petrinet.PetrinetWi
 
 public class EnumeratePaths extends AbstractPetrinetMiner {
 
+    private ProcessTree discoveredProcessTree;
+
     private String[] getActivities(XTrace trace){
         String[] activities = new String[trace.size()];
         for(int i = 0; i < activities.length; i++){
@@ -48,6 +50,12 @@ public class EnumeratePaths extends AbstractPetrinetMiner {
             }
         }
 
+        discoveredProcessTree = pt;
+
         return  PetrinetHelper.ConvertToPetrinet(pt);
+    }
+
+    public ProcessTree getDiscoveredProcessTree(){
+        return discoveredProcessTree;
     }
 }
