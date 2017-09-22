@@ -91,20 +91,12 @@ public class RecursiveScan extends AbstractPetrinetMiner {
         return pratitioning;
     }
 
-    private HashSet<TreeChanges> generatePossibleTreeChanges(Partitioning pratitioning) throws MiningException {
-        List<NoiseInductiveMiner> miners = NoiseInductiveMiner
-                .WithNoiseThresholds(this.filename, this.noiseThresholds)
-                .stream().collect(Collectors.toList());
-        HashSet<TreeChanges> allChanges = new HashSet<>();
-        traverseChildren(allChanges, miners, new TreeChanges(pratitioning), pratitioning.getProcessTree().getRoot());
-        return allChanges;
-    }
-
     private HashSet<TreeChanges> generatePossibleTreeChanges2(Partitioning pratitioning) throws MiningException {
         List<NoiseInductiveMiner> miners = NoiseInductiveMiner
                 .WithNoiseThresholds(this.filename, this.noiseThresholds)
                 .stream().collect(Collectors.toList());
-        List<AbstractMap.SimpleEntry<UUID, NoiseInductiveMiner>> options = getOptions(pratitioning, miners).collect(Collectors.toList());
+        Set<Change> options = getOptions(pratitioning, miners)
+                .map(x->new Change(x.getKey(), x.getValue())).collect(Collectors.toSet());
 
         HashSet<TreeChanges> allChanges = new HashSet<>();
         Stack<TreeChanges> current = new Stack<>();
@@ -121,17 +113,15 @@ public class RecursiveScan extends AbstractPetrinetMiner {
                 //if (currentChange.isBaseline()){
                 //    logger.info(String.format("Found a baseline solution"));
                 //}
-                options = currentChange.getUnexplored(miners).collect(Collectors.toList());
-                for(AbstractMap.SimpleEntry<UUID, NoiseInductiveMiner> entry : options) {
-                    UUID id = entry.getKey();
-                    NoiseInductiveMiner miner = entry.getValue();
+                //options = currentChange.getUnexplored(miners).collect(Collectors.toList());
+                for(Change change : options) {
 
                     //if (pratitioning.getProcessTree().getRoot().getID().equals(id)){
                     //    logger.info(String.format("Checking the root, with noise %f", miner.getNoiseThreshold()));
                     //}
 
                     TreeChanges newSln = currentChange.ToTreeChanges();
-                    if (newSln.Add(id, miner)) { // replacement is feasible
+                    if (newSln.Add(change)) { // replacement is feasible
                         if (!allChanges.contains(newSln)){
                             current.push(newSln);
                             scanned++;
@@ -151,6 +141,19 @@ public class RecursiveScan extends AbstractPetrinetMiner {
 
         allChanges.removeIf(x -> x.getNumberOfChanges() == 0);
         return allChanges;
+    }
+
+    private HashSet<TreeChanges> generatePossibleTreeChanges3(Partitioning pratitioning) throws MiningException {
+        List<NoiseInductiveMiner> miners = NoiseInductiveMiner
+                .WithNoiseThresholds(this.filename, this.noiseThresholds)
+                .stream().collect(Collectors.toList());
+        Set<Change> options = getOptions(pratitioning, miners)
+                .map(x-> new Change(x.getKey(), x.getValue()))
+                .collect(Collectors.toSet());
+
+        Set<Set<Change>> allPossibleSolutions = powerSet(options);
+
+        return null;
     }
 
     public Stream<AbstractMap.SimpleEntry<UUID, NoiseInductiveMiner>> getOptions(Partitioning pratitioning, List<NoiseInductiveMiner> miners){
@@ -255,7 +258,7 @@ public class RecursiveScan extends AbstractPetrinetMiner {
         Partitioning pratitioning = splitLog();
         logger.info(pratitioning.toString());
 
-        HashSet<TreeChanges> changes = generatePossibleTreeChanges2(pratitioning);
+        HashSet<TreeChanges> changes = generatePossibleTreeChanges3(pratitioning);
         logger.info(String.format("found %d potential solutions", changes.size()));
 
         TreeChanges baselineModel = findBaseline(changes);
@@ -272,22 +275,23 @@ public class RecursiveScan extends AbstractPetrinetMiner {
         return PetrinetHelper.ConvertToPetrinet(bestModel.getModifiedProcessTree());
     }
 
-    private void traverseChildren(HashSet<TreeChanges> allChanges, List<NoiseInductiveMiner> miners, TreeChanges changes, Node node) throws MiningException {
-        for(NoiseInductiveMiner miner : miners){
-            TreeChanges newSln = changes.ToTreeChanges();
-            if (newSln.Add(node.getID(), miner)){ // replacement is feasible
-                if (allChanges.add(newSln)){ //branch that was not scanned
-                    logger.info(String.format("found new process tree: %s", newSln.getModifiedProcessTree().toString()));
-                }
-            }
+    public static <T> Set<Set<T>> powerSet(Set<T> originalSet) {
+        Set<Set<T>> sets = new HashSet<Set<T>>();
+        if (originalSet.isEmpty()) {
+            sets.add(new HashSet<T>());
+            return sets;
         }
-
-        if (node instanceof AbstractBlock){
-            for(Node childrenNode : ((AbstractBlock) node).getOutgoingEdges()
-                    .stream().map(x -> x.getTarget()).collect(Collectors.toList())){
-                traverseChildren(allChanges, miners, changes, childrenNode);
-            }
+        List<T> list = new ArrayList<T>(originalSet);
+        T head = list.get(0);
+        Set<T> rest = new HashSet<T>(list.subList(1, list.size()));
+        for (Set<T> set : powerSet(rest)) {
+            Set<T> newSet = new HashSet<T>();
+            newSet.add(head);
+            newSet.addAll(set);
+            sets.add(newSet);
+            sets.add(set);
         }
+        return sets;
     }
 }
 
