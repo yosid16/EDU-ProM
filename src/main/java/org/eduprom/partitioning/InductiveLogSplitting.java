@@ -227,7 +227,7 @@ public class InductiveLogSplitting implements ILogSplitter {
             newNode = processor.postProcess(newNode, log, logInfo, minerState);
         }
 
-        partitioning.getLogs().put(newNode.getID(), log.toXLog());
+        partitioning.add(newNode.getID(), log.toXLog());
 
         return newNode;
     }

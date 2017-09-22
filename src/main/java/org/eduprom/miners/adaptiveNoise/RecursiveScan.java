@@ -3,10 +3,8 @@ package org.eduprom.miners.adaptiveNoise;
 import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
 import com.google.common.base.Stopwatch;
-import com.google.common.collect.Sets;
 import org.deckfour.xes.model.XLog;
 import org.eduprom.exceptions.ExportFailedException;
-import org.eduprom.exceptions.LogFileNotFoundException;
 import org.eduprom.exceptions.MiningException;
 import org.eduprom.exceptions.ProcessTreeConversionException;
 import org.eduprom.miners.AbstractPetrinetMiner;
@@ -16,11 +14,7 @@ import org.eduprom.partitioning.InductiveLogSplitting;
 import org.eduprom.partitioning.Partitioning;
 import org.eduprom.utils.PetrinetHelper;
 import org.processmining.plugins.petrinet.replayresult.PNRepResult;
-import org.processmining.processtree.Block;
-import org.processmining.processtree.Edge;
-import org.processmining.processtree.Node;
 import org.processmining.processtree.ProcessTree;
-import org.processmining.processtree.impl.AbstractBlock;
 import org.processmining.ptconversions.pn.ProcessTree2Petrinet;
 import org.apache.commons.lang3.StringUtils;
 
@@ -29,21 +23,23 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class RecursiveScan extends AbstractPetrinetMiner {
 
     private Float[] noiseThresholds;
+    private List<NoiseInductiveMiner> miners;
+
+    private double precisionWeight;
+    private double fitnessWeight;
 
     //region private methods
 
-    private void modifyPsi(TreeChanges changes, XLog log, double precisionWeight, double fitnessWeight) throws MiningException {
+    private void modifyPsi(ConformanceInfo info, ProcessTree tree, XLog log) throws MiningException {
         ProcessTree2Petrinet.PetrinetWithMarkings res = null;
         try {
-            res = PetrinetHelper.ConvertToPetrinet(changes.getModifiedProcessTree());
+            res = PetrinetHelper.ConvertToPetrinet(tree);
         } catch (ProcessTreeConversionException e) {
             throw new MiningException(e);
         }
@@ -55,130 +51,95 @@ public class RecursiveScan extends AbstractPetrinetMiner {
         PNRepResult alignment = petrinetHelper.getAlignment(log, res.petrinet, res.initialMarking, res.finalMarking);
         double fitness = Double.parseDouble(alignment.getInfo().get("Move-Model Fitness").toString());
         //this.petrinetHelper.printResults(alignment);
-        changes.setFitness(fitness);
+        info.setFitness(fitness);
 
         double precision = petrinetHelper.getPrecision(log, res.petrinet, alignment, res.initialMarking, res.finalMarking);
-        changes.setPrecision(precision);
-
-        changes.setPsi(precisionWeight * fitness + fitnessWeight * precision);
+        info.setPrecision(precision);
     }
 
-    /*
-    private void modifyPsi(ProcessTree processTree, XLog log, double precisionWeight, double fitnessWeight) throws MiningException {
-        ProcessTree2Petrinet.PetrinetWithMarkings res = null;
-        try {
-            res = PetrinetHelper.ConvertToPetrinet(processTree);
-        } catch (ProcessTreeConversionException e) {
-            throw new MiningException(e);
-        }
-
-        PNRepResult alignment = petrinetHelper.getAlignment(log, res.petrinet, res.initialMarking, res.finalMarking);
-        double fitness = Double.parseDouble(alignment.getInfo().get("Move-Model Fitness").toString());
-        changes.setFitness(fitness);
-
-        double precision = 0;
-        precision = petrinetHelper.getPrecision(log, res.petrinet, alignment, res.initialMarking, res.finalMarking);
-        changes.setPrecision(precision);
-
-        changes.setPsi(precisionWeight * fitness + fitnessWeight * precision);
-    }*/
-
-
-    private Partitioning splitLog(){
+    private Partitioning splitLog() throws MiningException {
 
         ILogSplitter logSplitter = new InductiveLogSplitting();
         Partitioning pratitioning = logSplitter.split(this.log);
+
+        NoiseInductiveMiner baselineMiner = miners.stream().filter(x->x.getNoiseThreshold() == 0).findAny().get();
+        for(Partitioning.PartitionInfo partitionInfo : pratitioning.getPartitions().values()) {
+            ConformanceInfo info = new ConformanceInfo(fitnessWeight, precisionWeight);
+            ProcessTree pt = baselineMiner.mineProcessTree(partitionInfo.getLog());
+
+            modifyPsi(info, pt, partitionInfo.getLog());
+
+            partitionInfo.setProcessTree(pt);
+            partitionInfo.setConformanceInfo(info);
+
+        }
         return pratitioning;
     }
 
-    private HashSet<TreeChanges> generatePossibleTreeChanges2(Partitioning pratitioning) throws MiningException {
-        List<NoiseInductiveMiner> miners = NoiseInductiveMiner
-                .WithNoiseThresholds(this.filename, this.noiseThresholds)
-                .stream().collect(Collectors.toList());
-        Set<Change> options = getOptions(pratitioning, miners)
-                .map(x->new Change(x.getKey(), x.getValue())).collect(Collectors.toSet());
+    private Set<TreeChanges> generatePossibleTreeChanges2(Partitioning pratitioning) throws MiningException {
+        Set<Change> baseline = getOptions(pratitioning, miners);
 
-        HashSet<TreeChanges> allChanges = new HashSet<>();
-        Stack<TreeChanges> current = new Stack<>();
-        current.push(new TreeChanges(pratitioning));
+
+        HashMap<TreeChangesSet, TreeChanges> allChanges = new HashMap<>();
+        Queue<TreeChanges> current = new LinkedList<>();
+        current.offer(new TreeChanges(pratitioning, fitnessWeight, precisionWeight));
         int scanned = 0;
         while (!current.isEmpty()) {
-            TreeChanges currentChange = current.pop();
+            TreeChanges currentChange = current.poll();
 
-            //if (currentChange.isBaseline() && currentChange.getNumberOfChanges() > 0){
-            //    logger.info(String.format("Scanning a baseline solution"));
-            //}
+            List<Change> changes = currentChange.getApplicableChanges(baseline)
+                    .filter(x -> !allChanges.containsKey(currentChange.getChanges().toTreeChangesSet().add(x)))
+                    .collect(Collectors.toList());
 
-            if (allChanges.add(currentChange)){
-                //if (currentChange.isBaseline()){
-                //    logger.info(String.format("Found a baseline solution"));
-                //}
-                //options = currentChange.getUnexplored(miners).collect(Collectors.toList());
-                for(Change change : options) {
+            //logger.info(String.format("changes size: %d", changes.size()));
 
-                    //if (pratitioning.getProcessTree().getRoot().getID().equals(id)){
-                    //    logger.info(String.format("Checking the root, with noise %f", miner.getNoiseThreshold()));
-                    //}
-
-                    TreeChanges newSln = currentChange.ToTreeChanges();
-                    if (newSln.Add(change)) { // replacement is feasible
-                        if (!allChanges.contains(newSln)){
-                            current.push(newSln);
-                            scanned++;
-                            //logger.info(String.format("scanning: %s", newSln.getChanges().toString()));
-                        }
+            for(Change change : changes) {
+                TreeChanges newSln = currentChange.ToTreeChanges();
+                if (newSln.Add(change)) { // replacement is feasible
+                    if (!allChanges.containsKey(newSln.getChanges())){
+                        allChanges.put(newSln.getChanges(), newSln);
+                        current.offer(newSln);
+                        scanned++;
                     }
                 }
             }
-            else {
-                //logger.info(String.format("pruned branch: %s", currentChange.toString()));
-                break;
-            }
 
-            logger.info(String.format("stack size: %d, scanned: %d", current.size(), scanned));
+
+            //logger.info(String.format("stack size: %d, scanned: %d", current.size(), scanned));
         }
 
 
-        allChanges.removeIf(x -> x.getNumberOfChanges() == 0);
-        return allChanges;
+        //allChanges.removeIf(x -> x.getNumberOfChanges() == 0);
+        return allChanges.values().stream().collect(Collectors.toSet());
     }
 
-    private HashSet<TreeChanges> generatePossibleTreeChanges3(Partitioning pratitioning) throws MiningException {
-        List<NoiseInductiveMiner> miners = NoiseInductiveMiner
-                .WithNoiseThresholds(this.filename, this.noiseThresholds)
-                .stream().collect(Collectors.toList());
-        Set<Change> options = getOptions(pratitioning, miners)
-                .map(x-> new Change(x.getKey(), x.getValue()))
+
+    public Set<Change> getOptions(Partitioning pratitioning, List<NoiseInductiveMiner> miners){
+        return pratitioning.getPartitions().entrySet().stream()
+                .filter(x -> x.getValue().getConformanceInfo().getPsi() < 0.8)
+                .map(x->x.getKey())
+                .flatMap(x-> miners.stream().map(miner -> new Change(x, miner)))
                 .collect(Collectors.toSet());
-
-        Set<Set<Change>> allPossibleSolutions = powerSet(options);
-
-        return null;
     }
 
-    public Stream<AbstractMap.SimpleEntry<UUID, NoiseInductiveMiner>> getOptions(Partitioning pratitioning, List<NoiseInductiveMiner> miners){
-        return pratitioning.getLogs().keySet().stream()
-                .flatMap(x-> miners.stream().map(miner -> new AbstractMap.SimpleEntry<UUID, NoiseInductiveMiner>(x, miner)));
-    }
-
-    private TreeChanges findOptimal(HashSet<TreeChanges> treeChanges) throws MiningException {
+    private TreeChanges findOptimal(Set<TreeChanges> treeChanges) throws MiningException {
         double bestPsi = 0;
         TreeChanges bestModel = null;
 
         for(TreeChanges change : treeChanges) {
-            modifyPsi(change, log, 0.5, 0.5);
-            logger.info("OPTIONAL MODEL: " + change.toString());
+            modifyPsi(change.getConformanceInfo(), change.getModifiedProcessTree(), log);
+            //logger.info("OPTIONAL MODEL: " + change.toString());
 
-            if (change.getPsi() > bestPsi){
+            if (change.getConformanceInfo().getPsi() > bestPsi){
                 bestModel = change;
-                bestPsi = change.getPsi();
+                bestPsi = change.getConformanceInfo().getPsi();
             }
         }
 
         return bestModel;
     }
 
-    private TreeChanges findBaseline(HashSet<TreeChanges> treeChanges) throws MiningException {
+    private TreeChanges findBaseline(Set<TreeChanges> treeChanges) throws MiningException {
         TreeChanges bestBaseline = null;
         for(TreeChanges change : treeChanges){
             if (!change.isBaseline()){
@@ -186,7 +147,7 @@ public class RecursiveScan extends AbstractPetrinetMiner {
             }
 
             logger.info("BASELINE MODEL: " + change.toString());
-            if (bestBaseline == null || bestBaseline.getPsi() < change.getPsi()){
+            if (bestBaseline == null || bestBaseline.getConformanceInfo().getPsi() < change.getConformanceInfo().getPsi()){
                 bestBaseline = change;
             }
         }
@@ -197,7 +158,7 @@ public class RecursiveScan extends AbstractPetrinetMiner {
         return bestBaseline;
     }
 
-    private void compare(HashSet<TreeChanges> treeChanges, TreeChanges bestModel, TreeChanges baselineModel, long elapsedSeconds) throws ExportFailedException {
+    private void compare(Set<TreeChanges> treeChanges, TreeChanges bestModel, TreeChanges baselineModel, long elapsedSeconds) throws ExportFailedException {
         try{
             String path = String.format("./Output/RecursiveScan.csv", getOutputPath());
             boolean appendSchema = true;
@@ -221,9 +182,9 @@ public class RecursiveScan extends AbstractPetrinetMiner {
                     "baseline_psi", "baseline_fitness", "baseline_precision", "improvement" };
 
             String[] data = new String[] {filename, String.valueOf(elapsedSeconds), String.valueOf(optionsScanned), StringUtils.join(this.noiseThresholds, ',') ,
-                    String.valueOf(bestModel.getPsi()), String.valueOf(bestModel.getFitness()), String.valueOf(bestModel.getPrecision()), String.valueOf(bestModel.getNumberOfChanges()),
-                    String.valueOf(baselineModel.getPsi()), String.valueOf(baselineModel.getFitness()), String.valueOf(baselineModel.getPrecision()),
-                    String.valueOf(bestModel.getPsi() - baselineModel.getPsi())};
+                    String.valueOf(bestModel.getConformanceInfo().getPsi()), String.valueOf(bestModel.getConformanceInfo().getFitness()), String.valueOf(bestModel.getConformanceInfo().getPrecision()), String.valueOf(bestModel.getNumberOfChanges()),
+                    String.valueOf(baselineModel.getConformanceInfo().getPsi()), String.valueOf(baselineModel.getConformanceInfo().getFitness()), String.valueOf(baselineModel.getConformanceInfo().getPrecision()),
+                    String.valueOf(bestModel.getConformanceInfo().getPsi() - baselineModel.getConformanceInfo().getPsi())};
 
             if (appendSchema){
                 csvWriter.writeNext(schema);
@@ -244,6 +205,13 @@ public class RecursiveScan extends AbstractPetrinetMiner {
         super(filename);
         this.noiseThresholds = Stream.concat(Arrays.stream(noiseThresholds),
                 Stream.of(0.0f)).distinct().toArray(Float[]::new);
+
+        this.miners = NoiseInductiveMiner
+                .WithNoiseThresholds(this.filename, this.noiseThresholds)
+                .stream().collect(Collectors.toList());
+
+        this.precisionWeight = 0.5;
+        this.fitnessWeight = 0.5;
     }
 
     //endregion
@@ -258,14 +226,14 @@ public class RecursiveScan extends AbstractPetrinetMiner {
         Partitioning pratitioning = splitLog();
         logger.info(pratitioning.toString());
 
-        HashSet<TreeChanges> changes = generatePossibleTreeChanges3(pratitioning);
+        Set<TreeChanges> changes = generatePossibleTreeChanges2(pratitioning);
         logger.info(String.format("found %d potential solutions", changes.size()));
-
-        TreeChanges baselineModel = findBaseline(changes);
-        logger.info("BEST BASELINE MODEL: " + baselineModel.toString());
 
         TreeChanges bestModel = findOptimal(changes);
         logger.info("OPTIMAL MODEL: " + bestModel.toString());
+
+        TreeChanges baselineModel = findBaseline(changes);
+        logger.info("BEST BASELINE MODEL: " + baselineModel.toString());
 
         //stop measuring time and compare results
         stopwatch.stop();

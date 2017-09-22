@@ -1,6 +1,7 @@
 package org.eduprom.partitioning;
 
 import org.deckfour.xes.model.XLog;
+import org.eduprom.miners.adaptiveNoise.ConformanceInfo;
 import org.eduprom.utils.LogHelper;
 import org.processmining.processtree.Node;
 import org.processmining.processtree.ProcessTree;
@@ -8,14 +9,45 @@ import org.processmining.processtree.impl.AbstractBlock;
 import org.processmining.processtree.impl.ProcessTreeImpl;
 
 import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
 public class Partitioning
 {
+    public class PartitionInfo {
+        private XLog log;
+        private ProcessTree processTree;
+        private ConformanceInfo conformanceInfo;
+
+        public PartitionInfo(XLog log){
+            this.log = log;
+        }
+
+
+
+        public ProcessTree getProcessTree() {
+            return processTree;
+        }
+
+        public void setProcessTree(ProcessTree processTree) {
+            this.processTree = processTree;
+        }
+
+        public XLog getLog() {
+            return log;
+        }
+
+        public ConformanceInfo getConformanceInfo() {
+            return conformanceInfo;
+        }
+
+        public void setConformanceInfo(ConformanceInfo conformanceInfo) {
+            this.conformanceInfo = conformanceInfo;
+        }
+    }
+
     private ProcessTree processTree;
     private  LogHelper _helper;
-    private HashMap<UUID, XLog> logs;
+    private HashMap<UUID, PartitionInfo> logs;
 
     private boolean hasPartitioningChild(Node node){
         return (((AbstractBlock)node).getOutgoingEdges()).stream().anyMatch(x -> logs.containsKey(x.getTarget()));
@@ -26,40 +58,21 @@ public class Partitioning
     {
         _helper = new LogHelper();
         this.processTree = new ProcessTreeImpl();
-        logs = new HashMap<UUID, XLog>();
+        logs = new HashMap<UUID, PartitionInfo>();
     }
 
     @Override
     public String toString() {
-        return String.format("Partitioning has: %d sublogs", getLogs().size());
-        /*
-        String s = "";
-
-        for(Map.Entry<Node, XLog> entry : getExclusiveLogs().entrySet()){
-            s += "\nstart log for node - " + entry.getKey().toString() + ":\n";
-            s += _helper.toString(entry.getValue());
-            s += "\nend log for node - " + entry.getKey().toString() + ":\n";
-        }
-        return s;
-        */
+        return String.format("Partitioning has: %d sublogs", getPartitions().size());
     }
 
-    public HashMap<UUID, XLog> getLogs() {
+    public HashMap<UUID, PartitionInfo> getPartitions() {
         return logs;
     }
 
-    /*
-    public HashMap<UUID, XLog> getExclusiveLogs(){
-        HashMap<UUID, XLog> exclusiveLogs = new HashMap<>();
-        for (Map.Entry<UUID, XLog> entry : logs.entrySet()){
-            exclusiveLogs.put(entry.getKey(), entry.getValue());
-        }
-        for (Map.Entry<UUID, XLog> entry : logs.entrySet()){
-            entry.getKey().getParents().stream().forEach(x -> exclusiveLogs.remove(x));
-        }
-
-        return exclusiveLogs;
-    }*/
+    public void add(UUID id, XLog log){
+        this.logs.put(id, new PartitionInfo(log));
+    }
 
     public ProcessTree getProcessTree() {
         return this.processTree;
