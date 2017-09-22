@@ -1,5 +1,6 @@
 package org.eduprom.miners.adaptiveNoise;
 
+import com.google.common.collect.Sets;
 import org.deckfour.xes.model.XLog;
 import org.eduprom.exceptions.MiningException;
 import org.eduprom.miners.AbstractMiner;
@@ -30,6 +31,7 @@ public class TreeChanges {
     private Partitioning pratitioning;
     private HashMap<UUID, NoiseInductiveMiner> changes;
     private HashMap<UUID, UUID> newIds;
+    private Set<UUID> explored;
 
     private double fitness;
     private double precision;
@@ -40,6 +42,7 @@ public class TreeChanges {
         this.changes = new HashMap<>();
         this.newIds = new HashMap<>();
         this.pratitioning = pratitioning;
+        this.explored = new HashSet<>();
         id = UUID.randomUUID();
         setModifiedProcessTree(pratitioning.getProcessTree().toTree());
 
@@ -56,6 +59,7 @@ public class TreeChanges {
      */
     public boolean Add(UUID nodeId, NoiseInductiveMiner inductiveMiner) throws MiningException {
         Node localNode = modifiedProcessTree.getNode(nodeId);
+        this.explored.add(nodeId);
         if (pratitioning.getLogs().containsKey(nodeId) && localNode != null){
             changes.put(nodeId, inductiveMiner);
             ProcessTree pt = inductiveMiner.mineProcessTree(pratitioning.getLogs().get(nodeId));
@@ -72,9 +76,9 @@ public class TreeChanges {
     public TreeChanges ToTreeChanges() throws MiningException {
         TreeChanges treeChanges = new TreeChanges(pratitioning);
         treeChanges.modifiedProcessTree = this.modifiedProcessTree.toTree();
-        treeChanges.changes = new HashMap<>();
         treeChanges.changes.putAll(this.changes);
         treeChanges.newIds.putAll(this.newIds);
+        treeChanges.explored.addAll(this.explored);
 
         /*
         for(Map.Entry<UUID, NoiseInductiveMiner> entry : this.changes.entrySet()){
@@ -92,12 +96,27 @@ public class TreeChanges {
 
     @Override
     public String toString() {
-        String s = String.format("id: %s, #Changes %d, psi %f (fitness %f, precision %f)",
-                id.toString(), changes.size(), psi, fitness, precision);
+        String s = String.format("#Changes %d, psi %f (fitness %f, precision %f)",
+                changes.size(), psi, fitness, precision);
 
         for(Map.Entry<UUID, XLog> entry : this.pratitioning.getLogs().entrySet()){
             if (changes.containsKey(entry.getKey())){
+                /*
+                boolean isRoot = false;
+                try{
+                    isRoot = this.modifiedProcessTree.getNode(newIds.get(entry.getKey())).isRoot();
+                }
+                catch (Exception ex){
+                    int a = 1;
+
+                }
+                */
+
                 s +=  String.format(", node noise %f", changes.get(entry.getKey()).getNoiseThreshold());
+                /*
+                if (isRoot){
+                    s += "(root)";
+                }*/
             }
         }
 
@@ -107,7 +126,8 @@ public class TreeChanges {
     public boolean isBaseline() throws MiningException {
         Optional<Map.Entry<UUID, NoiseInductiveMiner>> entryOptional = changes.entrySet().stream().findAny();
         if (!entryOptional.isPresent()){
-            throw new MiningException("Tree changed must contain at least one change");
+            return false;
+            //throw new MiningException("changes must contain at least one element");
         }
 
         Map.Entry<UUID, NoiseInductiveMiner> minerEntry = entryOptional.get();
@@ -158,23 +178,37 @@ public class TreeChanges {
         return this.pratitioning;
     }
 
-    public Stream<UUID> getUnchanged(){
-        return this.getPratitioning().getLogs().keySet().stream().filter(x -> !this.changes.containsKey(x));
+
+    public Stream<AbstractMap.SimpleEntry<UUID, NoiseInductiveMiner>> getUnexplored(List<NoiseInductiveMiner> miners){
+        return pratitioning.getLogs().keySet().stream()
+                .filter(x-> !this.explored.contains(x))
+                .flatMap(x-> miners.stream().map(miner -> new AbstractMap.SimpleEntry<UUID, NoiseInductiveMiner>(x, miner)));
     }
 
-    public boolean hasUnchanged(){
-        return !this.getUnchanged().findAny().isPresent();
+    public Optional<UUID> getUnexploredSingle(){
+        return this.pratitioning.getLogs().keySet().stream().filter(x -> !explored.contains(x)).findAny();
     }
+
+    public String getChanges(){
+        StringBuilder sb = new StringBuilder();
+
+        changes.entrySet().stream().sorted(Comparator.comparing(Map.Entry:: getKey))
+                .map(x-> String.format(" id: %s, noise %f", x.getKey().toString(), x.getValue().getNoiseThreshold()))
+                .forEach(x-> sb.append(x));
+
+        return sb.toString();
+    }
+
 
     @Override
     public boolean equals(Object o) {
 
-        return (o instanceof TreeChanges) && getModifiedProcessTree().toString().equals(((TreeChanges)o).getModifiedProcessTree().toString());
+        return (o instanceof TreeChanges) && getChanges().equals(((TreeChanges)o).getChanges());
     }
 
     @Override
     public int hashCode() {
-        return getModifiedProcessTree().toString().hashCode();
+        return getChanges().hashCode();
     }
 }
 

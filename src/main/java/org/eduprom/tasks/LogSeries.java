@@ -22,7 +22,7 @@ public class LogSeries {
 
 		//String filenameFormat = "EventLogs\\contest_2017\\log%s.xes";
 		String filenameFormat = "EventLogs\\contest_dataset\\test_log_may_%s.xes";
-		Integer[] fileNumbers = new Integer[] { 1 , 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+		Integer[] fileNumbers = new Integer[] { 2, 3, 4, 5, 6, 7, 8, 9, 10 };
 		List<String> files = Arrays.stream(fileNumbers).map(x -> String.format(filenameFormat, x)).collect(Collectors.toList());
 
     	logManager.readConfiguration(new FileInputStream("./app.properties"));
@@ -31,7 +31,7 @@ public class LogSeries {
         try {
 
         	for(String filename : files){
-				IMiner miner = new RecursiveScan(filename, 0.0f, 0.1f, 0.2f, 0.3f);
+				IMiner miner = new RecursiveScan(filename, 0.0f, 0.1f, 0.2f);
 				miner.mine();
 				miner.export();
 			}
