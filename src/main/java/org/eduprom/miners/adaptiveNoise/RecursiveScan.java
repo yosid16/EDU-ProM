@@ -3,6 +3,7 @@ package org.eduprom.miners.adaptiveNoise;
 import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
 import com.google.common.base.Stopwatch;
+import org.apache.commons.math3.stat.descriptive.rank.Median;
 import org.deckfour.xes.model.XLog;
 import org.eduprom.exceptions.ExportFailedException;
 import org.eduprom.exceptions.MiningException;
@@ -25,6 +26,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.apache.commons.math3.*;
 
 public class RecursiveScan extends AbstractPetrinetMiner {
 
@@ -76,9 +78,7 @@ public class RecursiveScan extends AbstractPetrinetMiner {
         return pratitioning;
     }
 
-    private Set<TreeChanges> generatePossibleTreeChanges2(Partitioning pratitioning) throws MiningException {
-        Set<Change> baseline = getOptions(pratitioning, miners);
-
+    private Set<TreeChanges> generatePossibleTreeChanges(Partitioning pratitioning, Set<Change> changeOptions) throws MiningException {
 
         HashMap<TreeChangesSet, TreeChanges> allChanges = new HashMap<>();
         Queue<TreeChanges> current = new LinkedList<>();
@@ -87,7 +87,7 @@ public class RecursiveScan extends AbstractPetrinetMiner {
         while (!current.isEmpty()) {
             TreeChanges currentChange = current.poll();
 
-            List<Change> changes = currentChange.getApplicableChanges(baseline)
+            List<Change> changes = currentChange.getApplicableChanges(changeOptions)
                     .filter(x -> !allChanges.containsKey(currentChange.getChanges().toTreeChangesSet().add(x)))
                     .collect(Collectors.toList());
 
@@ -115,8 +115,12 @@ public class RecursiveScan extends AbstractPetrinetMiner {
 
 
     public Set<Change> getOptions(Partitioning pratitioning, List<NoiseInductiveMiner> miners){
+        Median median = new Median();
+        double[] values = pratitioning.getPartitions().values().stream().mapToDouble(x->x.getConformanceInfo().getPsi()).toArray();
+        double thredhold = median.evaluate(values);
+
         return pratitioning.getPartitions().entrySet().stream()
-                .filter(x -> x.getValue().getConformanceInfo().getPsi() < 0.8)
+                .filter(x -> x.getValue().getConformanceInfo().getPsi() < thredhold)
                 .map(x->x.getKey())
                 .flatMap(x-> miners.stream().map(miner -> new Change(x, miner)))
                 .collect(Collectors.toSet());
@@ -201,7 +205,7 @@ public class RecursiveScan extends AbstractPetrinetMiner {
 
     //region constructors
 
-    public RecursiveScan(String filename, Float... noiseThresholds) throws Exception {
+    public RecursiveScan(String filename, double fitnessWeight, double precisionWeight, Float... noiseThresholds) throws Exception {
         super(filename);
         this.noiseThresholds = Stream.concat(Arrays.stream(noiseThresholds),
                 Stream.of(0.0f)).distinct().toArray(Float[]::new);
@@ -210,8 +214,8 @@ public class RecursiveScan extends AbstractPetrinetMiner {
                 .WithNoiseThresholds(this.filename, this.noiseThresholds)
                 .stream().collect(Collectors.toList());
 
-        this.precisionWeight = 0.5;
-        this.fitnessWeight = 0.5;
+        this.precisionWeight = precisionWeight;
+        this.fitnessWeight = fitnessWeight;
     }
 
     //endregion
@@ -222,12 +226,17 @@ public class RecursiveScan extends AbstractPetrinetMiner {
         //start measuring scan time
         Stopwatch stopwatch = Stopwatch.createStarted();
 
-        //run algorithm
-        Partitioning pratitioning = splitLog();
-        logger.info(pratitioning.toString());
+        logger.info(String.format("Fitness weight: %f, Precision weight: %f", fitnessWeight, precisionWeight));
 
-        Set<TreeChanges> changes = generatePossibleTreeChanges2(pratitioning);
-        logger.info(String.format("found %d potential solutions", changes.size()));
+        //run algorithm
+        Partitioning partitioning = splitLog();
+        logger.info(partitioning.toString());
+
+        Set<Change> changeOptions = getOptions(partitioning, miners);
+        logger.info(String.format("found %d possible changes to initial partitioning (#miners x #sublogs)", changeOptions.size()));
+
+        Set<TreeChanges> changes = generatePossibleTreeChanges(partitioning, changeOptions);
+        logger.info(String.format("found %d potential solutions (all subsets of (miners x sublogs) )", changes.size()));
 
         TreeChanges bestModel = findOptimal(changes);
         logger.info("OPTIMAL MODEL: " + bestModel.toString());

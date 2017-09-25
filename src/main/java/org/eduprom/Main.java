@@ -6,6 +6,7 @@ import org.eduprom.miners.InductiveMiner;
 import org.eduprom.miners.adaptiveNoise.IntermediateMiners.NoiseInductiveMiner;
 import org.eduprom.miners.adaptiveNoise.RecursiveScan;
 import org.eduprom.miners.adaptiveNoise.TestTreeChangesMiner;
+import org.eduprom.utils.LogHelper;
 
 import java.io.FileInputStream;
 import java.util.logging.Level;
@@ -20,17 +21,19 @@ public class Main {
 	
     public static void main(String[] args) throws Exception {
 
-		String filename = "EventLogs\\TestingTreeChanges\\ab_ac.csv";
+		//String filename = "EventLogs\\log1.xes";
+		String filename = "EventLogs\\contest_dataset\\test_log_may_4.xes";
         //String filename = "EventLogs\\test.csv";
 
     	logManager.readConfiguration(new FileInputStream("./app.properties"));
     	logger.info("started application");
     	    	    	
         try {
-        	IMiner miner = new RecursiveScan(filename, 0.1f, 0.3f);
-			//IMiner miner = new TestTreeChangesMiner(filename);
+
+			IMiner miner = new RecursiveScan(filename, 0.5, 0.5,
+					0.0f, 0.2f, 0.4f, 0.6f, 0.8f, 1.0f);
         	miner.mine();
-        	miner.export();
+        	//miner.export();
         	//miner.evaluate();
 
         } catch (Exception ex) {

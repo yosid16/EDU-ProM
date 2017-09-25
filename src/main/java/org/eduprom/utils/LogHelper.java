@@ -149,6 +149,8 @@ public class LogHelper {
 								Function.identity(), Collectors.counting()
 						)
 				);
+		//s.entrySet().stream().filter(x->x.getValue() > 1).collect(Collectors.toList())
+		//s.entrySet().stream().sorted(Map.Entry::getValue).forEach(x -> logger.info(x.toString()));
 		logger.log(level, String.format("Log: %s", s));
 	}
 }
