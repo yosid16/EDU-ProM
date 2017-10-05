@@ -15,6 +15,8 @@ public class TreeChanges {
     protected static final Logger logger = Logger.getLogger(TreeChanges.class.getName());
     protected static final PocessTreeHelper helper = new PocessTreeHelper();
 
+    //protected static TreeChangesSet treeChangesCache = new TreeChangesSet();
+
     private final Lock lock = new ReentrantLock();
     private ProcessTree modifiedProcessTree;
     private Partitioning pratitioning;
@@ -42,7 +44,8 @@ public class TreeChanges {
         this.explored.add(change.getId());
         if (pratitioning.getPartitions().containsKey(change.getId()) && localNode != null){
             changes.getChanges().add(change);
-            ProcessTree pt = change.getMiner().mineProcessTree(pratitioning.getPartitions().get(change.getId()).getLog());
+            UUID id = change.getId();
+            ProcessTree pt = change.getProcessTree();
             //logger.info(String.format("replaced process tree: %s  with: %s", localNode.toString(), pt.toString()));
             helper.merge(pt.getRoot(), localNode);
             newIds.put(change.getId(), pt.getRoot().getID());
@@ -98,8 +101,10 @@ public class TreeChanges {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append(String.format("#Changes %d, psi %f (fitness %f, precision %f)",
-                changes.getChanges().size(), conformanceInfo.getPsi(), conformanceInfo.getFitness(), conformanceInfo.getPrecision()));
+        sb.append(String.format("#Changes %d, psi %f (fitness %f, precision %f); Bits removed: %d",
+                changes.getChanges().size(),
+                conformanceInfo.getPsi(), conformanceInfo.getFitness(), conformanceInfo.getPrecision(),
+                getBitsRemoved()));
 
         for(Change change : changes.getChanges()){
                 sb.append(",");
@@ -112,8 +117,7 @@ public class TreeChanges {
     public boolean isBaseline() throws MiningException {
         Optional<Change> entryOptional = changes.getChanges().stream().findAny();
         if (!entryOptional.isPresent()){
-            return false;
-            //throw new MiningException("changes must contain at least one element");
+            return true;
         }
 
         Change minerEntry = entryOptional.get();
@@ -163,6 +167,10 @@ public class TreeChanges {
 
     public ConformanceInfo getConformanceInfo() {
         return conformanceInfo;
+    }
+
+    public int getBitsRemoved(){
+        return this.getChanges().getChanges().stream().mapToInt(x->x.getBitsChanged()).sum();
     }
 
     @Override

@@ -22,7 +22,7 @@ public class Main {
     public static void main(String[] args) throws Exception {
 
 		//String filename = "EventLogs\\log1.xes";
-		String filename = "EventLogs\\contest_dataset\\test_log_may_4.xes";
+		String filename = "EventLogs\\contest_dataset\\training_log_4.xes";
         //String filename = "EventLogs\\test.csv";
 
     	logManager.readConfiguration(new FileInputStream("./app.properties"));

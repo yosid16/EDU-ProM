@@ -22,7 +22,7 @@ public class LogSeries {
 
 
 		String filenameFormat2017 = "EventLogs\\contest_2017\\log%s.xes";
-		String filenameFormat2016 = "EventLogs\\contest_dataset\\test_log_may_%s.xes";
+		String filenameFormat2016 = "EventLogs\\contest_dataset\\training_log_%s.xes";
 		Integer[] fileNumbers = new Integer[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 }; //
 		List<String> files = Arrays.stream(fileNumbers).map(x -> String.format(filenameFormat2016, x)).collect(Collectors.toList());
 		files.addAll(Arrays.stream(fileNumbers).map(x -> String.format(filenameFormat2017, x)).collect(Collectors.toList()));
@@ -33,7 +33,7 @@ public class LogSeries {
         try {
 
         	for(String filename : files){
-				IMiner miner = new RecursiveScan(filename, 0.5, 0.5,0.0f, 0.2f, 0.4f, 0.6f, 0.8f, 1.0f);
+				IMiner miner = new RecursiveScan(filename, 0.5, 0.5,0.2f, 0.4f, 0.6f, 0.8f, 1.0f);
 				miner.mine();
 				miner.export();
 			}
