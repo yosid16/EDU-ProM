@@ -3,6 +3,7 @@ package org.eduprom.partitioning;
 import org.deckfour.xes.classification.XEventNameClassifier;
 import org.deckfour.xes.model.XLog;
 import org.eduprom.miners.AbstractMiner;
+import org.eduprom.miners.adaptiveNoise.conformance.IConformanceContext;
 import org.processmining.framework.packages.PackageManager;
 import org.processmining.plugins.InductiveMiner.conversion.ReduceTree;
 import org.processmining.plugins.InductiveMiner.efficienttree.EfficientTreeReduce;
@@ -33,6 +34,7 @@ public class InductiveLogSplitting implements ILogSplitter {
     protected final static Logger logger = Logger.getLogger(AbstractMiner.class.getName());
 
     private MiningParametersIM _parameters = new MiningParametersIM();
+    private IConformanceContext conformanceContext;
 
     protected static PackageManager.Canceller _canceller = new PackageManager.Canceller() {
 
@@ -44,7 +46,9 @@ public class InductiveLogSplitting implements ILogSplitter {
         }
     };
 
-    public InductiveLogSplitting() {
+    public InductiveLogSplitting(IConformanceContext conformanceContext) {
+        this.conformanceContext = conformanceContext;
+
     }
 
     @Override
@@ -57,7 +61,7 @@ public class InductiveLogSplitting implements ILogSplitter {
         }
 
         //create process tree
-        Partitioning res = new Partitioning();
+        Partitioning res = new Partitioning(conformanceContext);
         ProcessTree tree = res.getProcessTree();
 
         MinerState minerState = new MinerState(parameters, _canceller);
@@ -227,7 +231,7 @@ public class InductiveLogSplitting implements ILogSplitter {
             newNode = processor.postProcess(newNode, log, logInfo, minerState);
         }
 
-        partitioning.add(newNode.getID(), log.toXLog());
+        partitioning.add(newNode, log.toXLog());
 
         return newNode;
     }

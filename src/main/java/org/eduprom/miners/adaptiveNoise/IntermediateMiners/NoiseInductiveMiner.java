@@ -7,6 +7,7 @@ import org.eduprom.exceptions.ParsingException;
 import org.eduprom.miners.IProcessTreeMiner;
 import org.eduprom.miners.InductiveMiner;
 import org.eduprom.miners.adaptiveNoise.FilterAlgorithm;
+import org.processmining.contexts.cli.CLIPluginContext;
 import org.processmining.log.algorithms.LowFrequencyFilterAlgorithm;
 import org.processmining.log.parameters.LowFrequencyFilterParameters;
 import org.processmining.plugins.InductiveMiner.mining.MiningParametersIM;
@@ -54,6 +55,47 @@ public class NoiseInductiveMiner extends InductiveMiner {
 		processTreeCache.put(id, result);
 		return result;
 	}
+
+	public MiningResult mineProcessTree(XLog rLog) {
+
+		FilterAlgorithm.FilterResult res = filterLog(rLog);
+		//int removed = rLog.size() - filteredLog.size();
+
+		//if (removed > 0){
+		//logger.info(String.format("log filtered: original log size: %d, new log size: %d, removed %d traces (threshold: %f)",
+		//		rLog.size(), filteredLog.size(), removed, getNoiseThreshold()));
+		//}
+
+
+		processTree = IMProcessTree.mineProcessTree(res.getFilteredLog(), parameters, getCanceller());
+		MiningResult result = new MiningResult(processTree, res);
+		//logger.info("mined process tree");
+		return result;
+	}
+
+
+	public static MiningResult mineProcessTree(XLog rLog, float noise) {
+		int noiseThreshold = Math.round(noise * 100);
+		LowFrequencyFilterParameters params = new LowFrequencyFilterParameters(rLog);
+		params.setThreshold(noiseThreshold);
+		FilterAlgorithm.FilterResult res = (new FilterAlgorithm())
+				.filter(new CLIPluginContext(new org.processmining.contexts.cli.CLIContext(), ""), rLog, params);
+
+		//int removed = rLog.size() - filteredLog.size();
+
+		//if (removed > 0){
+		//logger.info(String.format("log filtered: original log size: %d, new log size: %d, removed %d traces (threshold: %f)",
+		//		rLog.size(), filteredLog.size(), removed, getNoiseThreshold()));
+		//}
+
+		MiningParametersIM parameters = new MiningParametersIM();
+		parameters.setNoiseThreshold(noise);
+		ProcessTree processTree = IMProcessTree.mineProcessTree(res.getFilteredLog(), parameters, ()-> false);
+		MiningResult result = new MiningResult(processTree, res);
+		return result;
+	}
+
+
 
 	public static NoiseInductiveMiner WithNoiseThreshold(String filename, float noiseThreshold) throws LogFileNotFoundException {
 		MiningParametersIM parametersIM = new MiningParametersIM();

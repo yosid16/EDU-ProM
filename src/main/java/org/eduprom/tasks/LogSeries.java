@@ -33,7 +33,9 @@ public class LogSeries {
         try {
 
         	for(String filename : files){
-				IMiner miner = new RecursiveScan(filename, 0.5, 0.5,0.2f, 0.4f, 0.6f, 0.8f, 1.0f);
+        		//0.1f, 0.2f, 0.3f, 0.4f, 0.5f, 0.6f, 0.7f, 0.8f, 0.9f, 1.0f
+				IMiner miner = new RecursiveScan(filename, 0.34, 0.33, 0.33,
+						0.2f, 0.4f, 0.6f);
 				miner.mine();
 				miner.export();
 			}

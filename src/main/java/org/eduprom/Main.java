@@ -31,7 +31,7 @@ public class Main {
         try {
 
 			IMiner miner = new RecursiveScan(filename, 0.5, 0.5,
-					0.0f, 0.2f, 0.4f, 0.6f, 0.8f, 1.0f);
+					0.2f, 0.4f, 0.6f);
         	miner.mine();
         	//miner.export();
         	//miner.evaluate();

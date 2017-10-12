@@ -3,18 +3,29 @@ package org.eduprom.miners.adaptiveNoise;
 import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
 import com.google.common.base.Stopwatch;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import javafx.util.Pair;
 import org.apache.commons.math3.stat.descriptive.rank.Median;
 import org.deckfour.xes.model.XLog;
+import org.deckfour.xes.model.XTrace;
+import org.deckfour.xes.model.impl.XLogImpl;
+import org.eduprom.entities.CrossValidationPartition;
 import org.eduprom.exceptions.ExportFailedException;
 import org.eduprom.exceptions.MiningException;
 import org.eduprom.exceptions.ProcessTreeConversionException;
 import org.eduprom.miners.AbstractPetrinetMiner;
+import org.eduprom.miners.adaptiveNoise.IntermediateMiners.MiningResult;
 import org.eduprom.miners.adaptiveNoise.IntermediateMiners.NoiseInductiveMiner;
+import org.eduprom.miners.adaptiveNoise.conformance.IConformanceContext;
+import org.eduprom.miners.adaptiveNoise.conformance.IConformanceObject;
 import org.eduprom.partitioning.ILogSplitter;
 import org.eduprom.partitioning.InductiveLogSplitting;
 import org.eduprom.partitioning.Partitioning;
 import org.eduprom.utils.PetrinetHelper;
+import org.processmining.modelrepair.plugins.align.PNLogReplayer;
 import org.processmining.plugins.petrinet.replayresult.PNRepResult;
+import org.processmining.plugins.pnalignanalysis.conformance.AlignmentPrecGenRes;
 import org.processmining.processtree.ProcessTree;
 import org.processmining.ptconversions.pn.ProcessTree2Petrinet;
 import org.apache.commons.lang3.StringUtils;
@@ -23,25 +34,29 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.commons.math3.*;
 
-public class RecursiveScan extends AbstractPetrinetMiner {
+public class RecursiveScan extends AbstractPetrinetMiner implements IConformanceContext {
 
     private Float[] noiseThresholds;
     private List<NoiseInductiveMiner> miners;
 
+    private final NoiseInductiveMiner partitionMiner = NoiseInductiveMiner.WithNoiseThreshold(filename, 0f);
     private double precisionWeight;
     private double fitnessWeight;
+    private Double generalizationWeight;
 
     //region private methods
 
-    private void modifyPsi(ConformanceInfo info, ProcessTree tree, XLog log) throws MiningException {
+    /*
+    private void modifyPsi() throws MiningException {
         ProcessTree2Petrinet.PetrinetWithMarkings res = null;
         try {
-            res = PetrinetHelper.ConvertToPetrinet(tree);
+            res = PetrinetHelper.ConvertToPetrinet(this.getProcessTree());
         } catch (ProcessTreeConversionException e) {
             throw new MiningException(e);
         }
@@ -53,27 +68,196 @@ public class RecursiveScan extends AbstractPetrinetMiner {
         PNRepResult alignment = petrinetHelper.getAlignment(log, res.petrinet, res.initialMarking, res.finalMarking);
         double fitness = Double.parseDouble(alignment.getInfo().get("Move-Model Fitness").toString());
         //this.petrinetHelper.printResults(alignment);
-        info.setFitness(fitness);
+        this.info.setFitness(fitness);
 
         double precision = petrinetHelper.getPrecision(log, res.petrinet, alignment, res.initialMarking, res.finalMarking);
         info.setPrecision(precision);
+
+        //double generalization = petrinetHelper.getGeneralization(log, res);
+        //info.setGeneralization(generalization);
+    }*/
+
+
+    private void modifyPsiWithGen(IConformanceObject object) throws MiningException {
+        object.setConformanceInfo(new ConformanceInfo(fitnessWeight, precisionWeight, generalizationWeight));
+        MiningResult result = object.getMiner().mineProcessTree(object.getLog(), object.getId());
+        object.setMiningResult(result);
+        ProcessTree2Petrinet.PetrinetWithMarkings res = null;
+        try {
+            res = PetrinetHelper.ConvertToPetrinet(result.getProcessTree());
+        } catch (ProcessTreeConversionException e) {
+            throw new MiningException(e);
+        }
+
+        //String path = String.format("./Output/%s_%s_%s" , getName(),
+        //        FilenameUtils.removeExtension(Paths.get(filename).getFileName().toString()), changes.id.toString());
+        //petrinetHelper.export(res.petrinet, path);
+
+        PNRepResult alignment = petrinetHelper.getAlignment(object.getLog(), res.petrinet, res.initialMarking, res.finalMarking);
+        double fitness = Double.parseDouble(alignment.getInfo().get("Move-Model Fitness").toString());
+        //this.petrinetHelper.printResults(alignment);
+        object.getConformanceInfo().setFitness(fitness);
+
+        AlignmentPrecGenRes alignmentPrecGenRes = petrinetHelper.getConformance(object.getLog(), res.petrinet, alignment, res.initialMarking, res.finalMarking);
+        object.getConformanceInfo().setPrecision(alignmentPrecGenRes.getPrecision());
+        object.getConformanceInfo().setGeneralization(alignmentPrecGenRes.getGeneralization());
+
+        //double generalization = petrinetHelper.getGeneralization(log, res);
+        //object.getConformanceInfo().setGeneralization(1.0);
     }
 
-    private Partitioning splitLog() throws MiningException {
 
-        ILogSplitter logSplitter = new InductiveLogSplitting();
-        Partitioning pratitioning = logSplitter.split(this.log);
+    private void modifyPsiNoGen(IConformanceObject object) throws MiningException {
+        object.setConformanceInfo(new ConformanceInfo(fitnessWeight, precisionWeight, generalizationWeight));
+        MiningResult result = object.getMiner().mineProcessTree(object.getLog(), object.getId());
+        object.setMiningResult(result);
+        ProcessTree2Petrinet.PetrinetWithMarkings res = null;
+        try {
+            res = PetrinetHelper.ConvertToPetrinet(result.getProcessTree());
+        } catch (ProcessTreeConversionException e) {
+            throw new MiningException(e);
+        }
 
-        NoiseInductiveMiner baselineMiner = NoiseInductiveMiner.WithNoiseThreshold(filename, 0f);
-        for(Map.Entry<UUID, Partitioning.PartitionInfo> partitionInfo : pratitioning.getPartitions().entrySet()) {
-            ConformanceInfo info = new ConformanceInfo(fitnessWeight, precisionWeight);
-            ProcessTree pt = baselineMiner.mineProcessTree(partitionInfo.getValue().getLog(), partitionInfo.getKey()).getProcessTree();
+        //String path = String.format("./Output/%s_%s_%s" , getName(),
+        //        FilenameUtils.removeExtension(Paths.get(filename).getFileName().toString()), changes.id.toString());
+        //petrinetHelper.export(res.petrinet, path);
 
-            modifyPsi(info, pt, partitionInfo.getValue().getLog());
+        PNRepResult alignment = petrinetHelper.getAlignment(object.getLog(), res.petrinet, res.initialMarking, res.finalMarking);
+        double fitness = Double.parseDouble(alignment.getInfo().get("Move-Model Fitness").toString());
+        //this.petrinetHelper.printResults(alignment);
+        object.getConformanceInfo().setFitness(fitness);
 
-            partitionInfo.getValue().setProcessTree(pt);
-            partitionInfo.getValue().setConformanceInfo(info);
+        double precision = petrinetHelper.getPrecision(object.getLog(), res.petrinet, alignment, res.initialMarking, res.finalMarking);
+        object.getConformanceInfo().setPrecision(precision);
 
+        //double generalization = petrinetHelper.getGeneralization(log, res);
+        object.getConformanceInfo().setGeneralization(1.0);
+    }
+
+    private void modifyPsiCrossValidation(IConformanceObject object) throws MiningException {
+        Collections.shuffle(object.getLog());
+        int k = object.getLog().size() > 10 ? 10 : 2;
+        List<CrossValidationPartition> partitions = Lists.partition(object.getLog(), object.getLog().size() / 10)
+                .stream().map(x -> new CrossValidationPartition(x, object.getLog().getAttributes())).collect(Collectors.toList());
+
+        List<ConformanceInfo> values = new ArrayList<ConformanceInfo>();
+        for(CrossValidationPartition testTraces: partitions){
+            List<XTrace> trainTraces = partitions.stream()
+                    .filter(x -> x != testTraces)
+                    .flatMap(x -> x.getLog().stream()).collect(Collectors.toList());
+            XLog trainLog = new XLogImpl(object.getLog().getAttributes());
+            trainLog.addAll(trainTraces);
+
+            XLog testLog = new XLogImpl(object.getLog().getAttributes());
+            testLog.addAll(testTraces.getLog());
+
+            MiningResult result = object.getMiner().mineProcessTree(trainLog);
+            ProcessTree2Petrinet.PetrinetWithMarkings res = PetrinetHelper.ConvertToPetrinet(result.getProcessTree());
+
+
+            ConformanceInfo candidate = new ConformanceInfo(fitnessWeight,
+                    precisionWeight, generalizationWeight);
+
+            PNRepResult alignment = petrinetHelper.getAlignment(trainLog, res.petrinet, res.initialMarking, res.finalMarking);
+            double fitness = Double.parseDouble(alignment.getInfo().get("Move-Model Fitness").toString());
+            candidate.setFitness(fitness);
+
+            double precision = petrinetHelper.getPrecision(trainLog, res.petrinet, alignment, res.initialMarking, res.finalMarking);
+            candidate.setPrecision(precision);
+
+            PNRepResult testAlignment = petrinetHelper.getAlignment(testLog, res.petrinet, res.initialMarking, res.finalMarking);
+            double generalization = Double.parseDouble(testAlignment.getInfo().get("Move-Model Fitness").toString());
+            candidate.setGeneralization(generalization);
+            values.add(candidate);
+        }
+
+        MiningResult result = object.getMiner().mineProcessTree(object.getLog());
+        object.setMiningResult(result);
+        ConformanceInfo conformanceInfo = new ConformanceInfo(fitnessWeight, precisionWeight, generalizationWeight);
+        conformanceInfo.setFitness(values.stream().mapToDouble(x->x.getFitness()).sum() / values.size());
+        conformanceInfo.setPrecision(values.stream().mapToDouble(x->x.getPrecision()).sum() / values.size());
+        conformanceInfo.setGeneralization(values.stream().mapToDouble(x->x.getGeneralization()).sum() / values.size());
+        object.setConformanceInfo(conformanceInfo);
+    }
+
+
+    private void modifyPsiRollup(TreeChanges changes, XLog trainLog, XLog testLog) throws MiningException {
+        //Collections.shuffle(log);
+        //List<CrossValidationPartition> partitions = logHelper.crossValidationSplit(this.log, 10);
+
+
+        ProcessTree2Petrinet.PetrinetWithMarkings res = null;
+        try {
+            res = PetrinetHelper.ConvertToPetrinet(changes.getModifiedProcessTree());
+        } catch (ProcessTreeConversionException e) {
+            throw new MiningException(e);
+        }
+
+        //String path = String.format("./Output/%s_%s_%s" , getName(),
+        //        FilenameUtils.removeExtension(Paths.get(filename).getFileName().toString()), changes.id.toString());
+        //petrinetHelper.export(res.petrinet, path);
+
+        PNRepResult alignment = petrinetHelper.getAlignment(trainLog, res.petrinet, res.initialMarking, res.finalMarking);
+        double fitness = Double.parseDouble(alignment.getInfo().get("Move-Model Fitness").toString());
+        //this.petrinetHelper.printResults(alignment);
+        changes.getConformanceInfo().setFitness(fitness);
+
+        double precision = petrinetHelper.getPrecision(trainLog, res.petrinet, alignment, res.initialMarking, res.finalMarking);
+        changes.getConformanceInfo().setPrecision(precision);
+
+
+        PNRepResult testAlignment = petrinetHelper.getAlignment(testLog, res.petrinet, res.initialMarking, res.finalMarking);
+        double generalization = Double.parseDouble(testAlignment.getInfo().get("Move-Model Fitness").toString());
+        changes.getConformanceInfo().setGeneralization(generalization);
+
+        //AlignmentPrecGenRes alignmentPrecGenRes = petrinetHelper.getConformance(log, res.petrinet, alignment, res.initialMarking, res.finalMarking);
+        //changes.getConformanceInfo().setGeneralization(alignmentPrecGenRes.getGeneralization());
+        //changes.getConformanceInfo().setPrecision(alignmentPrecGenRes.getPrecision());
+
+        /*
+        Partitioning.PartitionInfo rootInfo = changes.getPratitioning()
+                .getPartitions().values().stream()
+                .filter(x->x.isRoot()).findAny().get();
+        int rootBits = rootInfo.getBits();
+
+        Map<ConformanceInfo, Double> conformanceInfos = new ConcurrentHashMap<>();
+        //changes.getUnchangedPartitions().values().stream()
+        for(Map.Entry<UUID, Partitioning.PartitionInfo> entry : changes.getUnchangedPartitions().entrySet()){
+            double weight = (double)entry.getValue().getBits() / rootBits;
+            conformanceInfos.put(entry.getValue().getConformanceInfo(), weight);
+        }
+
+        for(Map.Entry<UUID, Change> entry : changes.getChangesMap().entrySet()){
+            double weight = (double)entry.getValue().getBits() / rootBits;
+            conformanceInfos.put(entry.getValue().getConformanceInfo(), weight);
+        }
+
+
+        Double min = conformanceInfos.values().stream().mapToDouble(x->x).min().getAsDouble();
+        Double max = conformanceInfos.values().stream().mapToDouble(x->x).max().getAsDouble();
+        Double sum = conformanceInfos.values().stream().mapToDouble(x->x).sum();
+        conformanceInfos.entrySet().forEach(x -> conformanceInfos.put(x.getKey(), x.getValue() /sum ));
+
+        ConformanceInfo info = changes.getConformanceInfo();
+        info.setFitness(conformanceInfos.entrySet().stream().mapToDouble(x -> x.getKey().getFitness() * x.getValue()).sum());
+        info.setPrecision(conformanceInfos.entrySet().stream().mapToDouble(x -> x.getKey().getPrecision() * x.getValue()).sum());
+        info.setGeneralization(conformanceInfos.entrySet().stream().mapToDouble(x -> x.getKey().getGeneralization() * x.getValue()).sum());
+        //info.setFitness(conformanceInfos.stream().mapToDouble(x -> x.getKey().getFitness() * ((x.getValue() - min) / (max - min))).sum());
+        //info.setPrecision(conformanceInfos.stream().mapToDouble(x -> x.getKey().getPrecision() * ((x.getValue() - min) / (max - min))).sum());
+        //info.setGeneralization(conformanceInfos.stream().mapToDouble(x -> x.getKey().getGeneralization() * ((x.getValue() - min) / (max - min))).sum());
+        */
+
+    }
+
+    private Partitioning splitLog(XLog trainLog) throws MiningException {
+
+        ILogSplitter logSplitter = new InductiveLogSplitting(this);
+        Partitioning pratitioning = logSplitter.split(trainLog);
+
+        for(Partitioning.PartitionInfo partitionInfo : pratitioning.getPartitions().values()) {
+            modifyPsiCrossValidation(partitionInfo);
+
+            //logger.info(String.format("Conformance on log split: %s", partitionInfo.getConformanceInfo().toString()));
         }
         return pratitioning;
     }
@@ -82,7 +266,7 @@ public class RecursiveScan extends AbstractPetrinetMiner {
 
         HashMap<TreeChangesSet, TreeChanges> allChanges = new HashMap<>();
         Queue<TreeChanges> current = new LinkedList<>();
-        TreeChanges baselineChange = new TreeChanges(pratitioning, fitnessWeight, precisionWeight);
+        TreeChanges baselineChange = new TreeChanges(pratitioning, fitnessWeight, precisionWeight, generalizationWeight);
         current.offer(baselineChange);
         allChanges.put(baselineChange.getChanges(), baselineChange);
 
@@ -116,27 +300,95 @@ public class RecursiveScan extends AbstractPetrinetMiner {
         return allChanges.values().stream().collect(Collectors.toSet());
     }
 
+    private Set<TreeChanges> generatePossibleTreeChanges2(Partitioning pratitioning, Set<Change> changeOptions) throws MiningException {
 
-    public Set<Change> getOptions(Partitioning pratitioning, List<NoiseInductiveMiner> miners){
-        Median median = new Median();
-        double[] values = pratitioning.getPartitions().values().stream().mapToDouble(x -> x.getConformanceInfo().getPsi()).toArray();
-        double thredhold = median.evaluate(values);
+        Set<Set<Change>> changesSet = Sets.newConcurrentHashSet(changeOptions.stream()
+                .map(x -> {
+                    HashSet<Change> s = new HashSet<Change>();
+                    s.add(x);
+                    return s;
+                }).collect(Collectors.toList()));
 
+        for(Change change1 : changeOptions) {
+            for (Change change2 : changeOptions) {
+                if (!change1.getPartitionInfo().isRalated(change2.getPartitionInfo())){
+                    changesSet.stream().filter(x->x.contains(change1))
+                            .forEach(x->
+                            {
+                                if (x.stream().allMatch(y -> !y.getPartitionInfo().isRalated(change2.getPartitionInfo()))){
+                                    Set<Change> newSln = x.stream().collect(Collectors.toSet());
+                                    newSln.add(change2);
+                                    changesSet.add(newSln);
+                                }
+                            });
+
+                    changesSet.stream().filter(x->x.contains(change2))
+                            .forEach(x->
+                            {
+                                if (x.stream().allMatch(y -> !y.getPartitionInfo().isRalated(change1.getPartitionInfo()))){
+                                    Set<Change> newSln = x.stream().collect(Collectors.toSet());
+                                    newSln.add(change1);
+                                    changesSet.add(newSln);
+                                }
+                            });
+                }
+            }
+        }
+
+        Set<Set<Change>> possibleChanges = new HashSet<>();
+        for (Set<Change> changes: changesSet){
+            possibleChanges.addAll(Sets.powerSet(changes));
+        }
+
+        HashMap<TreeChangesSet, TreeChanges> allChanges = new HashMap<>();
+        TreeChanges baselineChange = new TreeChanges(pratitioning, fitnessWeight, precisionWeight, generalizationWeight);
+        allChanges.put(baselineChange.getChanges(), baselineChange);
+        int scanned = 0;
+        for (Set<Change> changes: possibleChanges){
+            TreeChanges newSln = baselineChange.ToTreeChanges();
+            boolean success = true;
+            for(Change change : changes) {
+                if (!newSln.Add(change)){
+                    success = false;
+                    break;
+                }
+            }
+            if (success){
+                allChanges.put(newSln.getChanges(), newSln);
+            }
+            else {
+                //throw new MiningException("why?!");
+            }
+        }
+
+        return allChanges.values().stream().collect(Collectors.toSet());
+    }
+
+
+    public Set<Change> getOptions(Partitioning pratitioning, List<NoiseInductiveMiner> miners) throws MiningException {
         Set<Change> changes = pratitioning.getPartitions().entrySet().stream()
                 .filter(x -> x.getValue().getConformanceInfo().getPsi() < 1.0)
-                .flatMap(x-> miners.stream().map(miner -> new Change(x.getKey(), x.getValue().getLog(), miner)))
+                .flatMap(x-> miners.stream()
+                        .map(miner -> new Change(x.getValue(), x.getValue().getLog(), miner, this)))
                 .collect(Collectors.toSet());
-        changes.stream().forEach(x -> x.discover());
 
+        for(Change change : changes){
+            //logger.info(String.format("started change: %s", change));
+            modifyPsiCrossValidation(change);
+            //logger.info(String.format("Conformance on option: %s", change.getConformanceInfo().toString()));
+        }
+
+        //changes.stream().forEach(x -> x.discover());
         //changes.removeIf(x -> x.getBitsChanged() == 0);
 
         return changes;
     }
 
-    private TreeChanges findOptimal(Set<TreeChanges> treeChanges) throws MiningException {
+    private TreeChanges findOptimal(Set<TreeChanges> treeChanges, XLog trainLog, XLog testLog) throws MiningException {
         double bestPsi = 0;
         TreeChanges bestModel = null;
         HashSet<String> scanned = new HashSet<>();
+
 
 
         for(TreeChanges change : treeChanges) {
@@ -144,7 +396,7 @@ public class RecursiveScan extends AbstractPetrinetMiner {
             if (scanned.contains(key) && !change.isBaseline()){
                 continue;
             }
-            modifyPsi(change.getConformanceInfo(), change.getModifiedProcessTree(), log);
+            modifyPsiRollup(change, trainLog, testLog);
             //logger.info("OPTIONAL MODEL: " + change.toString());
 
             if (change.getConformanceInfo().getPsi() > bestPsi) {
@@ -225,7 +477,7 @@ public class RecursiveScan extends AbstractPetrinetMiner {
 
     //region constructors
 
-    public RecursiveScan(String filename, double fitnessWeight, double precisionWeight, Float... noiseThresholds) throws Exception {
+    public RecursiveScan(String filename, double fitnessWeight, double precisionWeight, double generalizationWeight, Float... noiseThresholds) throws Exception {
         super(filename);
         this.noiseThresholds = Stream.concat(Arrays.stream(noiseThresholds)
                 ,Stream.of()).distinct().toArray(Float[]::new); //0.0f
@@ -236,6 +488,7 @@ public class RecursiveScan extends AbstractPetrinetMiner {
 
         this.precisionWeight = precisionWeight;
         this.fitnessWeight = fitnessWeight;
+        this.generalizationWeight = generalizationWeight;
     }
 
     //endregion
@@ -243,27 +496,35 @@ public class RecursiveScan extends AbstractPetrinetMiner {
     @Override
     protected ProcessTree2Petrinet.PetrinetWithMarkings minePetrinet() throws MiningException {
 
+        List<CrossValidationPartition> crossValidationPartitions =  this.logHelper.crossValidationSplit(this.log, 10);
+        CrossValidationPartition testPartition = crossValidationPartitions.stream().findAny().get();
+        XLog testLog = testPartition.getLog();
+        XLog trainLog = CrossValidationPartition.Bind(crossValidationPartitions.stream().filter(x -> testPartition != x)
+                .collect(Collectors.toList())).getLog();
+
+
         //start measuring scan time
         Stopwatch stopwatch = Stopwatch.createStarted();
 
-        logger.info(String.format("Fitness weight: %f, Precision weight: %f", fitnessWeight, precisionWeight));
+        logger.info(String.format("Fitness weight: %f, Precision weight: %f, generalization weight: %f",
+                fitnessWeight, precisionWeight, generalizationWeight));
 
         //run algorithm
-        Partitioning partitioning = splitLog();
+        Partitioning partitioning = splitLog(trainLog);
         logger.info(partitioning.toString());
 
         Set<Change> changeOptions = getOptions(partitioning, miners);
-        logger.info(String.format("found %d possible changes to initial partitioning (#miners x #sublogs)", changeOptions.size()));
 
-        if (changeOptions.stream().allMatch(x->x.getBitsChanged() == 0)){
-            logger.info(String.format("mined the possible changes, none resulted in filtering the log"));
-        }
-        logger.info(String.format("mined the possible changes, generating all possible compositions"));
+        logger.info(String.format("found %d possible changes to initial partitioning (#miners x #sublogs)",
+                changeOptions.size()));
 
-        Set<TreeChanges> changes = generatePossibleTreeChanges(partitioning, changeOptions);
-        logger.info(String.format("found %d potential solutions (all subsets of (miners x sublogs) )", changes.size()));
+        Set<TreeChanges> changes = generatePossibleTreeChanges2(partitioning, changeOptions);
+        logger.info(String.format("found %d potential solutions (all subsets of (miners x sublogs)). Total distinct trees: %d",
+                changes.size(), changes.stream()
+                        .map(x->x.getModifiedProcessTree().toString())
+                        .collect(Collectors.toSet()).size()));
 
-        TreeChanges bestModel = findOptimal(changes);
+        TreeChanges bestModel = findOptimal(changes, trainLog, testLog);
         logger.info("OPTIMAL MODEL: " + bestModel.toString());
 
         TreeChanges baselineModel = findBaseline(changes);
@@ -277,23 +538,9 @@ public class RecursiveScan extends AbstractPetrinetMiner {
         return PetrinetHelper.ConvertToPetrinet(bestModel.getModifiedProcessTree());
     }
 
-    public static <T> Set<Set<T>> powerSet(Set<T> originalSet) {
-        Set<Set<T>> sets = new HashSet<Set<T>>();
-        if (originalSet.isEmpty()) {
-            sets.add(new HashSet<T>());
-            return sets;
-        }
-        List<T> list = new ArrayList<T>(originalSet);
-        T head = list.get(0);
-        Set<T> rest = new HashSet<T>(list.subList(1, list.size()));
-        for (Set<T> set : powerSet(rest)) {
-            Set<T> newSet = new HashSet<T>();
-            newSet.add(head);
-            newSet.addAll(set);
-            sets.add(newSet);
-            sets.add(set);
-        }
-        return sets;
+    @Override
+    public NoiseInductiveMiner getPartitionMiner() {
+        return this.partitionMiner;
     }
 }
 

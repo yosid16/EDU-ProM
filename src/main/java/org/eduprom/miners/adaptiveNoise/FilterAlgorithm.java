@@ -17,14 +17,15 @@ public class FilterAlgorithm implements LogFilterAlgorithm {
 
     public class FilterResult
     {
-        public FilterResult(XLog filteredLog, int bitsRemoved){
+        private XLog filteredLog;
+        private int bitsRemoved;
+        private int bits;
+
+        public FilterResult(XLog filteredLog, int bitsRemoved, int bits){
             this.filteredLog = filteredLog;
             this.bitsRemoved = bitsRemoved;
+            this.bits = bits;
         }
-
-        private XLog filteredLog;
-
-        private int bitsRemoved;
 
         public XLog getFilteredLog() {
             return filteredLog;
@@ -32,6 +33,10 @@ public class FilterAlgorithm implements LogFilterAlgorithm {
 
         public int getBitsRemoved() {
             return bitsRemoved;
+        }
+
+        public int getBits(){
+            return this.bits;
         }
     }
 
@@ -42,7 +47,8 @@ public class FilterAlgorithm implements LogFilterAlgorithm {
     public FilterResult filter(PluginContext context, XLog log, LogFilterParameters parameters){
         XLog filtered = apply(context, log, parameters);
         int bitsRemoved = this.removed.stream().mapToInt(x->x.size()).sum();
-        return new FilterResult(filtered, bitsRemoved);
+        int bits = log.stream().mapToInt(x->x.size()).sum();
+        return new FilterResult(filtered, bitsRemoved, bits);
     }
 
     public XLog apply(PluginContext context, XLog log, LogFilterParameters parameters) {

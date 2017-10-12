@@ -22,9 +22,9 @@ public class Matching {
     	logger.info("started application");
     	    	    	
         try {
-            IMiner miner = new RecursiveScan(filename, 0.0f, 0.1f, 0.2f, 0.3f);
-            miner.mine();
-            miner.export();
+            //IMiner miner = new RecursiveScan(filename, 0.0f, 0.1f, 0.2f, 0.3f);
+            //miner.mine();
+            //miner.export();
 
         } catch (Exception ex) {
         	logger.log(Level.SEVERE, "exception when trying to train/evaluate the miner", ex);

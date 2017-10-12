@@ -63,7 +63,7 @@ public abstract class AbstractMiner implements IMiner {
             logger.info(String.format("Started training the log file: %s using the algorithm: %s",
                     filename, getName()));
             readLog();
-            logHelper.printLogGrouped(Level.FINE, log);
+            //logHelper.printLogGrouped(Level.FINE, log);
             logger.info(String.format("reading event log finished successfully,log size: %s", log.size()));
 
             mineSpecific();

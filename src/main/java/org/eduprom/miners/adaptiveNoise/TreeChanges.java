@@ -4,12 +4,16 @@ import org.eduprom.exceptions.MiningException;
 import org.eduprom.partitioning.Partitioning;
 import org.eduprom.utils.PocessTreeHelper;
 import org.processmining.processtree.*;
+import org.processmining.processtree.impl.AbstractBlock;
 
 import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static java.util.stream.Stream.concat;
 
 public class TreeChanges {
     protected static final Logger logger = Logger.getLogger(TreeChanges.class.getName());
@@ -28,25 +32,27 @@ public class TreeChanges {
     private ConformanceInfo conformanceInfo;
     private UUID id;
 
-    public TreeChanges(Partitioning pratitioning, double fitnessWeight, double precisionWeight){
+    public TreeChanges(Partitioning pratitioning, double fitnessWeight, double precisionWeight, double generalizationWeight){
         this.changes = new TreeChangesSet();
         this.newIds = new HashMap<>();
         this.pratitioning = pratitioning;
         this.explored = new HashSet<>();
-        conformanceInfo = new ConformanceInfo(fitnessWeight, precisionWeight);
+        conformanceInfo = new ConformanceInfo(fitnessWeight, precisionWeight, generalizationWeight);
         id = UUID.randomUUID();
         setModifiedProcessTree(pratitioning.getProcessTree().toTree());
     }
 
-
     public boolean Add(Change change) throws MiningException {
         Node localNode = modifiedProcessTree.getNode(change.getId());
-        this.explored.add(change.getId());
+        this.explored.addAll(change.getReplacedNodes());
         if (pratitioning.getPartitions().containsKey(change.getId()) && localNode != null){
+
             changes.getChanges().add(change);
             UUID id = change.getId();
             ProcessTree pt = change.getProcessTree();
             //logger.info(String.format("replaced process tree: %s  with: %s", localNode.toString(), pt.toString()));
+            //logger.info("new: " + pt.toString());
+            //logger.info("old: " + localNode.toString());
             helper.merge(pt.getRoot(), localNode);
             newIds.put(change.getId(), pt.getRoot().getID());
             return true;
@@ -54,46 +60,14 @@ public class TreeChanges {
 
         return false;
     }
-    /*
-    public boolean AddWithoutApplying(UUID nodeId, NoiseInductiveMiner inductiveMiner) throws MiningException {
-        Node localNode = modifiedProcessTree.getNode(nodeId);
-        this.explored.add(nodeId);
-        if (pratitioning.getPartitions().containsKey(nodeId) && localNode != null){
-            changes.put(nodeId, inductiveMiner);
-            ProcessTree pt = inductiveMiner.mineProcessTree(pratitioning.getPartitions().get(nodeId));
-            //logger.info(String.format("replaced process tree: %s  with: %s", localNode.toString(), pt.toString()));
-            helper.merge(pt.getRoot(), localNode);
-            newIds.put(nodeId, pt.getRoot().getID());
-            return true;
-        }
-
-        return false;
-    }
-
-    public void apply() {
-        Node localNode = modifiedProcessTree.getNode(nodeId);
-
-    }*/
-
 
     public TreeChanges ToTreeChanges() throws MiningException {
         TreeChanges treeChanges = new TreeChanges(pratitioning,
-                this.conformanceInfo.getFitnessWeight(), this.conformanceInfo.getPrecisionWeight());
+                this.conformanceInfo.getFitnessWeight(), this.conformanceInfo.getPrecisionWeight(), this.conformanceInfo.getGeneralizationWeight());
         treeChanges.modifiedProcessTree = this.modifiedProcessTree.toTree();
         treeChanges.changes.getChanges().addAll(this.changes.getChanges());
         treeChanges.newIds.putAll(this.newIds);
         treeChanges.explored.addAll(this.explored);
-
-        /*
-        for(Map.Entry<UUID, NoiseInductiveMiner> entry : this.changes.entrySet()){
-            if (!treeChanges.Add(entry.getKey(), entry.getValue())){
-                throw new MiningException("Failed to clone the tree changes.");
-            }
-        }
-
-        if (!this.equals(treeChanges)){
-            throw new MiningException("clone failed, a non-valid tree changes was produced.");
-        }*/
 
         return treeChanges;
     }
@@ -101,10 +75,11 @@ public class TreeChanges {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append(String.format("#Changes %d, psi %f (fitness %f, precision %f); Bits removed: %d",
+        sb.append(String.format("#Changes %d, psi %f (fitness %f, precision %f, generalization: %f); Bits removed: %d",
                 changes.getChanges().size(),
-                conformanceInfo.getPsi(), conformanceInfo.getFitness(), conformanceInfo.getPrecision(),
-                getBitsRemoved()));
+                conformanceInfo.getPsi(),
+                conformanceInfo.getFitness(), conformanceInfo.getPrecision(), conformanceInfo.getGeneralization(),
+                this.getBitsRemoved()));
 
         for(Change change : changes.getChanges()){
                 sb.append(",");
@@ -165,12 +140,44 @@ public class TreeChanges {
         return sb.toString();
     }
 
+    public Map<UUID, Change> getChangesMap(){
+        return this.changes.getChanges().stream().collect(Collectors.toMap(y->y.getId(), y->y));
+    }
+
+    public Map<UUID, Partitioning.PartitionInfo> getUnchangedPartitions(){
+        //Set<UUID> filtered = this.changes.getChanges().stream()
+        //        .flatMap(x->x.getPartitionInfo().getChildren().stream()).collect(Collectors.toSet());
+
+        //return this.pratitioning.getPartitions().entrySet().stream()
+        //        .filter(x -> !filtered.contains(x.getKey()))
+        //        .collect(Collectors.toMap(y -> y.getKey(), y -> y.getValue()));
+
+        Set<UUID> ids = this.getModifiedProcessTree().getNodes().stream().map(y->y.getID()).collect(Collectors.toSet());
+        return this.pratitioning.getPartitions().entrySet().stream()
+                .filter(x-> ids.contains(x.getKey()))
+                .collect(Collectors.toMap(y -> y.getKey(), y -> y.getValue()));
+    }
+
+
+
     public ConformanceInfo getConformanceInfo() {
         return conformanceInfo;
     }
 
-    public int getBitsRemoved(){
-        return this.getChanges().getChanges().stream().mapToInt(x->x.getBitsChanged()).sum();
+    public int getBitsRemoved() {
+        int removed = 0;
+        for (Change change: getChanges().getChanges()){
+            removed += change.getBitsRemoved();
+        }
+        return removed;
+    }
+
+    public int getBits() {
+        int removed = 0;
+        for (Change change: getChanges().getChanges()){
+            removed += change.getBits();
+        }
+        return removed;
     }
 
     @Override

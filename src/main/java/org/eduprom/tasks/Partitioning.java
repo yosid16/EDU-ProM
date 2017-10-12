@@ -25,11 +25,11 @@ public class Partitioning {
     	    	    	
         try {
 
-			ILogSplitter logSplitter = new InductiveLogSplitting();
-			LogHelper helper = new LogHelper();
-			XLog log = helper.read(filename);
-			org.eduprom.partitioning.Partitioning pratitioning = logSplitter.split(log);
-			logger.info(pratitioning.toString());
+			//ILogSplitter logSplitter = new InductiveLogSplitting();
+			//LogHelper helper = new LogHelper();
+			//XLog log = helper.read(filename);
+			//org.eduprom.partitioning.Partitioning pratitioning = logSplitter.split(log);
+			//logger.info(pratitioning.toString());
 
         } catch (Exception ex) {
         	logger.log(Level.SEVERE, "exception when trying to train/evaluate the miner", ex);;
