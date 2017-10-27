@@ -9,6 +9,7 @@ import org.eduprom.entities.CrossValidationPartition;
 import org.eduprom.exceptions.ConformanceCheckException;
 import org.eduprom.exceptions.ExportFailedException;
 import org.eduprom.exceptions.LogFileNotFoundException;
+import org.eduprom.miners.AbstractMiner;
 import org.eduprom.miners.adaptiveNoise.AdaptiveNoiseMiner;
 import org.eduprom.miners.adaptiveNoise.ConformanceInfo;
 import org.eduprom.miners.adaptiveNoise.IntermediateMiners.NoiseInductiveMiner;
@@ -25,11 +26,16 @@ import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
+
+import static org.processmining.plugins.petrinet.replayresult.PNRepResult.TRACEFITNESS;
 
 public class AdaptiveNoiseBenchmark implements IBenchmark {
 
-    static final String FITNESS_KEY = "Move-Model Fitness";
+    protected static final Logger logger = Logger.getLogger(AbstractMiner.class.getName());
+    static final String FITNESS_KEY = TRACEFITNESS;
     private LogHelper logHelper;
     private final AdaptiveNoiseConfiguration adaptiveNoiseConfiguration;
     private List<String> filenames;
@@ -98,6 +104,7 @@ public class AdaptiveNoiseBenchmark implements IBenchmark {
                 }
             }
 
+            logger.log(Level.INFO, "BEST BASELINE: {}", bestBaseline.getConformanceInfo().toString());
             sendResult(source, bestBaseline, filename);
         }
     }

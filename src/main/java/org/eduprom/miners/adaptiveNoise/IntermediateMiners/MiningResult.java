@@ -1,14 +1,15 @@
 package org.eduprom.miners.adaptiveNoise.IntermediateMiners;
 
 import org.eduprom.miners.adaptiveNoise.FilterAlgorithm;
+import org.eduprom.miners.adaptiveNoise.FilterResult;
 import org.processmining.processtree.ProcessTree;
 
 public class MiningResult {
 
     private ProcessTree processTree;
-    private FilterAlgorithm.FilterResult filterResult;
+    private FilterResult filterResult;
 
-    public MiningResult(ProcessTree processTree, FilterAlgorithm.FilterResult filterResult){
+    public MiningResult(ProcessTree processTree, FilterResult filterResult){
         this.processTree = processTree;
         this.filterResult = filterResult;
     }
@@ -17,7 +18,7 @@ public class MiningResult {
         return processTree;
     }
 
-    public FilterAlgorithm.FilterResult getFilterResult() {
+    public FilterResult getFilterResult() {
         return filterResult;
     }
 }

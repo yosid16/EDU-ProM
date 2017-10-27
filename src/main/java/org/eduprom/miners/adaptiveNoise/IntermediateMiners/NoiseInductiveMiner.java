@@ -9,6 +9,7 @@ import org.eduprom.exceptions.ParsingException;
 import org.eduprom.miners.InductiveMiner;
 import org.eduprom.miners.adaptiveNoise.ConformanceInfo;
 import org.eduprom.miners.adaptiveNoise.FilterAlgorithm;
+import org.eduprom.miners.adaptiveNoise.FilterResult;
 import org.eduprom.utils.PetrinetHelper;
 import org.processmining.log.parameters.LowFrequencyFilterParameters;
 import org.processmining.models.graphbased.directed.petrinet.impl.PetrinetImpl;
@@ -48,7 +49,7 @@ public class NoiseInductiveMiner extends InductiveMiner implements IBenchmarkabl
 	//endregion
 
 	//region mining for custom log
-	public MiningResult mineProcessTree(XLog rLog, UUID id) {
+	public MiningResult mineProcessTree(XLog rLog, UUID id) throws MiningException {
 		if (processTreeCache.containsKey(id)){
 			return processTreeCache.get(id);
 		}
@@ -58,8 +59,15 @@ public class NoiseInductiveMiner extends InductiveMiner implements IBenchmarkabl
 		return result;
 	}
 
-	public MiningResult mineProcessTree(XLog rLog) {
-		FilterAlgorithm.FilterResult res = filterLog(rLog);
+	public MiningResult mineProcessTree(XLog rLog) throws MiningException {
+		FilterResult res;
+		if (rLog.isEmpty()){
+			res = new FilterResult((XLog)rLog.clone(), 0, rLog.stream().mapToInt(x->x.size()).sum());
+		}
+		else{
+			res = filterLog(rLog);
+		}
+
 		ProcessTree processTree = IMProcessTree.mineProcessTree(res.getFilteredLog(), parameters, getCanceller());
 		MiningResult result = new MiningResult(processTree, res);
 		return result;
@@ -88,7 +96,7 @@ public class NoiseInductiveMiner extends InductiveMiner implements IBenchmarkabl
 		return parameters.getNoiseThreshold();
 	}
 
-	private FilterAlgorithm.FilterResult filterLog(XLog rLog){
+	private FilterResult filterLog(XLog rLog){
 		int noiseThreshold = Math.round(this.getNoiseThreshold() * 100);
 		LowFrequencyFilterParameters params = new LowFrequencyFilterParameters(rLog);
 		params.setThreshold(noiseThreshold);

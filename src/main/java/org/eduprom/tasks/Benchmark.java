@@ -26,7 +26,7 @@ public class Benchmark {
 						"EventLogs\\contest_dataset\\training_log_%s.xes"//,
 						//"EventLogs\\contest_2017\\log%s.xes"
 				};
-		Integer[] fileNumbers = new Integer[] { 1 };
+		Integer[] fileNumbers = new Integer[] { 1 , 2, 3, 4, 5, 6, 7, 8, 9, 10 };
 		List<String> files = Arrays.stream(fileNumbers).flatMap(x-> Arrays.stream(formats)
 				.map(f -> String.format(f, x))).collect(Collectors.toList());
 

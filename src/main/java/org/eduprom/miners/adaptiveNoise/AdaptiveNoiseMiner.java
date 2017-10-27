@@ -24,6 +24,7 @@ import org.processmining.plugins.pnalignanalysis.conformance.AlignmentPrecGenRes
 import org.processmining.ptconversions.pn.ProcessTree2Petrinet;
 
 import java.util.*;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 import static java.lang.String.format;
@@ -32,7 +33,7 @@ public class AdaptiveNoiseMiner extends AbstractPetrinetMiner implements IConfor
 
     //region static members
 
-    static final String FITNESS_KEY = "Move-Model Fitness";
+    static final String FITNESS_KEY = PNRepResult.TRACEFITNESS;
 
     //endregion
 
@@ -67,10 +68,15 @@ public class AdaptiveNoiseMiner extends AbstractPetrinetMiner implements IConfor
                 .stream().map(x -> new CrossValidationPartition(x, object.getLog().getAttributes())).collect(Collectors.toList());
 
         List<ConformanceInfo> values = new ArrayList<ConformanceInfo>();
+
         for(CrossValidationPartition testTraces: partitions){
             List<XTrace> trainTraces = partitions.stream()
                     .filter(x -> x != testTraces)
                     .flatMap(x -> x.getLog().stream()).collect(Collectors.toList());
+            if (trainTraces.isEmpty()){
+                trainTraces.addAll(testTraces.getLog().stream().collect(Collectors.toList()));
+            }
+
             XLog trainLog = new XLogImpl(object.getLog().getAttributes());
             trainLog.addAll(trainTraces);
 
@@ -79,7 +85,6 @@ public class AdaptiveNoiseMiner extends AbstractPetrinetMiner implements IConfor
 
             MiningResult result = object.getMiner().mineProcessTree(trainLog);
             ProcessTree2Petrinet.PetrinetWithMarkings res = PetrinetHelper.ConvertToPetrinet(result.getProcessTree());
-
 
             ConformanceInfo candidate = getNewConformanceInfo();
 
@@ -129,7 +134,7 @@ public class AdaptiveNoiseMiner extends AbstractPetrinetMiner implements IConfor
         for(Partitioning.PartitionInfo partitionInfo : pratitioning.getPartitions().values()) {
             modifyPsiCrossValidation(partitionInfo);
 
-            logger.info(String.format("Conformance on log split: %s", partitionInfo.getConformanceInfo().toString()));
+            logger.log(Level.FINE, String.format("Conformance on log split: %s", partitionInfo.getConformanceInfo().toString()));
         }
         return pratitioning;
     }
@@ -214,7 +219,7 @@ public class AdaptiveNoiseMiner extends AbstractPetrinetMiner implements IConfor
                 .collect(Collectors.toSet());
         Map<String, Change> treeToChangeMapping = new HashMap<>();
         for(Change change : changes){
-            logger.info(String.format("started change: %s", change.getPartitionInfo().getConformanceInfo().toString()));
+            logger.log(Level.INFO, String.format("started change: %s", change.getPartitionInfo().getConformanceInfo().toString()));
             modifyPsiCrossValidation(change);
             String resultingTree = change.getMiningResult().getProcessTree().toString();
             treeToChangeMapping.putIfAbsent(resultingTree, change);
@@ -247,7 +252,7 @@ public class AdaptiveNoiseMiner extends AbstractPetrinetMiner implements IConfor
                 double generalization = Double.parseDouble(testAlignment.getInfo().get(FITNESS_KEY).toString());
                 info.setGeneralization(generalization);
 
-                logger.info(format("OPTIONAL MODEL: %s, tree: %s", change.toString(), change.getModifiedProcessTree().toString()));
+                logger.log(Level.INFO, format("OPTIONAL MODEL: %s, tree: %s", change.toString(), change.getModifiedProcessTree().toString()));
             }
             catch (Exception ex){
                 throw new RuntimeException(ex);
