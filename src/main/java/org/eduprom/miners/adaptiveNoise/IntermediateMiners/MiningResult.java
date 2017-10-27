@@ -3,9 +3,6 @@ package org.eduprom.miners.adaptiveNoise.IntermediateMiners;
 import org.eduprom.miners.adaptiveNoise.FilterAlgorithm;
 import org.processmining.processtree.ProcessTree;
 
-/**
- * Created by ydahari on 10/5/2017.
- */
 public class MiningResult {
 
     private ProcessTree processTree;

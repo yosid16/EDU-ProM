@@ -22,6 +22,7 @@ import static org.processmining.ptconversions.pn.ProcessTree2Petrinet.PetrinetWi
 
 public class TestTreeChangesMiner extends AbstractPetrinetMiner {
 
+    public static final String FITNESS_KEY = "Move-Model Fitness";
     public TestTreeChangesMiner(String filename) throws LogFileNotFoundException {
 		super(filename);
 	}
@@ -39,7 +40,7 @@ public class TestTreeChangesMiner extends AbstractPetrinetMiner {
         //petrinetHelper.export(res.petrinet, path);
 
         PNRepResult alignment = petrinetHelper.getAlignment(log, res.petrinet, res.initialMarking, res.finalMarking);
-        double fitness = Double.parseDouble(alignment.getInfo().get("Move-Model Fitness").toString());
+        double fitness = Double.parseDouble(alignment.getInfo().get(FITNESS_KEY).toString());
         //this.petrinetHelper.printResults(alignment);
         info.setFitness(fitness);
 
@@ -55,7 +56,7 @@ public class TestTreeChangesMiner extends AbstractPetrinetMiner {
         float threshold = 1.0f;
         while(threshold <= 100){
             ConformanceInfo info = new ConformanceInfo(0.5, 0.5);
-            NoiseInductiveMiner miner = NoiseInductiveMiner.WithNoiseThreshold(filename, threshold);
+            NoiseInductiveMiner miner = NoiseInductiveMiner.withNoiseThreshold(filename, threshold);
             modifyPsi(info, miner.mineProcessTree(log), this.log);
             threshold += 0.1f;
             logger.info(String.format("threshold:%f ,fitness: %f, precision: %f, psi: %s",

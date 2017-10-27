@@ -2,23 +2,17 @@ package org.eduprom.miners.adaptiveNoise;
 
 import org.deckfour.xes.model.XLog;
 import org.eduprom.exceptions.MiningException;
-import org.eduprom.exceptions.ProcessTreeConversionException;
 import org.eduprom.miners.adaptiveNoise.IntermediateMiners.MiningResult;
 import org.eduprom.miners.adaptiveNoise.IntermediateMiners.NoiseInductiveMiner;
 import org.eduprom.miners.adaptiveNoise.conformance.IConformanceContext;
-import org.eduprom.miners.adaptiveNoise.conformance.IConformanceObject;
+import org.eduprom.miners.adaptiveNoise.conformance.IAdaptiveNoiseConformanceObject;
 import org.eduprom.partitioning.Partitioning;
-import org.eduprom.utils.PetrinetHelper;
-import org.jbpt.petri.untangling.Process;
-import org.processmining.models.graphbased.directed.petrinet.Petrinet;
-import org.processmining.plugins.petrinet.replayresult.PNRepResult;
 import org.processmining.processtree.ProcessTree;
-import org.processmining.ptconversions.pn.ProcessTree2Petrinet;
 
 import java.util.Set;
 import java.util.UUID;
 
-public class Change implements IConformanceObject {
+public class Change implements IAdaptiveNoiseConformanceObject {
 
     private Partitioning.PartitionInfo partitionInfo;
     private NoiseInductiveMiner miner;
@@ -100,6 +94,6 @@ public class Change implements IConformanceObject {
 
     @Override
     public String toString() {
-        return String.format("id: %s, noise: %f", getId().toString(), miner.getNoiseThreshold());
+        return String.format("SubTree: T_%d, noise: %f", getPartitionInfo().getSequentialId(), miner.getNoiseThreshold());
     }
 }

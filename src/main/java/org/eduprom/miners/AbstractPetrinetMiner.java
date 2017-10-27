@@ -74,5 +74,6 @@ public abstract class AbstractPetrinetMiner extends AbstractMiner {
         return this.petrinetWithMarkings;
     }
 
+
     //endregion
 }

@@ -1,6 +1,7 @@
 package org.eduprom.miners.adaptiveNoise.conformance;
 
 import org.deckfour.xes.model.XLog;
+import org.eduprom.conformance.IConformanceObject;
 import org.eduprom.miners.adaptiveNoise.ConformanceInfo;
 import org.eduprom.miners.adaptiveNoise.IntermediateMiners.MiningResult;
 import org.eduprom.miners.adaptiveNoise.IntermediateMiners.NoiseInductiveMiner;
@@ -9,7 +10,7 @@ import org.processmining.processtree.ProcessTree;
 
 import java.util.UUID;
 
-public interface IConformanceObject {
+public interface IAdaptiveNoiseConformanceObject extends IConformanceObject {
 
     UUID getId();
 
@@ -22,6 +23,4 @@ public interface IConformanceObject {
     MiningResult getMiningResult();
 
     void setConformanceInfo(ConformanceInfo conformanceInfo);
-
-    ConformanceInfo getConformanceInfo();
 }

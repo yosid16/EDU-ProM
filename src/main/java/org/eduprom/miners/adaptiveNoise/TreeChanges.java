@@ -3,8 +3,9 @@ package org.eduprom.miners.adaptiveNoise;
 import org.eduprom.exceptions.MiningException;
 import org.eduprom.partitioning.Partitioning;
 import org.eduprom.utils.PocessTreeHelper;
+import org.processmining.plugins.petrinet.replayresult.PNRepResult;
 import org.processmining.processtree.*;
-import org.processmining.processtree.impl.AbstractBlock;
+import org.processmining.ptconversions.pn.ProcessTree2Petrinet;
 
 import java.util.*;
 import java.util.concurrent.locks.Lock;
@@ -12,8 +13,6 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import static java.util.stream.Stream.concat;
 
 public class TreeChanges {
     protected static final Logger logger = Logger.getLogger(TreeChanges.class.getName());
@@ -29,16 +28,19 @@ public class TreeChanges {
     private Set<UUID> explored;
     private TreeChangesSet changes;
 
+    private ProcessTree2Petrinet.PetrinetWithMarkings petrinetWithMarkings;
+
     private ConformanceInfo conformanceInfo;
+    private PNRepResult alignment;
     private UUID id;
 
-    public TreeChanges(Partitioning pratitioning, double fitnessWeight, double precisionWeight, double generalizationWeight){
+    public TreeChanges(Partitioning pratitioning, ConformanceInfo conformanceInfo){
         this.changes = new TreeChangesSet();
         this.newIds = new HashMap<>();
         this.pratitioning = pratitioning;
         this.explored = new HashSet<>();
-        conformanceInfo = new ConformanceInfo(fitnessWeight, precisionWeight, generalizationWeight);
-        id = UUID.randomUUID();
+        this.conformanceInfo = conformanceInfo;
+        this.id = UUID.randomUUID();
         setModifiedProcessTree(pratitioning.getProcessTree().toTree());
     }
 
@@ -62,8 +64,7 @@ public class TreeChanges {
     }
 
     public TreeChanges ToTreeChanges() throws MiningException {
-        TreeChanges treeChanges = new TreeChanges(pratitioning,
-                this.conformanceInfo.getFitnessWeight(), this.conformanceInfo.getPrecisionWeight(), this.conformanceInfo.getGeneralizationWeight());
+        TreeChanges treeChanges = new TreeChanges(pratitioning, this.getConformanceInfo().CloneWeights());
         treeChanges.modifiedProcessTree = this.modifiedProcessTree.toTree();
         treeChanges.changes.getChanges().addAll(this.changes.getChanges());
         treeChanges.newIds.putAll(this.newIds);
@@ -134,7 +135,7 @@ public class TreeChanges {
         StringBuilder sb = new StringBuilder();
 
         changes.getChanges().stream().sorted(Comparator.comparing(Change:: getId))
-                .map(x-> String.format(" id: %s, noise %f", x.getId().toString(), x.getMiner().getNoiseThreshold()))
+                .map(x-> String.format(" id: T_%d, noise %f", x.getPartitionInfo().getSequentialId(), x.getMiner().getNoiseThreshold()))
                 .forEach(x-> sb.append(x));
 
         return sb.toString();
@@ -158,8 +159,54 @@ public class TreeChanges {
                 .collect(Collectors.toMap(y -> y.getKey(), y -> y.getValue()));
     }
 
+    public ProcessTree2Petrinet.PetrinetWithMarkings getPetrinetWithMarkings() {
+        return petrinetWithMarkings;
+    }
+
+    public void setPetrinetWithMarkings(ProcessTree2Petrinet.PetrinetWithMarkings petrinetWithMarkings) {
+        this.petrinetWithMarkings = petrinetWithMarkings;
+    }
+
+    public PNRepResult getAlignment() {
+        return alignment;
+    }
+
+    public void setAlignment(PNRepResult alignment) {
+        this.alignment = alignment;
+    }
 
 
+    /*
+    @Override
+    public UUID getId() {
+        return this.id;
+    }
+
+    @Override
+    public XLog getLog() {
+        return this.getPratitioning().getOrigianlLog();
+    }
+
+    @Override
+    public NoiseInductiveMiner getMiner() {
+        return null;
+    }
+
+    @Override
+    public void setMiningResult(MiningResult result) {
+
+    }
+
+    @Override
+    public MiningResult getMiningResult() {
+        return null;
+    }
+
+    @Override
+    public void setConformanceInfo(ConformanceInfo conformanceInfo) {
+
+    }
+    */
     public ConformanceInfo getConformanceInfo() {
         return conformanceInfo;
     }

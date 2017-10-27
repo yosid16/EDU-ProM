@@ -1,11 +1,13 @@
 package org.eduprom.miners;
 
+import com.google.common.base.Stopwatch;
 import org.apache.commons.io.FilenameUtils;
 import org.eduprom.exceptions.LogFileNotFoundException;
 import org.eduprom.exceptions.MiningException;
 import org.eduprom.exceptions.ParsingException;
 import org.eduprom.utils.LogHelper;
 import java.nio.file.Paths;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -38,6 +40,7 @@ public abstract class AbstractMiner implements IMiner {
     protected LogHelper logHelper;
     protected XLog log;
     protected Canceller canceller = ()-> false;
+    private long elapsedMiliseconds;
 
     //endregion
 
@@ -60,6 +63,7 @@ public abstract class AbstractMiner implements IMiner {
     @Override
     public void mine() {
         try {
+            Stopwatch stopwatch = Stopwatch.createStarted();
             logger.info(String.format("Started training the log file: %s using the algorithm: %s",
                     filename, getName()));
             readLog();
@@ -69,6 +73,11 @@ public abstract class AbstractMiner implements IMiner {
             mineSpecific();
             logger.info(String.format("Training the log file: %s using the algorithm: %s has completed successfully"
                     , filename, getName()));
+            stopwatch.stop();
+            this.elapsedMiliseconds = stopwatch.elapsed(TimeUnit.MILLISECONDS);
+
+
+
         } catch (MiningException e) {
             String message = String.format("Training the log file: %s using the algorithm: %s has failed"
                     , filename, getName());
@@ -105,6 +114,11 @@ public abstract class AbstractMiner implements IMiner {
 
     protected abstract void mineSpecific() throws MiningException;
 
+    @Override
+    public void setLog(XLog log) {
+        this.log = log;
+    }
+
     protected String getOutputPath(){
         return String.format("./Output/%s_%s" ,
                 getName(),
@@ -113,6 +127,11 @@ public abstract class AbstractMiner implements IMiner {
 
     protected XEventClassifier getClassifier(){
         return new XEventNameClassifier();
+    }
+
+    @Override
+    public long getElapsedMiliseconds() {
+        return elapsedMiliseconds;
     }
 
     //endregion

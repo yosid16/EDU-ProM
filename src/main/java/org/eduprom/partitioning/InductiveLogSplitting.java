@@ -61,7 +61,7 @@ public class InductiveLogSplitting implements ILogSplitter {
         }
 
         //create process tree
-        Partitioning res = new Partitioning(conformanceContext);
+        Partitioning res = new Partitioning(conformanceContext, xLog);
         ProcessTree tree = res.getProcessTree();
 
         MinerState minerState = new MinerState(parameters, _canceller);

@@ -1,5 +1,6 @@
 package org.eduprom.miners;
 
+import org.deckfour.xes.model.XLog;
 import org.eduprom.exceptions.ConformanceCheckException;
 import org.eduprom.exceptions.ExportFailedException;
 import org.eduprom.exceptions.MiningException;
@@ -17,6 +18,12 @@ public interface IMiner {
     void mine() throws MiningException;
 
     /***
+     * Sets the training log
+     * @param log the new log
+     */
+    void setLog(XLog log);
+
+    /***
      * Evaluates the process model quality. For example may print fitness, precision information.
      * @throws Exception
      */
@@ -27,4 +34,10 @@ public interface IMiner {
      * @throws Exception
      */
     void export() throws ExportFailedException;
+
+    /***
+     * Time to construct the model
+     * @return
+     */
+    long getElapsedMiliseconds();
 }

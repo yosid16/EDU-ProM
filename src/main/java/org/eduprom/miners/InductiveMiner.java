@@ -8,6 +8,8 @@ import org.processmining.plugins.InductiveMiner.plugins.IMPetriNet;
 import org.processmining.models.graphbased.directed.petrinet.impl.PetrinetImpl;
 import org.processmining.models.semantics.petrinet.Marking;
 
+import java.util.logging.Level;
+
 import static org.processmining.ptconversions.pn.ProcessTree2Petrinet.PetrinetWithMarkings;
 
 public class InductiveMiner extends AbstractPetrinetMiner {
@@ -28,6 +30,7 @@ public class InductiveMiner extends AbstractPetrinetMiner {
 
 	@Override
 	protected PetrinetWithMarkings minePetrinet() throws MiningException {
+		this.logHelper.printLogGrouped(Level.INFO, this.log);
 		logger.info("Started mining a petri nets using inductive miner");
 		Object[] res = IMPetriNet.minePetriNet(log, parameters, getCanceller());
 		PetrinetWithMarkings pn = new PetrinetWithMarkings();

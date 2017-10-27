@@ -45,11 +45,6 @@ public class ConformanceInfo {
     }
 
     public double getPsi() {
-        if (!assigned()){
-            int a = 1;
-            //throw new MiningException("associated quality metric has not been assigned");
-        }
-
         return fitnessWeight * fitness + precisionWeight * precision + generalizationWeight * generalization;
     }
 
@@ -66,12 +61,28 @@ public class ConformanceInfo {
     }
 
     public boolean assigned() {
-        return fitness != null || precision != null || generalization != null;
+        return fitness != null && precision != null && generalization != null;
     }
 
     @Override
     public String toString() {
         return String.format("fitness (%f, %f), precision(%f, %f), generalization: (%f,%f)",
                 fitnessWeight, fitness, precisionWeight, precision, generalizationWeight, generalization);
+    }
+
+    public double maxValue(){
+        return fitnessWeight * (fitness == null ? 1 : fitness) +
+                precisionWeight * (precision == null ? 1 : precision) +
+                generalizationWeight * (generalization == null ? 1 : generalization);
+    }
+
+    public double minValue(){
+        return fitnessWeight * (fitness == null ? 0 : fitness) +
+                precisionWeight * (precision == null ? 0 : precision) +
+                generalizationWeight * (generalization == null ? 0 : generalization);
+    }
+
+    public ConformanceInfo CloneWeights(){
+        return new ConformanceInfo(this.getFitnessWeight(), this.getPrecisionWeight(), this.getGeneralizationWeight());
     }
 }
