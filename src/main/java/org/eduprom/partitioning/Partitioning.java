@@ -32,6 +32,7 @@ public class Partitioning
         private MiningResult miningResult;
         private ConformanceInfo conformanceInfo;
         private IConformanceContext conformanceContext;
+        private Set<UUID> resursiveChildern;
 
         private Stream<Node> getAllRecursiveNodes(Node node){
             if (node instanceof AbstractBlock){
@@ -46,6 +47,7 @@ public class Partitioning
             this.partitionLog = partitionLog;
             this.node = node;
             this.conformanceContext = conformanceContext;
+            this.resursiveChildern = getAllRecursiveNodes(this.node).map(x->x.getID()).collect(Collectors.toSet());
         }
 
         public boolean isRoot() {
@@ -96,7 +98,7 @@ public class Partitioning
         }
 
         public boolean isChildOf(PartitionInfo partitionInfo){
-            return this.getAllRecursiveNodes(this.node).filter(x->x.getID() == partitionInfo.getId()).findAny().isPresent();
+            return resursiveChildern.contains(partitionInfo.getId());
         }
 
         public boolean isRalated(PartitionInfo partitionInfo){

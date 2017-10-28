@@ -23,8 +23,10 @@ import org.processmining.ptconversions.pn.ProcessTree2Petrinet;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -39,6 +41,8 @@ public class AdaptiveNoiseBenchmark implements IBenchmark {
     private LogHelper logHelper;
     private final AdaptiveNoiseConfiguration adaptiveNoiseConfiguration;
     private List<String> filenames;
+    private String path;
+    private int testSize;
 
     private ConformanceInfo getNewConformanceInfo(){
         return new ConformanceInfo(adaptiveNoiseConfiguration.getFitnessWeight(),
@@ -47,10 +51,13 @@ public class AdaptiveNoiseBenchmark implements IBenchmark {
 
     }
 
-    public AdaptiveNoiseBenchmark(List<String> filenames, AdaptiveNoiseConfiguration adaptiveNoiseConfiguration){
+    public AdaptiveNoiseBenchmark(List<String> filenames, AdaptiveNoiseConfiguration adaptiveNoiseConfiguration, int testSize){
         this.adaptiveNoiseConfiguration = adaptiveNoiseConfiguration;
         this.filenames = filenames;
         this.logHelper = new LogHelper();
+        this.testSize = testSize;
+        this.path = String.format("./Output/%s-%s.csv", this.getName(),
+                new SimpleDateFormat("yyyy-MM-dd HH-mm-ss").format(new Date()));
     }
 
     @Override
@@ -76,7 +83,7 @@ public class AdaptiveNoiseBenchmark implements IBenchmark {
             //split the log to training and test sets.
             XLog log = logHelper.read(filename);
 
-            List<CrossValidationPartition> crossValidationPartitions =  this.logHelper.crossValidationSplit(log, 10);
+            List<CrossValidationPartition> crossValidationPartitions =  this.logHelper.crossValidationSplit(log, testSize);
             CrossValidationPartition testPartition = crossValidationPartitions.stream().findAny().get();
             XLog testLog = testPartition.getLog();
             XLog trainingLog = CrossValidationPartition.Bind(crossValidationPartitions.stream().filter(x -> testPartition != x)
@@ -104,15 +111,13 @@ public class AdaptiveNoiseBenchmark implements IBenchmark {
                 }
             }
 
-            logger.log(Level.INFO, "BEST BASELINE: {}", bestBaseline.getConformanceInfo().toString());
+            logger.log(Level.INFO, String.format("BEST BASELINE: %s", bestBaseline.getConformanceInfo().toString()));
             sendResult(source, bestBaseline, filename);
         }
     }
 
     private void sendResult(IBenchmarkableMiner source, IBenchmarkableMiner bestBaseline, String filename) throws ExportFailedException {
         try{
-            String path = String.format("./Output/%s.csv", this.getName());
-
             boolean appendSchema = true;
             if (new File(path).isFile()){
                 FileReader fileReader = new FileReader(path);
