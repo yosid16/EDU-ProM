@@ -11,6 +11,7 @@ public class AdaptiveNoiseConfiguration {
     private double precisionWeight;
     private double fitnessWeight;
     private Double generalizationWeight;
+    private boolean useCrossValidation;
 
     //endregoin
 
@@ -22,6 +23,8 @@ public class AdaptiveNoiseConfiguration {
         private double precisionWeight;
         private double fitnessWeight;
         private double generalizationWeight;
+
+        private boolean useCrossValidation;
 
         public AdaptiveNoiseConfigurationBuilder setNoiseThresholds(Float... noiseThresholds){
             this.noiseThresholds = noiseThresholds;
@@ -43,6 +46,11 @@ public class AdaptiveNoiseConfiguration {
             return this;
         }
 
+        public AdaptiveNoiseConfigurationBuilder useCrossValidation(boolean useCrossValidation){
+            this.useCrossValidation = useCrossValidation;
+            return this;
+        }
+
         public Float[] getNoiseThresholds() {
             return noiseThresholds;
         }
@@ -59,6 +67,10 @@ public class AdaptiveNoiseConfiguration {
             return generalizationWeight;
         }
 
+        public boolean getUseCrossValidation() {
+            return useCrossValidation;
+        }
+
         public AdaptiveNoiseConfiguration build(){
             return new AdaptiveNoiseConfiguration(this);
         }
@@ -70,6 +82,7 @@ public class AdaptiveNoiseConfiguration {
         this.fitnessWeight = builder.getFitnessWeight();
         this.precisionWeight = builder.getPrecisionWeight();
         this.generalizationWeight = builder.getGeneralizationWeight();
+        this.useCrossValidation = builder.getUseCrossValidation();
     }
 
     public Float[] getNoiseThresholds() {
@@ -88,6 +101,10 @@ public class AdaptiveNoiseConfiguration {
 
     public Double getGeneralizationWeight() {
         return generalizationWeight;
+    }
+
+    public boolean getUseCrossValidation(){
+        return useCrossValidation;
     }
 
 

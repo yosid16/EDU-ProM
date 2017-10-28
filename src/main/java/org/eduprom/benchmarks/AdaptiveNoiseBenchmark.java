@@ -140,6 +140,7 @@ public class AdaptiveNoiseBenchmark implements IBenchmark {
             String[] schema = new String[]
                     {
                             "filename",
+                            "number_of_partitions",
                             "duration",
                             "options_scanned",
                             "noise_thresholds",
@@ -159,7 +160,10 @@ public class AdaptiveNoiseBenchmark implements IBenchmark {
                     };
 
             String[] data = new String[] {
-                    filename,
+                    filename.replace("EventLogs\\contest_2017\\log", "BPM-2017-Log"
+                            .replace("EventLogs\\contest_dataset\\training_log_","BPM-2016-Log"))
+                            .replace(".xes", ""),
+                    String.valueOf(bestModel.getPratitioning().getPartitions().size()),
                     String.valueOf(source.getElapsedMiliseconds()),
                     String.valueOf(optionsScanned),
                     org.apache.commons.lang3.StringUtils.join(this.adaptiveNoiseConfiguration.getNoiseThresholds(), ',') ,

@@ -6,6 +6,7 @@ import org.eduprom.miners.adaptiveNoise.AdaptiveNoiseMiner;
 import org.eduprom.miners.adaptiveNoise.configuration.AdaptiveNoiseConfiguration;
 
 import java.io.FileInputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
@@ -30,15 +31,25 @@ public class Benchmark {
 		List<String> files = Arrays.stream(fileNumbers).flatMap(x-> Arrays.stream(formats)
 				.map(f -> String.format(f, x))).collect(Collectors.toList());
 		//Float[] thresholds = new Float[] { 0.1f, 0.2f, 0.3f, 0.4f, 0.5f, 0.6f, 0.7f, 0.8f, 0.9f, 1.0f };
-		Float[] thresholds = new Float[] { 0.005f, 0.05f, 0.1f, 0.2f, 0.3f, 0.4f, 0.5f, 0.6f, 0.7f, 0.8f, 0.9f, 1.0f };
-		//Float[] thresholds = new Float[] { 0.2f, 0.4f, 0.6f, 0.8f, 1.0f };
-
+		Float[] thresholds = new Float[] { 0.2f, 0.4f, 0.6f, 0.8f, 1.0f };
+		//Float[] thresholds = new Float[] { 0.005f, 0.05f, 0.1f, 0.2f, 0.3f, 0.4f, 0.5f, 0.6f, 0.7f, 0.8f, 0.9f, 1.0f };
+		/*
+		float min = 0.05f;
+		float max = 1.0f;
+		float increment = 0.05f;
+		List<Float> values = new ArrayList<>();
+		for (float value = min; value <= max; value+=increment){
+			values.add(value);
+		}
+		Float[] thresholds = values.toArray(new Float[0]);
+		*/
 
     	logManager.readConfiguration(new FileInputStream("./app.properties"));
     	logger.info("started application");
     	    	    	
         try {
 			AdaptiveNoiseConfiguration configuration = AdaptiveNoiseConfiguration.getBuilder()
+					.useCrossValidation(true)
 					.setNoiseThresholds(thresholds)
 					.setFitnessWeight(0.34)
 					.setPrecisionWeight(0.33)

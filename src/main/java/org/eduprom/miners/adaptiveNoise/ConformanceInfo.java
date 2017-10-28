@@ -6,6 +6,11 @@ import org.eduprom.exceptions.MiningException;
  * Created by ydahari on 9/22/2017.
  */
 public class ConformanceInfo {
+    private long fitnessDuration;
+    private long precisionDuration;
+    private long generalizationDuration;
+
+
     private Double fitness;
     private Double precision;
     private Double generalization;
@@ -84,5 +89,29 @@ public class ConformanceInfo {
 
     public ConformanceInfo CloneWeights(){
         return new ConformanceInfo(this.getFitnessWeight(), this.getPrecisionWeight(), this.getGeneralizationWeight());
+    }
+
+    public long getFitnessDuration() {
+        return fitnessDuration;
+    }
+
+    public void setFitnessDuration(long fitnessDuration) {
+        this.fitnessDuration = fitnessDuration;
+    }
+
+    public long getPrecisionDuration() {
+        return precisionDuration;
+    }
+
+    public void setPrecisionDuration(long precisionDuration) {
+        this.precisionDuration = precisionDuration;
+    }
+
+    public long getGeneralizationDuration() {
+        return generalizationDuration;
+    }
+
+    public void setGeneralizationDuration(long generalizationDuration) {
+        this.generalizationDuration = generalizationDuration;
     }
 }
