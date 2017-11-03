@@ -12,7 +12,7 @@ public interface IBenchmark {
      *
      * @return the new algorithm
      */
-    IBenchmarkableMiner getSource(String filename) throws Exception;
+    List<IBenchmarkableMiner> getSources(String filename) throws Exception;
 
     /***
      *

@@ -168,7 +168,7 @@ public class PetrinetHelper {
 
         parameters.setGUIMode(false);
         parameters.setCreateConn(false);
-        parameters.setNumThreads(3);
+        parameters.setNumThreads(4);
         ((CostBasedCompleteParam) parameters).setMaxNumOfStates(5000);
 
         PNRepResult result = null;
@@ -213,7 +213,7 @@ public class PetrinetHelper {
         for(List<XTrace> testTraces: partitions){
             List<XTrace> trainTraces = partitions.stream()
                     .filter(x -> x != testTraces)
-                    .flatMap(x->x.stream()).collect(Collectors.toList());
+                    .flatMap(Collection::stream).collect(Collectors.toList());
             XLog trainLog = new XLogImpl(log.getAttributes());
             trainLog.addAll(trainTraces);
 

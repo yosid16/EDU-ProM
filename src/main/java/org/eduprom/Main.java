@@ -3,6 +3,7 @@ package org.eduprom;
 import org.eduprom.miners.IMiner;
 import org.eduprom.miners.InductiveMiner;
 import org.eduprom.miners.adaptiveNoise.AdaptiveNoiseMiner;
+import org.processmining.plugins.InductiveMiner.mining.MiningParametersIMf;
 
 import java.io.FileInputStream;
 import java.util.logging.Level;
@@ -17,15 +18,15 @@ public class Main {
 	
     public static void main(String[] args) throws Exception {
 
-		//String filename = "EventLogs\\log1.xes";
+		String filename = "EventLogs\\log1.xes";
 		//String filename = "EventLogs\\contest_dataset\\training_log_4.xes";
-        String filename = "EventLogs\\test4.csv";
+        //String filename = "EventLogs\\test4.csv";
 
     	logManager.readConfiguration(new FileInputStream("./app.properties"));
     	logger.info("started application");
     	    	    	
         try {
-			IMiner miner = new InductiveMiner(filename);
+			IMiner miner = new InductiveMiner(filename, new MiningParametersIMf() {{ setNoiseThreshold(0.0f);}});
 
         	miner.mine();
         	miner.export();

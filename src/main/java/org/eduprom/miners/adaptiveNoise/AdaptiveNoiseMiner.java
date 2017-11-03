@@ -7,6 +7,7 @@ import org.deckfour.xes.model.XLog;
 import org.deckfour.xes.model.XTrace;
 import org.deckfour.xes.model.impl.XLogImpl;
 import org.eduprom.benchmarks.IBenchmarkableMiner;
+import org.eduprom.benchmarks.Weights;
 import org.eduprom.entities.CrossValidationPartition;
 import org.eduprom.exceptions.MiningException;
 import org.eduprom.miners.AbstractPetrinetMiner;
@@ -19,6 +20,7 @@ import org.eduprom.partitioning.ILogSplitter;
 import org.eduprom.partitioning.InductiveLogSplitting;
 import org.eduprom.partitioning.Partitioning;
 import org.eduprom.utils.PetrinetHelper;
+import org.processmining.plugins.InductiveMiner.mining.MiningParametersIMf;
 import org.processmining.plugins.petrinet.replayresult.PNRepResult;
 import org.processmining.plugins.pnalignanalysis.conformance.AlignmentPrecGenRes;
 import org.processmining.ptconversions.pn.ProcessTree2Petrinet;
@@ -49,16 +51,16 @@ public class AdaptiveNoiseMiner extends AbstractPetrinetMiner implements IConfor
     private TreeChanges bestModel;
     private ConformanceInfo conformanceInfo;
 
-    private Set<TreeChanges> changes;
+    private Map<String, TreeChanges> changes;
 
     //endregion
 
     //region private methods
 
     private ConformanceInfo getNewConformanceInfo(){
-        return new ConformanceInfo(this.configuration.getFitnessWeight(),
-                this.configuration.getPrecisionWeight(),
-                this.configuration.getGeneralizationWeight());
+        return new ConformanceInfo(this.configuration.getWeights().getFitnessWeight(),
+                this.configuration.getWeights().getPrecisionWeight(),
+                this.configuration.getWeights().getGeneralizationWeight());
     }
 
     private void modifyPsiCrossValidation(IAdaptiveNoiseConformanceObject object) throws MiningException {
@@ -128,10 +130,23 @@ public class AdaptiveNoiseMiner extends AbstractPetrinetMiner implements IConfor
         object.getConformanceInfo().setGeneralization(alignmentPrecGenRes.getGeneralization());
     }
 
-    private Partitioning splitLog(XLog trainLog, boolean computeConformance) throws MiningException {
-
-        ILogSplitter logSplitter = new InductiveLogSplitting(this);
+    private List<Partitioning> splitLog(XLog trainLog, boolean computeConformance) throws MiningException {
+        List<Partitioning> partitionings = new ArrayList<>();
+        for(float noiseThreshold: this.configuration.getNoiseThresholds()){
+            partitionings.add(splitLog(trainLog, computeConformance, noiseThreshold));
+        }
+        return partitionings;
+    }
+    //splitLog(pratitioning.getPartitions().get(UUID.fromString("1d78cd13-f981-48c3-8a56-7b492f689b4f")).getLog(), false, 0.1f).getPartitions()
+    private Partitioning splitLog(XLog trainLog, boolean computeConformance, float noiseFiltering) throws MiningException {
+        ILogSplitter logSplitter = new InductiveLogSplitting(this, new MiningParametersIMf()
+        {{
+            setNoiseThreshold(noiseFiltering);
+        }});
         Partitioning pratitioning = logSplitter.split(trainLog);
+        for(Partitioning.PartitionInfo partitionInfo: pratitioning.getPartitions().values()){
+            logger.info(partitionInfo.toString());
+        }
         if (computeConformance){
             for(Partitioning.PartitionInfo partitionInfo : pratitioning.getPartitions().values()) {
                 MiningResult result = partitionInfo.getMiner().mineProcessTree(partitionInfo.getLog());
@@ -162,7 +177,7 @@ public class AdaptiveNoiseMiner extends AbstractPetrinetMiner implements IConfor
         }
     }
 
-    private Set<TreeChanges> generatePossibleTreeChanges(Partitioning pratitioning, Set<Change> changeOptions) throws MiningException {
+    private Map<String, TreeChanges> generatePossibleTreeChanges(Partitioning pratitioning, Set<Change> changeOptions) throws MiningException {
         int maxSize = 5;
         Set<Set<Change>> changesSet = Sets.newConcurrentHashSet(changeOptions.stream()
                 .map(x -> {
@@ -234,18 +249,9 @@ public class AdaptiveNoiseMiner extends AbstractPetrinetMiner implements IConfor
                 allChanges.put(newSln.getChanges(), newSln);
             }
         }*/
-
-        Set<String> distinctProcessTrees = new HashSet<>();
-        Set<TreeChanges> distinctChanges = new HashSet<>();
-
-        for(TreeChanges change : allChanges.values()){
-            String key = change.getModifiedProcessTree().toString();
-            if (distinctProcessTrees.add(key) || change.isBaseline()){
-                distinctChanges.add(change);
-            }
-        }
-
-        return distinctChanges;
+        Map<String, TreeChanges> treeChangesMap = new HashMap<>();
+        allChanges.values().forEach(x-> treeChangesMap.putIfAbsent(x.getModifiedProcessTree().toString(), x));
+        return treeChangesMap;
     }
 
     private Set<Change> getOptions(Partitioning pratitioning, List<NoiseInductiveMiner> miners, boolean computeConformance) throws MiningException {
@@ -262,6 +268,7 @@ public class AdaptiveNoiseMiner extends AbstractPetrinetMiner implements IConfor
             change.setMiningResult(result);
 
             String resultingTree = change.getMiningResult().getProcessTree().toString();
+            //logger.log(Level.INFO, String.format("Partition: %d, Tree: %s", change.getPartitionInfo().getSequentialId() ,resultingTree));
             treeToChangeMapping.putIfAbsent(resultingTree, change);
 
             if (computeConformance){
@@ -284,7 +291,7 @@ public class AdaptiveNoiseMiner extends AbstractPetrinetMiner implements IConfor
             bestModel = change;
         }
     }
-    private void calcPsi(Set<TreeChanges> treeChanges, XLog trainLog, XLog testLog) throws MiningException {
+    private void calcPsi(Collection<TreeChanges> treeChanges, XLog trainLog, XLog testLog) throws MiningException {
         AtomicInteger progress = new AtomicInteger();
         treeChanges.parallelStream().forEach(change -> {
             try {
@@ -381,7 +388,7 @@ public class AdaptiveNoiseMiner extends AbstractPetrinetMiner implements IConfor
     public AdaptiveNoiseMiner(String filename, AdaptiveNoiseConfiguration configuration) throws Exception {
         super(filename);
         this.configuration = configuration;
-
+        this.changes = new HashMap<>();
         this.miners = NoiseInductiveMiner
                 .withNoiseThresholds(this.filename, configuration.getNoiseThresholds())
                 .stream().collect(Collectors.toList());
@@ -389,6 +396,7 @@ public class AdaptiveNoiseMiner extends AbstractPetrinetMiner implements IConfor
 
     //endregion
 
+    //region protected methods
     @Override
     protected ProcessTree2Petrinet.PetrinetWithMarkings minePetrinet() throws MiningException {
 
@@ -399,23 +407,40 @@ public class AdaptiveNoiseMiner extends AbstractPetrinetMiner implements IConfor
             XLog trainLog = CrossValidationPartition.Bind(crossValidationPartitions.stream().filter(x -> testPartition != x)
                     .collect(Collectors.toList())).getLog();
 
+            logger.info(String.format("Miners with %d noise thresholds %s are optional",
+                    miners.size(), miners.stream().map(x-> String.valueOf(x.getNoiseThreshold())).collect(Collectors.joining (","))));
+
             logger.info(format("Fitness weight: %f, Precision weight: %f, generalization weight: %f",
-                    configuration.getFitnessWeight(), configuration.getPrecisionWeight(), configuration.getGeneralizationWeight()));
+                    configuration.getWeights().getFitnessWeight(), configuration.getWeights().getPrecisionWeight(), configuration.getWeights().getGeneralizationWeight()));
 
             //run algorithm
-            Partitioning partitioning = splitLog(trainLog, false);//.filter(x -> !x.getNode().isLeaf())
-            //partitioning.getPartitions().values().stream().forEach(x-> logger.info(x.toString()));
+            Partitioning partitioning = splitLog(trainLog, false, configuration.getPartitionNoiseFilter());
             logger.info(partitioning.toString());
-
             Set<Change> changeOptions = getOptions(partitioning, miners, false);
             logger.info(format("found %d possible changes to initial partitioning (#miners x #sublogs)",
                     changeOptions.size()));
 
-            this.changes = generatePossibleTreeChanges(partitioning, changeOptions);
+            Map<String, TreeChanges> treeTochanges = generatePossibleTreeChanges(partitioning, changeOptions);
+            treeTochanges.entrySet().forEach(x -> this.changes.putIfAbsent(x.getKey(), x.getValue()));
+
+            /*
+            List<Partitioning> allPartitioning = splitLog(trainLog, false);
+            //partitioning.getPartitions().values().stream().forEach(x-> logger.info(x.toString()));
+
+            for(Partitioning partitioning : allPartitioning){
+                logger.info(partitioning.toString());
+                Set<Change> changeOptions = getOptions(partitioning, miners, false);
+                logger.info(format("found %d possible changes to initial partitioning (#miners x #sublogs)",
+                        changeOptions.size()));
+
+                Map<String, TreeChanges> treeTochanges = generatePossibleTreeChanges(partitioning, changeOptions);
+                treeTochanges.entrySet().forEach(x -> this.changes.putIfAbsent(x.getKey(), x.getValue()));
+            }*/
+
 
             logger.info(format("found %d distinct trees", changes.size()));
 
-            calcPsi(this.changes, trainLog, testLog);
+            calcPsi(this.changes.values(), trainLog, testLog);
             logger.info("calculated psi for all trees");
             logger.info("OPTIMAL MODEL: " + bestModel.toString());
 
@@ -432,6 +457,10 @@ public class AdaptiveNoiseMiner extends AbstractPetrinetMiner implements IConfor
         this.bestModel = models.stream().max(Comparator.comparing(x->x.getConformanceInfo().getPsi())).get();
         return PetrinetHelper.ConvertToPetrinet(bestModel.getModifiedProcessTree());
     }
+
+    //endregion
+
+    //region public methods
 
     @Override
     public NoiseInductiveMiner getPartitionMiner() {
@@ -462,9 +491,15 @@ public class AdaptiveNoiseMiner extends AbstractPetrinetMiner implements IConfor
         return bestModel;
     }
 
-    public Set<TreeChanges> getChanges() {
-        return changes;
+    public Collection<TreeChanges> getChanges() {
+        return changes.values();
     }
+
+    public AdaptiveNoiseConfiguration getConfiguration() {
+        return configuration;
+    }
+
+    //endregion
 }
 
 

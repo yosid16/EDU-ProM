@@ -33,7 +33,7 @@ public class InductiveLogSplitting implements ILogSplitter {
 
     protected final static Logger logger = Logger.getLogger(AbstractMiner.class.getName());
 
-    private MiningParametersIM _parameters = new MiningParametersIM();
+    private MiningParameters parameters = new MiningParametersIMf();
     private IConformanceContext conformanceContext;
 
     protected static PackageManager.Canceller _canceller = new PackageManager.Canceller() {
@@ -46,15 +46,14 @@ public class InductiveLogSplitting implements ILogSplitter {
         }
     };
 
-    public InductiveLogSplitting(IConformanceContext conformanceContext) {
+    public InductiveLogSplitting(IConformanceContext conformanceContext, MiningParameters parameters) {
         this.conformanceContext = conformanceContext;
-
+        this.parameters = parameters;
     }
 
     @Override
     public Partitioning split(XLog xLog) {
         IMLog log = new IMLogImpl(xLog, new XEventNameClassifier());
-        MiningParameters parameters = new MiningParametersIM();
         //repair life cycle if necessary
         if (parameters.isRepairLifeCycle()) {
             log = LifeCycles.preProcessLog(log);

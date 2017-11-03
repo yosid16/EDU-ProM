@@ -2,6 +2,7 @@ package org.eduprom.miners.adaptiveNoise.IntermediateMiners;
 
 import org.deckfour.xes.model.XLog;
 import org.eduprom.benchmarks.IBenchmarkableMiner;
+import org.eduprom.benchmarks.Weights;
 import org.eduprom.exceptions.ConformanceCheckException;
 import org.eduprom.exceptions.LogFileNotFoundException;
 import org.eduprom.exceptions.MiningException;
@@ -14,7 +15,9 @@ import org.eduprom.utils.PetrinetHelper;
 import org.processmining.log.parameters.LowFrequencyFilterParameters;
 import org.processmining.models.graphbased.directed.petrinet.impl.PetrinetImpl;
 import org.processmining.models.semantics.petrinet.Marking;
+import org.processmining.plugins.InductiveMiner.mining.MiningParameters;
 import org.processmining.plugins.InductiveMiner.mining.MiningParametersIM;
+import org.processmining.plugins.InductiveMiner.mining.MiningParametersIMf;
 import org.processmining.plugins.InductiveMiner.plugins.IMPetriNet;
 import org.processmining.plugins.InductiveMiner.plugins.IMProcessTree;
 import org.processmining.plugins.petrinet.replayresult.PNRepResult;
@@ -38,7 +41,7 @@ public class NoiseInductiveMiner extends InductiveMiner implements IBenchmarkabl
 
 
 	//region constructors
-	public NoiseInductiveMiner(String filename, MiningParametersIM parameters) throws LogFileNotFoundException {
+	public NoiseInductiveMiner(String filename, MiningParameters parameters) throws LogFileNotFoundException {
 		super(filename, parameters);
 	}
 
@@ -65,7 +68,8 @@ public class NoiseInductiveMiner extends InductiveMiner implements IBenchmarkabl
 			res = new FilterResult((XLog)rLog.clone(), 0, rLog.stream().mapToInt(x->x.size()).sum());
 		}
 		else{
-			res = filterLog(rLog);
+			//res = filterLog(rLog);
+			res = new FilterResult(rLog, 0, 0);
 		}
 
 		ProcessTree processTree = IMProcessTree.mineProcessTree(res.getFilteredLog(), parameters, getCanceller());
@@ -75,9 +79,9 @@ public class NoiseInductiveMiner extends InductiveMiner implements IBenchmarkabl
 	//endregion
 
 	public static NoiseInductiveMiner withNoiseThreshold(String filename, float noiseThreshold) throws LogFileNotFoundException {
-		MiningParametersIM parametersIM = new MiningParametersIM();
-		parametersIM.setNoiseThreshold(noiseThreshold);
-		return new NoiseInductiveMiner(filename, parametersIM);
+		MiningParameters parametersIMf = new MiningParametersIMf();
+		parametersIMf.setNoiseThreshold(noiseThreshold);
+		return new NoiseInductiveMiner(filename, parametersIMf);
 	}
 
 	public static List<NoiseInductiveMiner> withNoiseThresholds(String filename, Float... noiseThreshold) throws LogFileNotFoundException {

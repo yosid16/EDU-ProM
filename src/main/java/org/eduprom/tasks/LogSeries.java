@@ -5,6 +5,7 @@ import org.eduprom.miners.adaptiveNoise.AdaptiveNoiseMiner;
 import org.eduprom.miners.adaptiveNoise.configuration.AdaptiveNoiseConfiguration;
 
 import java.io.FileInputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
@@ -28,6 +29,7 @@ public class LogSeries {
 		Integer[] fileNumbers = new Integer[] { 1 /*, 2, 3, 4, 5, 6, 7, 8, 9, 10 */};
 		List<String> files = Arrays.stream(fileNumbers).flatMap(x-> Arrays.stream(formats)
 				.map(f -> String.format(f, x))).collect(Collectors.toList());
+		files = new ArrayList<String>() {{ add("EventLogs\\\\test4.csv"); }};
 
     	logManager.readConfiguration(new FileInputStream("./app.properties"));
     	logger.info("started application");
@@ -37,9 +39,7 @@ public class LogSeries {
         	for(String filename : files){
 				AdaptiveNoiseMiner miner = AdaptiveNoiseConfiguration.getBuilder()
 						.setNoiseThresholds(0.1f, 0.2f, 0.3f, 0.4f, 0.5f, 0.6f)
-						.setFitnessWeight(0.34)
-						.setPrecisionWeight(0.33)
-						.setGeneralizationWeight(0.34)
+						.setWeights()
 						.build()
 						.getMiner(filename);
 

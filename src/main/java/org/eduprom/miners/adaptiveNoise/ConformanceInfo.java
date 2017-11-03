@@ -71,7 +71,7 @@ public class ConformanceInfo {
 
     @Override
     public String toString() {
-        return String.format("fitness (%f, %f), precision(%f, %f), generalization: (%f,%f)",
+        return String.format("psi: %f, fitness (%f, %f), precision(%f, %f), generalization: (%f,%f)", getPsi(),
                 fitnessWeight, fitness, precisionWeight, precision, generalizationWeight, generalization);
     }
 

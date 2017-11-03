@@ -79,13 +79,17 @@ public class TreeChanges {
         sb.append(String.format("#Changes %d, psi %f (fitness %f, precision %f, generalization: %f); Bits removed: %d",
                 changes.getChanges().size(),
                 conformanceInfo.getPsi(),
-                conformanceInfo.getFitness(), conformanceInfo.getPrecision(), conformanceInfo.getGeneralization(),
+                conformanceInfo.getFitness(),
+                conformanceInfo.getPrecision(),
+                conformanceInfo.getGeneralization(),
                 this.getBitsRemoved()));
 
         for(Change change : changes.getChanges()){
                 sb.append(",");
                 sb.append(change.toString());
             }
+        sb.append("MODIFIED TREE: ");
+        sb.append(this.getModifiedProcessTree().toString());
 
         return sb.toString();
     }
@@ -235,7 +239,7 @@ public class TreeChanges {
 
     @Override
     public int hashCode() {
-        return getChangesDetailed().hashCode();
+        return getChanges().hashCode();
     }
 }
 

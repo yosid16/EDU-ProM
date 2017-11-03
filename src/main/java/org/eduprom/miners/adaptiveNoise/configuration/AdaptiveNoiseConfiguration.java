@@ -1,16 +1,21 @@
 package org.eduprom.miners.adaptiveNoise.configuration;
 
+import org.eduprom.benchmarks.Weights;
 import org.eduprom.miners.adaptiveNoise.AdaptiveNoiseMiner;
+import org.eduprom.miners.adaptiveNoise.IntermediateMiners.NoiseInductiveMiner;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Function;
 
 public class AdaptiveNoiseConfiguration {
+
 
     //region private members
 
     private Float[] noiseThresholds;
-
-    private double precisionWeight;
-    private double fitnessWeight;
-    private Double generalizationWeight;
+    private final float partitionNoiseFilter;
+    private Weights weights;
     private boolean useCrossValidation;
 
     //endregoin
@@ -20,9 +25,8 @@ public class AdaptiveNoiseConfiguration {
 
         private Float[] noiseThresholds;
 
-        private double precisionWeight;
-        private double fitnessWeight;
-        private double generalizationWeight;
+        private Weights weights;
+        private float partitionNoiseFilter;
 
         private boolean useCrossValidation;
 
@@ -31,40 +35,34 @@ public class AdaptiveNoiseConfiguration {
             return this;
         }
 
-        public AdaptiveNoiseConfigurationBuilder setFitnessWeight(double fitnessWeight){
-            this.fitnessWeight = fitnessWeight;
+        public AdaptiveNoiseConfigurationBuilder setWeights(double fitnessWeight, double precisionWeight, double generalizationWeight){
+            this.weights = new Weights(fitnessWeight, precisionWeight, generalizationWeight);
             return this;
         }
 
-        public AdaptiveNoiseConfigurationBuilder setPrecisionWeight(double precisionWeight){
-            this.precisionWeight = precisionWeight;
+        public AdaptiveNoiseConfigurationBuilder setWeights(Weights weights){
+            this.weights = weights;
             return this;
         }
 
-        public AdaptiveNoiseConfigurationBuilder setGeneralizationWeight(double generalizationWeight){
-            this.generalizationWeight = generalizationWeight;
+        public AdaptiveNoiseConfigurationBuilder setWeights(){
+            this.weights = Weights.getUniform();
             return this;
         }
+
 
         public AdaptiveNoiseConfigurationBuilder useCrossValidation(boolean useCrossValidation){
             this.useCrossValidation = useCrossValidation;
             return this;
         }
 
+        public AdaptiveNoiseConfigurationBuilder setPartitionNoiseFilter(float partitionNoiseFilter) {
+            this.partitionNoiseFilter = partitionNoiseFilter;
+            return this;
+        }
+
         public Float[] getNoiseThresholds() {
             return noiseThresholds;
-        }
-
-        public double getPrecisionWeight() {
-            return precisionWeight;
-        }
-
-        public double getFitnessWeight() {
-            return fitnessWeight;
-        }
-
-        public Double getGeneralizationWeight() {
-            return generalizationWeight;
         }
 
         public boolean getUseCrossValidation() {
@@ -74,39 +72,39 @@ public class AdaptiveNoiseConfiguration {
         public AdaptiveNoiseConfiguration build(){
             return new AdaptiveNoiseConfiguration(this);
         }
+
+        public float getPartitionNoiseFilter() {
+            return partitionNoiseFilter;
+        }
+
+        public Weights getWeights(){
+            return this.weights;
+        }
     }
     //endregion
 
     private AdaptiveNoiseConfiguration(AdaptiveNoiseConfigurationBuilder builder){
         this.noiseThresholds = builder.getNoiseThresholds();
-        this.fitnessWeight = builder.getFitnessWeight();
-        this.precisionWeight = builder.getPrecisionWeight();
-        this.generalizationWeight = builder.getGeneralizationWeight();
+        this.weights = builder.getWeights();
         this.useCrossValidation = builder.getUseCrossValidation();
+        this.partitionNoiseFilter = builder.getPartitionNoiseFilter();
     }
 
     public Float[] getNoiseThresholds() {
         return noiseThresholds;
     }
 
-
-    public double getPrecisionWeight() {
-        return precisionWeight;
-    }
-
-    public double getFitnessWeight() {
-        return fitnessWeight;
-    }
-
-
-    public Double getGeneralizationWeight() {
-        return generalizationWeight;
+    public Weights getWeights() {
+        return weights;
     }
 
     public boolean getUseCrossValidation(){
         return useCrossValidation;
     }
 
+    public float getPartitionNoiseFilter() {
+        return partitionNoiseFilter;
+    }
 
     public static AdaptiveNoiseConfigurationBuilder getBuilder(){
         return new AdaptiveNoiseConfigurationBuilder();
