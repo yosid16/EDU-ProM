@@ -17,6 +17,7 @@ public class AdaptiveNoiseBenchmarkConfiguration {
     private final float partitionNoiseFilter;
     private List<Weights> weights;
     private boolean useCrossValidation;
+    private boolean preExecuteFilter;
 
     //endregoin
 
@@ -27,7 +28,7 @@ public class AdaptiveNoiseBenchmarkConfiguration {
 
         private List<Weights> weights;
         private float partitionNoiseFilter;
-
+        private boolean preExecuteFilter;
         private boolean useCrossValidation;
 
         public AdaptiveNoiseBenchmarkConfigurationBuilder(){
@@ -70,6 +71,11 @@ public class AdaptiveNoiseBenchmarkConfiguration {
             return this;
         }
 
+        public AdaptiveNoiseBenchmarkConfigurationBuilder setPreExecuteFilter(boolean preExecuteFilter) {
+            this.preExecuteFilter = preExecuteFilter;
+            return this;
+        }
+
         public Float[] getNoiseThresholds() {
             return noiseThresholds;
         }
@@ -89,6 +95,10 @@ public class AdaptiveNoiseBenchmarkConfiguration {
         public List<Weights> getWeights(){
             return this.weights;
         }
+
+        public boolean isPreExecuteFilter() {
+            return preExecuteFilter;
+        }
     }
     //endregion
 
@@ -97,6 +107,7 @@ public class AdaptiveNoiseBenchmarkConfiguration {
         this.weights = builder.getWeights();
         this.useCrossValidation = builder.getUseCrossValidation();
         this.partitionNoiseFilter = builder.getPartitionNoiseFilter();
+        this.preExecuteFilter = builder.isPreExecuteFilter();
     }
 
     public Float[] getNoiseThresholds() {
@@ -119,6 +130,10 @@ public class AdaptiveNoiseBenchmarkConfiguration {
         return new AdaptiveNoiseBenchmarkConfigurationBuilder();
     }
 
+    public boolean isPreExecuteFilter() {
+        return preExecuteFilter;
+    }
+
     /*
     public AdaptiveNoiseMiner getMiner(String filename) throws Exception {
         return new AdaptiveNoiseMiner(filename, this);
@@ -129,6 +144,7 @@ public class AdaptiveNoiseBenchmarkConfiguration {
         return AdaptiveNoiseConfiguration.getBuilder()
                 .setNoiseThresholds(this.getNoiseThresholds())
                 .setPartitionNoiseFilter(this.partitionNoiseFilter)
+                .setPreExecuteFilter(this.preExecuteFilter)
                 .setWeights(weights)
                 .build();
     }

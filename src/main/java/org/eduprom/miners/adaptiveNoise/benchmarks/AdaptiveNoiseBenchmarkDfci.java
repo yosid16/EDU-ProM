@@ -103,7 +103,7 @@ public class AdaptiveNoiseBenchmarkDfci implements IBenchmark {
     public List<IBenchmarkableMiner> getTargets(String filename) throws LogFileNotFoundException {
         List<IBenchmarkableMiner> benchmarkableMiners = new ArrayList<>();
         for(float noiseThreshold: this.adaptiveNoiseConfiguration.getNoiseThresholds()){
-            benchmarkableMiners.add(new NoiseInductiveMiner(filename, noiseThreshold));
+            benchmarkableMiners.add(new NoiseInductiveMiner(filename, noiseThreshold, false));
         }
 
         return benchmarkableMiners;

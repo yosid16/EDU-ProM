@@ -21,11 +21,6 @@ public class InductiveMiner extends AbstractPetrinetMiner {
 
 	protected MiningParameters parameters;
 
-	public InductiveMiner(String filename) throws LogFileNotFoundException {
-		super(filename);
-		this.parameters = new MiningParametersIM();
-	}
-
 	public InductiveMiner(String filename, MiningParameters parameters) throws LogFileNotFoundException {
 		super(filename);
 		this.parameters = parameters;

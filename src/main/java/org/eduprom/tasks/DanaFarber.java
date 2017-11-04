@@ -23,8 +23,9 @@ public class DanaFarber {
 
 		String trainFile = "EventLogs\\\\DFCI_Train_April.csv";
 		String testFile = "EventLogs\\\\DFCI_Test_May.csv";
-		//Float[] thresholds = new Float[] { 0.1f, 0.2f, 0.3f, 0.4f, 0.5f, 0.6f, 0.7f, 0.8f, 0.9f, 1.0f };
+		Float[] thresholds = new Float[] { 0.1f, 0.2f, 0.3f, 0.4f, 0.5f, 0.6f, 0.7f, 0.8f, 0.9f, 1.0f };
 
+		/*
 		float min = 0.01f;
 		float max = 1.0f;
 		float increment = 0.01f;
@@ -35,7 +36,7 @@ public class DanaFarber {
 		//values.add(1.0f);
 		Float[] thresholds = values.toArray(new Float[0]);
 
-
+		*/
 
     	logManager.readConfiguration(new FileInputStream("./app.properties"));
     	logger.info("started application");
@@ -46,6 +47,7 @@ public class DanaFarber {
 					.useCrossValidation(false)
 					.setNoiseThresholds(thresholds)
 					.addWeights()
+					.setPreExecuteFilter(true)
 					.build();
 			IBenchmark benchmark = new AdaptiveNoiseBenchmarkDfci(trainFile, testFile, configuration);
 			benchmark.run();

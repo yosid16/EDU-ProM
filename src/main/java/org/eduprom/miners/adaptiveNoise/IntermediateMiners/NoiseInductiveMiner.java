@@ -38,17 +38,15 @@ public class NoiseInductiveMiner extends InductiveMiner implements IBenchmarkabl
 	private HashMap<UUID, MiningResult> processTreeCache = new HashMap<>();
 	private ConformanceInfo conformanceInfo;
 	private MiningResult result;
+	private boolean filterPreExecution;
 	//endregion
 
 
 	//region constructors
-	public NoiseInductiveMiner(String filename, MiningParameters parameters) throws LogFileNotFoundException {
-		super(filename, parameters);
-	}
 
-	public NoiseInductiveMiner(String filename, float noiseThreshold) throws LogFileNotFoundException {
-		super(filename);
-		this.parameters.setNoiseThreshold(noiseThreshold);
+	public NoiseInductiveMiner(String filename, float noiseThreshold, boolean filterPreExecution) throws LogFileNotFoundException {
+		super(filename, new MiningParametersIMf() {{ setNoiseThreshold(noiseThreshold); }});
+		this.filterPreExecution = filterPreExecution;
 	}
 	//endregion
 
@@ -58,37 +56,36 @@ public class NoiseInductiveMiner extends InductiveMiner implements IBenchmarkabl
 			return processTreeCache.get(id);
 		}
 
-		MiningResult result = mineProcessTree(rLog);
-		processTreeCache.put(id, result);
-		return result;
+		MiningResult res = mineProcessTree(rLog);
+		processTreeCache.put(id, res);
+		return res;
 	}
 
 	public MiningResult mineProcessTree(XLog rLog) throws MiningException {
-		FilterResult res;
-		if (rLog.isEmpty()){
+		FilterResult res = null;
+		MiningParameters runParams = null;
+		if (filterPreExecution){
+			res = filterLog(rLog);
+			runParams = new MiningParametersIMf() {{ setNoiseThreshold(0); }};
+		}
+		else if (rLog.isEmpty()){
 			res = new FilterResult((XLog)rLog.clone(), 0, rLog.stream().mapToInt(x->x.size()).sum());
 		}
 		else{
-			//res = filterLog(rLog);
-			res = new FilterResult(rLog, 0, 0);
+			res = new FilterResult((XLog)rLog.clone(), 0, rLog.stream().mapToInt(x->x.size()).sum());
+			runParams = this.parameters;
 		}
 
-		ProcessTree processTree = IMProcessTree.mineProcessTree(res.getFilteredLog(), parameters, getCanceller());
-		MiningResult result = new MiningResult(processTree, res);
-		return result;
+		ProcessTree processTree = IMProcessTree.mineProcessTree(res.getFilteredLog(), runParams, getCanceller());
+		return new MiningResult(processTree, res);
 	}
 	//endregion
 
-	public static NoiseInductiveMiner withNoiseThreshold(String filename, float noiseThreshold) throws LogFileNotFoundException {
-		MiningParameters parametersIMf = new MiningParametersIMf();
-		parametersIMf.setNoiseThreshold(noiseThreshold);
-		return new NoiseInductiveMiner(filename, parametersIMf);
-	}
 
-	public static List<NoiseInductiveMiner> withNoiseThresholds(String filename, Float... noiseThreshold) throws LogFileNotFoundException {
+	public static List<NoiseInductiveMiner> withNoiseThresholds(String filename, boolean filterPreExecution, Float... noiseThreshold) throws LogFileNotFoundException {
 		ArrayList<NoiseInductiveMiner> miners = new ArrayList<>();
 		for (Float threshold: noiseThreshold){
-			miners.add(withNoiseThreshold(filename, threshold));
+			miners.add(new NoiseInductiveMiner(filename, threshold, filterPreExecution));
 		}
 		return miners;
 	}

@@ -6,6 +6,7 @@ import org.eduprom.exceptions.MiningException;
 import org.eduprom.miners.AbstractPetrinetMiner;
 import org.eduprom.miners.InductiveMiner;
 import org.eduprom.miners.alpha.AlphaPlus;
+import org.processmining.plugins.InductiveMiner.mining.MiningParametersIMf;
 import org.processmining.plugins.petrinet.replayresult.PNRepResult;
 import org.processmining.ptconversions.pn.ProcessTree2Petrinet.PetrinetWithMarkings;
 
@@ -17,7 +18,7 @@ public class CompositionDemo extends AbstractPetrinetMiner {
 
     @Override
     protected PetrinetWithMarkings minePetrinet() throws MiningException {
-        InductiveMiner inductiveMiner = new InductiveMiner(filename);
+        InductiveMiner inductiveMiner = new InductiveMiner(filename, new MiningParametersIMf());
         AlphaPlus alphaPlusMiner = new AlphaPlus(filename);
 
         inductiveMiner.mine();

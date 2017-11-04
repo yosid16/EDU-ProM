@@ -45,7 +45,7 @@ public class AdaptiveNoiseMiner extends AbstractPetrinetMiner implements IConfor
     //region private members
 
     private List<NoiseInductiveMiner> miners;
-    private final NoiseInductiveMiner partitionMiner = NoiseInductiveMiner.withNoiseThreshold(filename, 0f);
+    private final NoiseInductiveMiner partitionMiner = new NoiseInductiveMiner(filename, 0f, false);
     private AdaptiveNoiseConfiguration configuration;
     private TreeChanges bestModel;
     private ConformanceInfo conformanceInfo;
@@ -387,7 +387,7 @@ public class AdaptiveNoiseMiner extends AbstractPetrinetMiner implements IConfor
         this.configuration = configuration;
         this.changes = new HashMap<>();
         this.miners = NoiseInductiveMiner
-                .withNoiseThresholds(this.filename, configuration.getNoiseThresholds())
+                .withNoiseThresholds(this.filename, configuration.isPreExecuteFilter(), configuration.getNoiseThresholds())
                 .stream().collect(Collectors.toList());
     }
 

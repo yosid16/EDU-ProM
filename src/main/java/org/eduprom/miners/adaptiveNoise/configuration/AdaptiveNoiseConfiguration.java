@@ -17,6 +17,7 @@ public class AdaptiveNoiseConfiguration {
     private final float partitionNoiseFilter;
     private Weights weights;
     private boolean useCrossValidation;
+    private boolean preExecuteFilter;
 
     //endregoin
 
@@ -29,6 +30,7 @@ public class AdaptiveNoiseConfiguration {
         private float partitionNoiseFilter;
 
         private boolean useCrossValidation;
+        private boolean preExecuteFilter;
 
         public AdaptiveNoiseConfigurationBuilder setNoiseThresholds(Float... noiseThresholds){
             this.noiseThresholds = noiseThresholds;
@@ -61,6 +63,11 @@ public class AdaptiveNoiseConfiguration {
             return this;
         }
 
+        public AdaptiveNoiseConfigurationBuilder setPreExecuteFilter(boolean preExecuteFilter) {
+            this.preExecuteFilter = preExecuteFilter;
+            return this;
+        }
+
         public Float[] getNoiseThresholds() {
             return noiseThresholds;
         }
@@ -80,6 +87,10 @@ public class AdaptiveNoiseConfiguration {
         public Weights getWeights(){
             return this.weights;
         }
+
+        public boolean isPreExecuteFilter() {
+            return preExecuteFilter;
+        }
     }
     //endregion
 
@@ -88,6 +99,7 @@ public class AdaptiveNoiseConfiguration {
         this.weights = builder.getWeights();
         this.useCrossValidation = builder.getUseCrossValidation();
         this.partitionNoiseFilter = builder.getPartitionNoiseFilter();
+        this.preExecuteFilter = builder.isPreExecuteFilter();
     }
 
     public Float[] getNoiseThresholds() {
@@ -113,5 +125,9 @@ public class AdaptiveNoiseConfiguration {
 
     public AdaptiveNoiseMiner getMiner(String filename) throws Exception {
         return new AdaptiveNoiseMiner(filename, this);
+    }
+
+    public boolean isPreExecuteFilter() {
+        return preExecuteFilter;
     }
 }

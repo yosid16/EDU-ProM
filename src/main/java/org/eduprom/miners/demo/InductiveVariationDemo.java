@@ -8,13 +8,14 @@ import org.eduprom.exceptions.ParsingException;
 import org.eduprom.miners.InductiveMiner;
 import org.processmining.log.algorithms.LowFrequencyFilterAlgorithm;
 import org.processmining.log.parameters.LowFrequencyFilterParameters;
+import org.processmining.plugins.InductiveMiner.mining.MiningParametersIMf;
 import org.processmining.plugins.petrinet.replayresult.PNRepResult;
 import org.processmining.ptconversions.pn.ProcessTree2Petrinet;
 
 public class InductiveVariationDemo extends InductiveMiner {
 
     public InductiveVariationDemo(String filename) throws LogFileNotFoundException {
-        super(filename);
+        super(filename, new MiningParametersIMf());
     }
 
     @Override

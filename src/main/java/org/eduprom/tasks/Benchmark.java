@@ -54,6 +54,7 @@ public class Benchmark {
 			AdaptiveNoiseBenchmarkConfiguration configuration = AdaptiveNoiseBenchmarkConfiguration.getBuilder()
 					.useCrossValidation(false)
 					.setNoiseThresholds(thresholds)
+					.setPreExecuteFilter(true)
 					.addWeights()
 					.build();
 			IBenchmark benchmark = new AdaptiveNoiseBenchmark(files, configuration, 10);

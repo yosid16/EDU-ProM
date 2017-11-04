@@ -2,6 +2,7 @@ package org.eduprom.tasks.demo;
 
 import org.eduprom.miners.IMiner;
 import org.eduprom.miners.InductiveMiner;
+import org.processmining.plugins.InductiveMiner.mining.MiningParametersIMf;
 
 import java.io.FileInputStream;
 import java.util.Arrays;
@@ -30,7 +31,7 @@ public class DiscoverLogSeries {
         try {
 
         	for(String filename : files){
-				IMiner miner = new InductiveMiner(filename);
+				IMiner miner = new InductiveMiner(filename, new MiningParametersIMf());
 				miner.mine();
 				miner.export();
 			}
