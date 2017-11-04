@@ -8,6 +8,7 @@ import org.eduprom.miners.adaptiveNoise.configuration.AdaptiveNoiseConfiguration
 
 import java.io.FileInputStream;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
@@ -24,15 +25,16 @@ public class Benchmark {
 
 		String[] formats =
 				{
-						//"EventLogs\\contest_dataset\\training_log_%s.xes",
+						"EventLogs\\contest_dataset\\training_log_%s.xes",
 						"EventLogs\\contest_2017\\log%s.xes"
 				};
-		Integer[] fileNumbers = new Integer[] { 6 }; //1 , 2, 3, 4, 5, 6, 7, 8, 9, 10
+		Integer[] fileNumbers = new Integer[] { 1 , 2, 3, 4, 5, 6, 7, 8, 9, 10 }; //
 		List<String> files = Arrays.stream(fileNumbers).flatMap(x-> Arrays.stream(formats)
 				.map(f -> String.format(f, x))).collect(Collectors.toList());
 		Float[] thresholds = new Float[] { 0.1f, 0.2f, 0.3f, 0.4f, 0.5f, 0.6f, 0.7f, 0.8f, 0.9f, 1.0f };
 		//Float[] thresholds = new Float[] { 0.2f, 0.4f };
 		//Float[] thresholds = new Float[] { 0.005f, 0.05f, 0.1f, 0.2f, 0.3f, 0.4f, 0.5f, 0.6f, 0.7f, 0.8f, 0.9f, 1.0f };
+		Collections.shuffle(files);
 
 		/*
 		float min = 0.001f;
@@ -50,9 +52,9 @@ public class Benchmark {
     	    	    	
         try {
 			AdaptiveNoiseBenchmarkConfiguration configuration = AdaptiveNoiseBenchmarkConfiguration.getBuilder()
-					.useCrossValidation(true)
+					.useCrossValidation(false)
 					.setNoiseThresholds(thresholds)
-					.addWeights(Weights.getRange(0.1))
+					.addWeights()
 					.build();
 			IBenchmark benchmark = new AdaptiveNoiseBenchmark(files, configuration, 10);
 			benchmark.run();

@@ -224,7 +224,8 @@ public class Partitioning
 
     @Override
     public String toString() {
-        return String.format("Partitioning has: %d sublogs", getPartitions().size());
+        return String.format("Partitioning has: %d sublogs (%d non leafs)",
+                getPartitions().size(), getPartitions().values().stream().filter(x->!x.getNode().isLeaf()).count());
     }
 
     public HashMap<UUID, PartitionInfo> getPartitions() {
@@ -240,6 +241,10 @@ public class Partitioning
 
     public ProcessTree getProcessTree() {
         return this.processTree;
+    }
+
+    public void setProcessTree(ProcessTree processTree) {
+        this.processTree = processTree;
     }
 
     public XLog getOrigianlLog(){

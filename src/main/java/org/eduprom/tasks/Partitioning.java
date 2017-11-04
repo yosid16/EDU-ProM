@@ -1,10 +1,5 @@
 package org.eduprom.tasks;
 
-import org.deckfour.xes.model.XLog;
-import org.eduprom.partitioning.ILogSplitter;
-import org.eduprom.partitioning.InductiveLogSplitting;
-import org.eduprom.utils.LogHelper;
-
 import java.io.FileInputStream;
 import java.util.logging.Level;
 import java.util.logging.LogManager;

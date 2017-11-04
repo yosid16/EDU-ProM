@@ -5,14 +5,8 @@ import org.eduprom.exceptions.LogFileNotFoundException;
 import org.eduprom.exceptions.MiningException;
 import org.eduprom.exceptions.ProcessTreeConversionException;
 import org.eduprom.miners.AbstractPetrinetMiner;
-import org.eduprom.miners.adaptiveNoise.IntermediateMiners.NoiseInductiveMiner;
-import org.eduprom.partitioning.ILogSplitter;
-import org.eduprom.partitioning.InductiveLogSplitting;
-import org.eduprom.partitioning.Partitioning;
 import org.eduprom.utils.PetrinetHelper;
-import org.eduprom.utils.PocessTreeHelper;
 import org.processmining.plugins.petrinet.replayresult.PNRepResult;
-import org.processmining.processtree.Node;
 import org.processmining.processtree.ProcessTree;
 import org.processmining.ptconversions.pn.ProcessTree2Petrinet;
 

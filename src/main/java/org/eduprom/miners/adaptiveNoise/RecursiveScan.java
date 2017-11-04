@@ -21,7 +21,7 @@ import org.eduprom.miners.adaptiveNoise.IntermediateMiners.NoiseInductiveMiner;
 import org.eduprom.miners.adaptiveNoise.conformance.IConformanceContext;
 import org.eduprom.miners.adaptiveNoise.conformance.IAdaptiveNoiseConformanceObject;
 import org.eduprom.partitioning.ILogSplitter;
-import org.eduprom.partitioning.InductiveLogSplitting;
+import org.eduprom.partitioning.trunk.InductiveLogSplitting;
 import org.eduprom.partitioning.Partitioning;
 import org.eduprom.utils.PetrinetHelper;
 import org.processmining.modelrepair.plugins.align.PNLogReplayer;

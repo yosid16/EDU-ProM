@@ -1,9 +1,12 @@
-package org.eduprom.partitioning;
+package org.eduprom.partitioning.trunk;
 
 import org.deckfour.xes.classification.XEventNameClassifier;
 import org.deckfour.xes.model.XLog;
 import org.eduprom.miners.AbstractMiner;
 import org.eduprom.miners.adaptiveNoise.conformance.IConformanceContext;
+import org.eduprom.partitioning.ILogSplitter;
+import org.eduprom.partitioning.MiningParametersLogSplitting;
+import org.eduprom.partitioning.Partitioning;
 import org.processmining.framework.packages.PackageManager;
 import org.processmining.plugins.InductiveMiner.conversion.ReduceTree;
 import org.processmining.plugins.InductiveMiner.efficienttree.EfficientTreeReduce;
@@ -25,6 +28,8 @@ import org.processmining.processtree.Node;
 import org.processmining.processtree.ProcessTree;
 import org.processmining.processtree.impl.AbstractBlock;
 import org.processmining.processtree.impl.AbstractTask;
+
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.logging.Logger;
 
@@ -33,8 +38,8 @@ public class InductiveLogSplitting implements ILogSplitter {
 
     protected final static Logger logger = Logger.getLogger(AbstractMiner.class.getName());
 
-    private MiningParameters parameters = new MiningParametersIMf();
     private IConformanceContext conformanceContext;
+    private MiningParametersLogSplitting parameters;
 
     protected static PackageManager.Canceller _canceller = new PackageManager.Canceller() {
 
@@ -46,25 +51,31 @@ public class InductiveLogSplitting implements ILogSplitter {
         }
     };
 
-    public InductiveLogSplitting(IConformanceContext conformanceContext, MiningParameters parameters) {
+    public InductiveLogSplitting(IConformanceContext conformanceContext, float noiseThreshold) {
         this.conformanceContext = conformanceContext;
-        this.parameters = parameters;
+        parameters = new MiningParametersLogSplitting() {{ setNoiseThreshold(noiseThreshold); }};
+    }
+
+    public InductiveLogSplitting(IConformanceContext conformanceContext) {
+        this(conformanceContext, 0);
     }
 
     @Override
     public Partitioning split(XLog xLog) {
+        Partitioning partitioning = new Partitioning(conformanceContext, xLog);
+        this.parameters.setLogPartitining(partitioning);
         IMLog log = new IMLogImpl(xLog, new XEventNameClassifier());
         //repair life cycle if necessary
-        if (parameters.isRepairLifeCycle()) {
+        if (this.parameters.isRepairLifeCycle()) {
             log = LifeCycles.preProcessLog(log);
         }
 
         //create process tree
-        Partitioning res = new Partitioning(conformanceContext, xLog);
-        ProcessTree tree = res.getProcessTree();
 
-        MinerState minerState = new MinerState(parameters, _canceller);
-        Node root = mineNode(log, res, minerState);
+        ProcessTree tree = partitioning.getProcessTree();
+
+        MinerState minerState = new MinerState(this.parameters, _canceller);
+        Node root = mineNode(log, tree, minerState);
 
         if (_canceller.isCancelled()) {
             minerState.shutdownThreadPools();
@@ -82,9 +93,9 @@ public class InductiveLogSplitting implements ILogSplitter {
         debug("discovered tree " + tree.getRoot(), minerState);
 
         //reduce the tree
-        if (parameters.getReduceParameters() != null) {
+        if (this.parameters.getReduceParameters() != null) {
             try {
-                tree = ReduceTree.reduceTree(tree, parameters.getReduceParameters());
+                tree = ReduceTree.reduceTree(tree, this.parameters.getReduceParameters());
                 debug("after reduction " + tree.getRoot(), minerState);
             } catch (UnknownTreeNodeException | EfficientTreeReduce.ReductionFailedException e) {
                 e.printStackTrace();
@@ -97,11 +108,11 @@ public class InductiveLogSplitting implements ILogSplitter {
             return null;
         }
 
-        return res;
+        return partitioning;
     }
 
-    public static Node mineNode(IMLog log, Partitioning partitioning, MinerState minerState) {
-        ProcessTree tree = partitioning.getProcessTree();
+    public static Node mineNode(IMLog log, ProcessTree tree, MinerState minerState) {
+        Partitioning partitioning = ((MiningParametersLogSplitting)minerState.parameters).getLogPartitining();
         //construct basic information about log
         IMLogInfo logInfo = minerState.parameters.getLog2LogInfo().createLogInfo(log);
 
@@ -156,7 +167,7 @@ public class InductiveLogSplitting implements ILogSplitter {
             //recurse
             if (cut.getOperator() != Cut.Operator.loop) {
                 for (IMLog sublog : splitResult.sublogs) {
-                    Node child = mineNode(sublog, partitioning, minerState);
+                    Node child = mineNode(sublog, tree, minerState);
 
                     if (minerState.isCancelled()) {
                         return null;
@@ -172,7 +183,7 @@ public class InductiveLogSplitting implements ILogSplitter {
                 //mine body
                 IMLog firstSublog = it.next();
                 {
-                    Node firstChild = mineNode(firstSublog, partitioning, minerState);
+                    Node firstChild = mineNode(firstSublog, tree, minerState);
 
                     if (minerState.isCancelled()) {
                         return null;
@@ -192,7 +203,7 @@ public class InductiveLogSplitting implements ILogSplitter {
                 }
                 while (it.hasNext()) {
                     IMLog sublog = it.next();
-                    Node child = mineNode(sublog, partitioning, minerState);
+                    Node child = mineNode(sublog, tree, minerState);
 
                     if (minerState.isCancelled()) {
                         return null;

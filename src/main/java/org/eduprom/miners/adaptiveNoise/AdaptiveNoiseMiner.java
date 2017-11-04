@@ -7,7 +7,6 @@ import org.deckfour.xes.model.XLog;
 import org.deckfour.xes.model.XTrace;
 import org.deckfour.xes.model.impl.XLogImpl;
 import org.eduprom.benchmarks.IBenchmarkableMiner;
-import org.eduprom.benchmarks.Weights;
 import org.eduprom.entities.CrossValidationPartition;
 import org.eduprom.exceptions.MiningException;
 import org.eduprom.miners.AbstractPetrinetMiner;
@@ -17,10 +16,10 @@ import org.eduprom.miners.adaptiveNoise.configuration.AdaptiveNoiseConfiguration
 import org.eduprom.miners.adaptiveNoise.conformance.IAdaptiveNoiseConformanceObject;
 import org.eduprom.miners.adaptiveNoise.conformance.IConformanceContext;
 import org.eduprom.partitioning.ILogSplitter;
-import org.eduprom.partitioning.InductiveLogSplitting;
+import org.eduprom.partitioning.InductiveCutSplitting;
+import org.eduprom.partitioning.trunk.InductiveLogSplitting;
 import org.eduprom.partitioning.Partitioning;
 import org.eduprom.utils.PetrinetHelper;
-import org.processmining.plugins.InductiveMiner.mining.MiningParametersIMf;
 import org.processmining.plugins.petrinet.replayresult.PNRepResult;
 import org.processmining.plugins.pnalignanalysis.conformance.AlignmentPrecGenRes;
 import org.processmining.ptconversions.pn.ProcessTree2Petrinet;
@@ -139,14 +138,12 @@ public class AdaptiveNoiseMiner extends AbstractPetrinetMiner implements IConfor
     }
     //splitLog(pratitioning.getPartitions().get(UUID.fromString("1d78cd13-f981-48c3-8a56-7b492f689b4f")).getLog(), false, 0.1f).getPartitions()
     private Partitioning splitLog(XLog trainLog, boolean computeConformance, float noiseFiltering) throws MiningException {
-        ILogSplitter logSplitter = new InductiveLogSplitting(this, new MiningParametersIMf()
-        {{
-            setNoiseThreshold(noiseFiltering);
-        }});
+        ILogSplitter logSplitter = new InductiveCutSplitting(this, noiseFiltering);
         Partitioning pratitioning = logSplitter.split(trainLog);
-        for(Partitioning.PartitionInfo partitionInfo: pratitioning.getPartitions().values()){
-            logger.info(partitionInfo.toString());
-        }
+
+        //for(Partitioning.PartitionInfo partitionInfo: pratitioning.getPartitions().values()){
+        //    logger.info(partitionInfo.toString());
+        //}
         if (computeConformance){
             for(Partitioning.PartitionInfo partitionInfo : pratitioning.getPartitions().values()) {
                 MiningResult result = partitionInfo.getMiner().mineProcessTree(partitionInfo.getLog());

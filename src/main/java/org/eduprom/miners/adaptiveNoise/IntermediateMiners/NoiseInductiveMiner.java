@@ -18,6 +18,7 @@ import org.processmining.models.semantics.petrinet.Marking;
 import org.processmining.plugins.InductiveMiner.mining.MiningParameters;
 import org.processmining.plugins.InductiveMiner.mining.MiningParametersIM;
 import org.processmining.plugins.InductiveMiner.mining.MiningParametersIMf;
+import org.processmining.plugins.InductiveMiner.mining.MiningParametersIMfa;
 import org.processmining.plugins.InductiveMiner.plugins.IMPetriNet;
 import org.processmining.plugins.InductiveMiner.plugins.IMProcessTree;
 import org.processmining.plugins.petrinet.replayresult.PNRepResult;
