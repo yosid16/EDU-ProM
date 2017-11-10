@@ -24,6 +24,7 @@ import org.processmining.plugins.petrinet.replayresult.PNRepResult;
 import org.processmining.plugins.pnalignanalysis.conformance.AlignmentPrecGenRes;
 import org.processmining.ptconversions.pn.ProcessTree2Petrinet;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -51,6 +52,7 @@ public class AdaptiveNoiseMiner extends AbstractPetrinetMiner implements IConfor
     private ConformanceInfo conformanceInfo;
 
     private Map<String, TreeChanges> changes;
+    private XLog validationLog;
 
     //endregion
 
@@ -138,7 +140,13 @@ public class AdaptiveNoiseMiner extends AbstractPetrinetMiner implements IConfor
     }
     //splitLog(pratitioning.getPartitions().get(UUID.fromString("1d78cd13-f981-48c3-8a56-7b492f689b4f")).getLog(), false, 0.1f).getPartitions()
     private Partitioning splitLog(XLog trainLog, boolean computeConformance, float noiseFiltering) throws MiningException {
-        ILogSplitter logSplitter = new InductiveCutSplitting(this, noiseFiltering);
+        ILogSplitter logSplitter = null; //new InductiveCutSplitting(this, noiseFiltering);
+        try {
+            logSplitter = configuration.getLogSplitter().getConstructor(IConformanceContext.class, Float.TYPE)
+                    .newInstance(this, noiseFiltering);
+        } catch (Exception e) {
+            throw new MiningException("Failed to create instance of log splitter", e);
+        }
         Partitioning pratitioning = logSplitter.split(trainLog);
 
         //for(Partitioning.PartitionInfo partitionInfo: pratitioning.getPartitions().values()){
@@ -396,13 +404,13 @@ public class AdaptiveNoiseMiner extends AbstractPetrinetMiner implements IConfor
     //region protected methods
     @Override
     protected ProcessTree2Petrinet.PetrinetWithMarkings minePetrinet() throws MiningException {
+        if (configuration.getUseCrossValidation()){
+            throw new MiningException("cross validation is not supported");
+        }
 
-        List<CrossValidationPartition> crossValidationPartitions =  this.logHelper.crossValidationSplit(this.log, 10);
         List<TreeChanges> models = new ArrayList<>();
-        for(CrossValidationPartition testPartition: crossValidationPartitions){
-            XLog testLog = testPartition.getLog();
-            XLog trainLog = CrossValidationPartition.Bind(crossValidationPartitions.stream().filter(x -> testPartition != x)
-                    .collect(Collectors.toList())).getLog();
+            XLog testLog = this.validationLog;
+            XLog trainLog = this.log;
 
             logger.info(String.format("Miners with %d noise thresholds %s are optional",
                     miners.size(), miners.stream().map(x-> String.valueOf(x.getNoiseThreshold())).collect(Collectors.joining (","))));
@@ -449,7 +457,6 @@ public class AdaptiveNoiseMiner extends AbstractPetrinetMiner implements IConfor
                 this.bestModel = null;
             }
             //return discoved process model
-        }
 
         this.bestModel = models.stream().max(Comparator.comparing(x->x.getConformanceInfo().getPsi())).get();
         return PetrinetHelper.ConvertToPetrinet(bestModel.getModifiedProcessTree());
@@ -494,6 +501,10 @@ public class AdaptiveNoiseMiner extends AbstractPetrinetMiner implements IConfor
 
     public AdaptiveNoiseConfiguration getConfiguration() {
         return configuration;
+    }
+
+    public void setValidationLog(XLog validationLog){
+        this.validationLog = validationLog;
     }
 
     //endregion

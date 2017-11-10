@@ -3,6 +3,7 @@ package org.eduprom.miners.adaptiveNoise.benchmarks;
 import org.eduprom.benchmarks.Weights;
 import org.eduprom.miners.adaptiveNoise.AdaptiveNoiseMiner;
 import org.eduprom.miners.adaptiveNoise.configuration.AdaptiveNoiseConfiguration;
+import org.eduprom.partitioning.ILogSplitter;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -18,6 +19,7 @@ public class AdaptiveNoiseBenchmarkConfiguration {
     private List<Weights> weights;
     private boolean useCrossValidation;
     private boolean preExecuteFilter;
+    private Class<? extends ILogSplitter> logSplitter;
 
     //endregoin
 
@@ -30,6 +32,7 @@ public class AdaptiveNoiseBenchmarkConfiguration {
         private float partitionNoiseFilter;
         private boolean preExecuteFilter;
         private boolean useCrossValidation;
+        private Class<? extends ILogSplitter> logSplitter;
 
         public AdaptiveNoiseBenchmarkConfigurationBuilder(){
             this.weights = new ArrayList<>();
@@ -76,6 +79,11 @@ public class AdaptiveNoiseBenchmarkConfiguration {
             return this;
         }
 
+        public AdaptiveNoiseBenchmarkConfigurationBuilder setLogSplitter(Class<? extends ILogSplitter> logSplitter) {
+            this.logSplitter = logSplitter;
+            return this;
+        }
+
         public Float[] getNoiseThresholds() {
             return noiseThresholds;
         }
@@ -99,6 +107,10 @@ public class AdaptiveNoiseBenchmarkConfiguration {
         public boolean isPreExecuteFilter() {
             return preExecuteFilter;
         }
+
+        public Class<? extends ILogSplitter> getLogSplitter() {
+            return logSplitter;
+        }
     }
     //endregion
 
@@ -108,6 +120,7 @@ public class AdaptiveNoiseBenchmarkConfiguration {
         this.useCrossValidation = builder.getUseCrossValidation();
         this.partitionNoiseFilter = builder.getPartitionNoiseFilter();
         this.preExecuteFilter = builder.isPreExecuteFilter();
+        this.logSplitter = builder.getLogSplitter();
     }
 
     public Float[] getNoiseThresholds() {
@@ -134,6 +147,10 @@ public class AdaptiveNoiseBenchmarkConfiguration {
         return preExecuteFilter;
     }
 
+    public Class<? extends ILogSplitter> getLogSplitterClass() {
+        return logSplitter;
+    }
+
     /*
     public AdaptiveNoiseMiner getMiner(String filename) throws Exception {
         return new AdaptiveNoiseMiner(filename, this);
@@ -145,6 +162,7 @@ public class AdaptiveNoiseBenchmarkConfiguration {
                 .setNoiseThresholds(this.getNoiseThresholds())
                 .setPartitionNoiseFilter(this.partitionNoiseFilter)
                 .setPreExecuteFilter(this.preExecuteFilter)
+                .setLogSplitter(this.logSplitter)
                 .setWeights(weights)
                 .build();
     }

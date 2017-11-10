@@ -5,6 +5,8 @@ import org.eduprom.miners.adaptiveNoise.benchmarks.AdaptiveNoiseBenchmark;
 import org.eduprom.benchmarks.IBenchmark;
 import org.eduprom.miners.adaptiveNoise.benchmarks.AdaptiveNoiseBenchmarkConfiguration;
 import org.eduprom.miners.adaptiveNoise.configuration.AdaptiveNoiseConfiguration;
+import org.eduprom.partitioning.InductiveCutSplitting;
+import org.eduprom.partitioning.trunk.InductiveLogSplitting;
 
 import java.io.FileInputStream;
 import java.util.Arrays;
@@ -54,7 +56,8 @@ public class Benchmark {
 			AdaptiveNoiseBenchmarkConfiguration configuration = AdaptiveNoiseBenchmarkConfiguration.getBuilder()
 					.useCrossValidation(false)
 					.setNoiseThresholds(thresholds)
-					.setPreExecuteFilter(true)
+					.setPreExecuteFilter(false)
+					.setLogSplitter(InductiveLogSplitting.class)
 					.addWeights()
 					.build();
 			IBenchmark benchmark = new AdaptiveNoiseBenchmark(files, configuration, 10);

@@ -3,7 +3,6 @@ package org.eduprom.miners.adaptiveNoise.benchmarks;
 
 import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
-import org.apache.commons.lang.StringUtils;
 import org.deckfour.xes.model.XLog;
 import org.eduprom.benchmarks.IBenchmark;
 import org.eduprom.benchmarks.IBenchmarkableMiner;
@@ -17,9 +16,7 @@ import org.eduprom.miners.adaptiveNoise.AdaptiveNoiseMiner;
 import org.eduprom.miners.adaptiveNoise.ConformanceInfo;
 import org.eduprom.miners.adaptiveNoise.IntermediateMiners.NoiseInductiveMiner;
 import org.eduprom.miners.adaptiveNoise.TreeChanges;
-import org.eduprom.miners.adaptiveNoise.configuration.AdaptiveNoiseConfiguration;
 import org.eduprom.utils.LogHelper;
-import org.eduprom.utils.PetrinetHelper;
 import org.processmining.plugins.petrinet.replayresult.PNRepResult;
 import org.processmining.ptconversions.pn.ProcessTree2Petrinet;
 
@@ -34,7 +31,7 @@ import java.util.stream.Collectors;
 
 import static org.processmining.plugins.petrinet.replayresult.PNRepResult.TRACEFITNESS;
 
-public class AdaptiveNoiseBenchmark implements IBenchmark {
+public class AdaptiveNoiseBenchmark implements IBenchmark<AdaptiveNoiseMiner, NoiseInductiveMiner> {
 
     protected static final Logger logger = Logger.getLogger(AbstractMiner.class.getName());
     static final String FITNESS_KEY = TRACEFITNESS;
@@ -59,7 +56,7 @@ public class AdaptiveNoiseBenchmark implements IBenchmark {
 
     private void evaluate(IBenchmarkableMiner miner, XLog trainingLog, XLog testLog, Weights weights) throws ConformanceCheckException {
         ProcessTree2Petrinet.PetrinetWithMarkings model = miner.getModel();
-        PNRepResult alignment = miner.getHelper().getAlignment(trainingLog,
+        PNRepResult alignment =  miner.getHelper().getAlignment(trainingLog,
                 model.petrinet, model.initialMarking, model.finalMarking);
 
         ConformanceInfo info = getNewConformanceInfo(weights);
@@ -87,8 +84,8 @@ public class AdaptiveNoiseBenchmark implements IBenchmark {
     }
 
     @Override
-    public List<IBenchmarkableMiner> getSources(String filename) throws Exception {
-        List<IBenchmarkableMiner> miners = new ArrayList<>();
+    public List<AdaptiveNoiseMiner> getSources(String filename) throws Exception {
+        List<AdaptiveNoiseMiner> miners = new ArrayList<>();
         for(Weights weights : this.adaptiveNoiseBenchmarkConfiguration.getWeights()){
             miners.add(new AdaptiveNoiseMiner(filename, this.adaptiveNoiseBenchmarkConfiguration.getAdaptiveNoiseConfiguration(weights)));
         }
@@ -97,8 +94,8 @@ public class AdaptiveNoiseBenchmark implements IBenchmark {
     }
 
     @Override
-    public List<IBenchmarkableMiner> getTargets(String filename) throws LogFileNotFoundException {
-        List<IBenchmarkableMiner> benchmarkableMiners = new ArrayList<>();
+    public List<NoiseInductiveMiner> getTargets(String filename) throws LogFileNotFoundException {
+        List<NoiseInductiveMiner> benchmarkableMiners = new ArrayList<>();
         for(float noiseThreshold: this.adaptiveNoiseBenchmarkConfiguration.getNoiseThresholds()){
             benchmarkableMiners.add(new NoiseInductiveMiner(filename, noiseThreshold, false));
         }
@@ -115,34 +112,38 @@ public class AdaptiveNoiseBenchmark implements IBenchmark {
 
             List<CrossValidationPartition> crossValidationPartitions =  this.logHelper.crossValidationSplit(log, testSize);
             CrossValidationPartition testPartition = crossValidationPartitions.stream().findAny().get();
+            CrossValidationPartition validationPartition = crossValidationPartitions.stream().filter(x->x != testPartition).findAny().get();
             XLog testLog = testPartition.getLog();
-            XLog trainingLog = CrossValidationPartition.Bind(crossValidationPartitions.stream().filter(x -> testPartition != x)
+            XLog validationLog = validationPartition.getLog();
+            XLog trainingLog = CrossValidationPartition.Bind(crossValidationPartitions.stream()
+                    .filter(x -> x != testPartition && x != validationPartition)
                     .collect(Collectors.toList())).getLog();
 
-            for (IBenchmarkableMiner source: getSources(filename)) {
+            for (AdaptiveNoiseMiner source: getSources(filename)) {
                 AdaptiveNoiseMiner adaptiveNoiseMiner = (AdaptiveNoiseMiner) source;
                 Weights weights = adaptiveNoiseMiner.getConfiguration().getWeights();
-                List<IBenchmarkableMiner> targets = getTargets(filename);
+                List<NoiseInductiveMiner> targets = getTargets(filename);
 
                 //assign the training set
                 source.setLog(trainingLog);
-                targets.forEach(x->x.setLog(trainingLog));
+                source.setValidationLog(validationLog);
 
                 //mine the models
                 source.mine();
-                evaluate(source, trainingLog, testLog, weights);
-
 
                 IBenchmarkableMiner bestBaseline = null;
                 for(IBenchmarkableMiner miner: targets){
                     miner.mine();
-                    evaluate(miner, trainingLog, testLog, weights);
+                    miner.setLog(trainingLog);
+                    evaluate(miner, trainingLog, validationLog, weights);
                     if (bestBaseline == null || bestBaseline.getConformanceInfo().getPsi() <= miner.getConformanceInfo().getPsi()){
                         bestBaseline = miner;
                     }
                 }
-
+                evaluate(bestBaseline, trainingLog, testLog, weights);
+                evaluate(source, trainingLog, testLog, weights);
                 logger.log(Level.INFO, String.format("BEST BASELINE: %s", bestBaseline.getConformanceInfo().toString()));
+                logger.log(Level.INFO, String.format("OPTIMAL MODEL: %s", source.getConformanceInfo().toString()));
                 sendResult(source, bestBaseline, filename);
             }
         }

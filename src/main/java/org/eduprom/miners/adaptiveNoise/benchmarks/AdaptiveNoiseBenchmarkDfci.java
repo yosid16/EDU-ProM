@@ -7,7 +7,6 @@ import org.deckfour.xes.model.XLog;
 import org.eduprom.benchmarks.IBenchmark;
 import org.eduprom.benchmarks.IBenchmarkableMiner;
 import org.eduprom.benchmarks.Weights;
-import org.eduprom.entities.CrossValidationPartition;
 import org.eduprom.exceptions.ConformanceCheckException;
 import org.eduprom.exceptions.ExportFailedException;
 import org.eduprom.exceptions.LogFileNotFoundException;
@@ -16,7 +15,6 @@ import org.eduprom.miners.adaptiveNoise.AdaptiveNoiseMiner;
 import org.eduprom.miners.adaptiveNoise.ConformanceInfo;
 import org.eduprom.miners.adaptiveNoise.IntermediateMiners.NoiseInductiveMiner;
 import org.eduprom.miners.adaptiveNoise.TreeChanges;
-import org.eduprom.miners.adaptiveNoise.configuration.AdaptiveNoiseConfiguration;
 import org.eduprom.utils.LogHelper;
 import org.processmining.plugins.petrinet.replayresult.PNRepResult;
 import org.processmining.ptconversions.pn.ProcessTree2Petrinet;
@@ -30,7 +28,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 import static org.processmining.plugins.petrinet.replayresult.PNRepResult.TRACEFITNESS;
 
@@ -90,8 +87,8 @@ public class AdaptiveNoiseBenchmarkDfci implements IBenchmark {
     }
 
     @Override
-    public List<IBenchmarkableMiner> getSources(String filename) throws Exception {
-        List<IBenchmarkableMiner> miners = new ArrayList<>();
+    public List<AdaptiveNoiseMiner> getSources(String filename) throws Exception {
+        List<AdaptiveNoiseMiner> miners = new ArrayList<>();
         for(Weights weights : this.adaptiveNoiseConfiguration.getWeights()){
             miners.add(new AdaptiveNoiseMiner(filename, this.adaptiveNoiseConfiguration.getAdaptiveNoiseConfiguration(weights)));
         }
@@ -100,8 +97,8 @@ public class AdaptiveNoiseBenchmarkDfci implements IBenchmark {
     }
 
     @Override
-    public List<IBenchmarkableMiner> getTargets(String filename) throws LogFileNotFoundException {
-        List<IBenchmarkableMiner> benchmarkableMiners = new ArrayList<>();
+    public List<NoiseInductiveMiner> getTargets(String filename) throws LogFileNotFoundException {
+        List<NoiseInductiveMiner> benchmarkableMiners = new ArrayList<>();
         for(float noiseThreshold: this.adaptiveNoiseConfiguration.getNoiseThresholds()){
             benchmarkableMiners.add(new NoiseInductiveMiner(filename, noiseThreshold, false));
         }
@@ -121,7 +118,7 @@ public class AdaptiveNoiseBenchmarkDfci implements IBenchmark {
             AdaptiveNoiseMiner adaptiveNoiseMiner = (AdaptiveNoiseMiner) source;
             Weights weights = adaptiveNoiseMiner.getConfiguration().getWeights();
             //get the miners
-            List<IBenchmarkableMiner> targets = getTargets(trainFile);
+            List<NoiseInductiveMiner> targets = getTargets(trainFile);
 
             //assign the training set
             source.setLog(trainingLog);

@@ -1,24 +1,23 @@
 package org.eduprom.benchmarks;
 
 import org.eduprom.exceptions.LogFileNotFoundException;
-import org.eduprom.miners.IMiner;
-import org.processmining.ptconversions.pn.ProcessTree2Petrinet;
+import org.eduprom.miners.adaptiveNoise.AdaptiveNoiseMiner;
 
 import java.util.List;
 
-public interface IBenchmark {
+public interface IBenchmark<T, U> {
 
     /***
      *
      * @return the new algorithm
      */
-    List<IBenchmarkableMiner> getSources(String filename) throws Exception;
+    List<T> getSources(String filename) throws Exception;
 
     /***
      *
      * @return previous algorithms to compare with
      */
-    List<IBenchmarkableMiner> getTargets(String filename) throws LogFileNotFoundException;
+    List<U> getTargets(String filename) throws LogFileNotFoundException;
 
 
     /***

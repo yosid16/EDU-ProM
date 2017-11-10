@@ -3,6 +3,7 @@ package org.eduprom.miners.adaptiveNoise.configuration;
 import org.eduprom.benchmarks.Weights;
 import org.eduprom.miners.adaptiveNoise.AdaptiveNoiseMiner;
 import org.eduprom.miners.adaptiveNoise.IntermediateMiners.NoiseInductiveMiner;
+import org.eduprom.partitioning.ILogSplitter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,6 +19,7 @@ public class AdaptiveNoiseConfiguration {
     private Weights weights;
     private boolean useCrossValidation;
     private boolean preExecuteFilter;
+    private Class<? extends ILogSplitter> logSplitter;
 
     //endregoin
 
@@ -31,6 +33,7 @@ public class AdaptiveNoiseConfiguration {
 
         private boolean useCrossValidation;
         private boolean preExecuteFilter;
+        private Class<? extends ILogSplitter> logSplitter;
 
         public AdaptiveNoiseConfigurationBuilder setNoiseThresholds(Float... noiseThresholds){
             this.noiseThresholds = noiseThresholds;
@@ -68,6 +71,11 @@ public class AdaptiveNoiseConfiguration {
             return this;
         }
 
+        public AdaptiveNoiseConfigurationBuilder setLogSplitter(Class<? extends ILogSplitter> logSplitter) {
+            this.logSplitter = logSplitter;
+            return this;
+        }
+
         public Float[] getNoiseThresholds() {
             return noiseThresholds;
         }
@@ -91,6 +99,10 @@ public class AdaptiveNoiseConfiguration {
         public boolean isPreExecuteFilter() {
             return preExecuteFilter;
         }
+
+        public Class<? extends ILogSplitter> getLogSplitter() {
+            return logSplitter;
+        }
     }
     //endregion
 
@@ -100,6 +112,7 @@ public class AdaptiveNoiseConfiguration {
         this.useCrossValidation = builder.getUseCrossValidation();
         this.partitionNoiseFilter = builder.getPartitionNoiseFilter();
         this.preExecuteFilter = builder.isPreExecuteFilter();
+        this.logSplitter = builder.getLogSplitter();
     }
 
     public Float[] getNoiseThresholds() {
@@ -129,5 +142,9 @@ public class AdaptiveNoiseConfiguration {
 
     public boolean isPreExecuteFilter() {
         return preExecuteFilter;
+    }
+
+    public Class<? extends ILogSplitter> getLogSplitter() {
+        return logSplitter;
     }
 }
