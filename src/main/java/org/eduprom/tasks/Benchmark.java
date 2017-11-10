@@ -27,10 +27,10 @@ public class Benchmark {
 
 		String[] formats =
 				{
-						"EventLogs\\contest_dataset\\training_log_%s.xes",
-						"EventLogs\\contest_2017\\log%s.xes"
+						"EventLogs\\contest_dataset\\training_log_%s.xes"//,
+						//"EventLogs\\contest_2017\\log%s.xes"
 				};
-		Integer[] fileNumbers = new Integer[] { 1 , 2, 3, 4, 5, 6, 7, 8, 9, 10 }; //
+		Integer[] fileNumbers = new Integer[] { 8 }; // 1 , 2, 3, 4, 5, 6, 7, 8, 9, 10
 		List<String> files = Arrays.stream(fileNumbers).flatMap(x-> Arrays.stream(formats)
 				.map(f -> String.format(f, x))).collect(Collectors.toList());
 		Float[] thresholds = new Float[] { 0.1f, 0.2f, 0.3f, 0.4f, 0.5f, 0.6f, 0.7f, 0.8f, 0.9f, 1.0f };
@@ -58,7 +58,7 @@ public class Benchmark {
 					.setNoiseThresholds(thresholds)
 					.setPreExecuteFilter(false)
 					.setLogSplitter(InductiveLogSplitting.class)
-					.addWeights()
+					.addWeights(new Weights(0.2, 0.6, 0.2))
 					.build();
 			IBenchmark benchmark = new AdaptiveNoiseBenchmark(files, configuration, 10);
 			benchmark.run();

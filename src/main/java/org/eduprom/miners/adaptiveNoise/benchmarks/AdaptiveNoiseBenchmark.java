@@ -11,6 +11,7 @@ import org.eduprom.entities.CrossValidationPartition;
 import org.eduprom.exceptions.ConformanceCheckException;
 import org.eduprom.exceptions.ExportFailedException;
 import org.eduprom.exceptions.LogFileNotFoundException;
+import org.eduprom.exceptions.ParsingException;
 import org.eduprom.miners.AbstractMiner;
 import org.eduprom.miners.adaptiveNoise.AdaptiveNoiseMiner;
 import org.eduprom.miners.adaptiveNoise.ConformanceInfo;
@@ -35,17 +36,50 @@ public class AdaptiveNoiseBenchmark implements IBenchmark<AdaptiveNoiseMiner, No
 
     protected static final Logger logger = Logger.getLogger(AbstractMiner.class.getName());
     static final String FITNESS_KEY = TRACEFITNESS;
-    private LogHelper logHelper;
-    private final AdaptiveNoiseBenchmarkConfiguration adaptiveNoiseBenchmarkConfiguration;
-    private List<String> filenames;
-    private String path;
-    private int testSize;
+    LogHelper logHelper;
+    final AdaptiveNoiseBenchmarkConfiguration adaptiveNoiseBenchmarkConfiguration;
+    List<String> filenames;
+    String path;
+    int testSize;
 
     /*
     private Set<String> getTraces(XLog log){
         return log.stream().map(x->x.stream().map(y->y.getAttributes().get("concept:name").toString())
                 .collect(Collectors.joining("->"))).collect(Collectors.toSet());
     }*/
+
+
+    public class BenchmarkLogs{
+        private XLog trainLog;
+
+        private XLog validationLog;
+
+        private XLog testLog;
+
+        public XLog getTrainLog() {
+            return trainLog;
+        }
+
+        public void setTrainLog(XLog trainLog) {
+            this.trainLog = trainLog;
+        }
+
+        public XLog getValidationLog() {
+            return validationLog;
+        }
+
+        public void setValidationLog(XLog validationLog) {
+            this.validationLog = validationLog;
+        }
+
+        public XLog getTestLog() {
+            return testLog;
+        }
+
+        public void setTestLog(XLog testLog) {
+            this.testLog = testLog;
+        }
+    }
 
     private ConformanceInfo getNewConformanceInfo(Weights weights){
         return new ConformanceInfo(weights.getFitnessWeight(),
@@ -103,21 +137,32 @@ public class AdaptiveNoiseBenchmark implements IBenchmark<AdaptiveNoiseMiner, No
         return benchmarkableMiners;
     }
 
+    protected BenchmarkLogs getBenchmarkLogs(String filename) throws ParsingException {
+        XLog log = logHelper.read(filename);
+
+        List<CrossValidationPartition> crossValidationPartitions =  this.logHelper.crossValidationSplit(log, testSize);
+        CrossValidationPartition testPartition = crossValidationPartitions.stream().findAny().get();
+        CrossValidationPartition validationPartition = crossValidationPartitions.stream().filter(x->x != testPartition).findAny().get();
+        XLog testLog = testPartition.getLog();
+        XLog validationLog = validationPartition.getLog();
+        XLog trainingLog = CrossValidationPartition.Bind(crossValidationPartitions.stream()
+                .filter(x -> x != testPartition && x != validationPartition)
+                .collect(Collectors.toList())).getLog();
+        return new BenchmarkLogs()
+        {{
+            setTrainLog(trainingLog);
+            setValidationLog(validationLog);
+            setTestLog(testLog);
+        }};
+    }
+
+
 
     public void run() throws Exception {
         for(String filename: filenames){
-
-            //split the log to training and test sets.
-            XLog log = logHelper.read(filename);
-
-            List<CrossValidationPartition> crossValidationPartitions =  this.logHelper.crossValidationSplit(log, testSize);
-            CrossValidationPartition testPartition = crossValidationPartitions.stream().findAny().get();
-            CrossValidationPartition validationPartition = crossValidationPartitions.stream().filter(x->x != testPartition).findAny().get();
-            XLog testLog = testPartition.getLog();
-            XLog validationLog = validationPartition.getLog();
-            XLog trainingLog = CrossValidationPartition.Bind(crossValidationPartitions.stream()
-                    .filter(x -> x != testPartition && x != validationPartition)
-                    .collect(Collectors.toList())).getLog();
+            BenchmarkLogs benchmarkLogs = getBenchmarkLogs(filename);
+            logger.info(String.format("LOG - (TRAINING, VALIDATION, TEST): (%d, %d, %d)",
+                    benchmarkLogs.trainLog.size(), benchmarkLogs.getValidationLog().size(), benchmarkLogs.getTestLog().size()));
 
             for (AdaptiveNoiseMiner source: getSources(filename)) {
                 AdaptiveNoiseMiner adaptiveNoiseMiner = (AdaptiveNoiseMiner) source;
@@ -125,24 +170,28 @@ public class AdaptiveNoiseBenchmark implements IBenchmark<AdaptiveNoiseMiner, No
                 List<NoiseInductiveMiner> targets = getTargets(filename);
 
                 //assign the training set
-                source.setLog(trainingLog);
-                source.setValidationLog(validationLog);
+                source.setLog(benchmarkLogs.trainLog);
+                source.setValidationLog(benchmarkLogs.validationLog);
 
                 //mine the models
                 source.mine();
 
-                IBenchmarkableMiner bestBaseline = null;
-                for(IBenchmarkableMiner miner: targets){
+                NoiseInductiveMiner bestBaseline = null;
+                for(NoiseInductiveMiner miner: targets){
+                    miner.setLog(benchmarkLogs.trainLog);
                     miner.mine();
-                    miner.setLog(trainingLog);
-                    evaluate(miner, trainingLog, validationLog, weights);
+
+                    evaluate(miner, benchmarkLogs.trainLog, benchmarkLogs.validationLog, weights);
                     if (bestBaseline == null || bestBaseline.getConformanceInfo().getPsi() <= miner.getConformanceInfo().getPsi()){
                         bestBaseline = miner;
                     }
                 }
-                evaluate(bestBaseline, trainingLog, testLog, weights);
-                evaluate(source, trainingLog, testLog, weights);
-                logger.log(Level.INFO, String.format("BEST BASELINE: %s", bestBaseline.getConformanceInfo().toString()));
+                evaluate(bestBaseline, benchmarkLogs.trainLog, benchmarkLogs.testLog, weights);
+                evaluate(source, benchmarkLogs.trainLog, benchmarkLogs.testLog, weights);
+                logger.log(Level.INFO, String.format("BEST BASELINE (noise %f ): %s, %s",
+                        bestBaseline.getNoiseThreshold(),
+                        bestBaseline.getConformanceInfo().toString(),
+                        bestBaseline.getResult().getProcessTree().toString()));
                 logger.log(Level.INFO, String.format("OPTIMAL MODEL: %s", source.getConformanceInfo().toString()));
                 sendResult(source, bestBaseline, filename);
             }

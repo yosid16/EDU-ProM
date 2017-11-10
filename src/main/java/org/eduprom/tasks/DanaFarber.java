@@ -5,6 +5,8 @@ import org.eduprom.miners.adaptiveNoise.benchmarks.AdaptiveNoiseBenchmarkConfigu
 import org.eduprom.miners.adaptiveNoise.benchmarks.AdaptiveNoiseBenchmarkDfci;
 import org.eduprom.benchmarks.IBenchmark;
 import org.eduprom.miners.adaptiveNoise.configuration.AdaptiveNoiseConfiguration;
+import org.eduprom.partitioning.InductiveCutSplitting;
+import org.eduprom.partitioning.trunk.InductiveLogSplitting;
 
 import java.io.FileInputStream;
 import java.util.ArrayList;
@@ -35,8 +37,9 @@ public class DanaFarber {
 		}
 		//values.add(1.0f);
 		Float[] thresholds = values.toArray(new Float[0]);
-
 		*/
+
+
 
     	logManager.readConfiguration(new FileInputStream("./app.properties"));
     	logger.info("started application");
@@ -46,10 +49,11 @@ public class DanaFarber {
 			AdaptiveNoiseBenchmarkConfiguration configuration = AdaptiveNoiseBenchmarkConfiguration.getBuilder()
 					.useCrossValidation(false)
 					.setNoiseThresholds(thresholds)
-					.addWeights()
-					.setPreExecuteFilter(true)
+					.addWeights(Weights.getRangePrecision(0.1))
+					.setPreExecuteFilter(false)
+					.setLogSplitter(InductiveLogSplitting.class) //InductiveCutSplitting
 					.build();
-			IBenchmark benchmark = new AdaptiveNoiseBenchmarkDfci(trainFile, testFile, configuration);
+			IBenchmark benchmark = new AdaptiveNoiseBenchmarkDfci(trainFile, testFile, configuration, 10);
 			benchmark.run();
 
         } catch (Exception ex) {

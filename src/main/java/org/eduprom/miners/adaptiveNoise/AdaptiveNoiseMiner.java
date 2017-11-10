@@ -428,6 +428,7 @@ public class AdaptiveNoiseMiner extends AbstractPetrinetMiner implements IConfor
             Map<String, TreeChanges> treeTochanges = generatePossibleTreeChanges(partitioning, changeOptions);
             treeTochanges.entrySet().forEach(x -> this.changes.putIfAbsent(x.getKey(), x.getValue()));
 
+
             /*
             List<Partitioning> allPartitioning = splitLog(trainLog, false);
             //partitioning.getPartitions().values().stream().forEach(x-> logger.info(x.toString()));
@@ -446,6 +447,16 @@ public class AdaptiveNoiseMiner extends AbstractPetrinetMiner implements IConfor
             logger.info(format("found %d distinct trees", changes.size()));
 
             calcPsi(this.changes.values(), trainLog, testLog);
+
+            for(TreeChanges c : treeTochanges.values()){
+                if (c.isBaseline()){
+                    logger.info(String.format("BASELINE (noise %f): %s",
+                            c.getChanges().getChanges().size() > 0 ?
+                                    c.getChanges().getChanges().iterator().next().getMiner().getNoiseThreshold() : 0,
+                            c));
+                }
+            }
+
             logger.info("calculated psi for all trees");
             logger.info("OPTIMAL MODEL: " + bestModel.toString());
 
