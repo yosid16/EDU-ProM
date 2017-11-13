@@ -2,34 +2,22 @@ package org.eduprom.miners.adaptiveNoise.IntermediateMiners;
 
 import org.deckfour.xes.model.XLog;
 import org.eduprom.benchmarks.IBenchmarkableMiner;
-import org.eduprom.benchmarks.Weights;
 import org.eduprom.exceptions.ConformanceCheckException;
 import org.eduprom.exceptions.LogFileNotFoundException;
 import org.eduprom.exceptions.MiningException;
-import org.eduprom.exceptions.ParsingException;
 import org.eduprom.miners.InductiveMiner;
-import org.eduprom.miners.adaptiveNoise.ConformanceInfo;
-import org.eduprom.miners.adaptiveNoise.FilterAlgorithm;
-import org.eduprom.miners.adaptiveNoise.FilterResult;
+import org.eduprom.miners.adaptiveNoise.conformance.ConformanceInfo;
+import org.eduprom.miners.adaptiveNoise.filters.FilterAlgorithm;
+import org.eduprom.miners.adaptiveNoise.filters.FilterResult;
 import org.eduprom.utils.PetrinetHelper;
 import org.processmining.log.parameters.LowFrequencyFilterParameters;
-import org.processmining.models.graphbased.directed.petrinet.impl.PetrinetImpl;
-import org.processmining.models.semantics.petrinet.Marking;
 import org.processmining.plugins.InductiveMiner.mining.MiningParameters;
-import org.processmining.plugins.InductiveMiner.mining.MiningParametersIM;
 import org.processmining.plugins.InductiveMiner.mining.MiningParametersIMf;
-import org.processmining.plugins.InductiveMiner.mining.MiningParametersIMfa;
-import org.processmining.plugins.InductiveMiner.plugins.IMPetriNet;
 import org.processmining.plugins.InductiveMiner.plugins.IMProcessTree;
-import org.processmining.plugins.petrinet.replayresult.PNRepResult;
-import org.processmining.plugins.pnalignanalysis.conformance.AlignmentPrecGenRes;
-import org.processmining.pnanalysis.metrics.impl.PetriNetStructurednessMetric;
 import org.processmining.processtree.ProcessTree;
 import org.processmining.ptconversions.pn.ProcessTree2Petrinet;
 
-import javax.resource.NotSupportedException;
 import java.util.*;
-import java.util.logging.Level;
 
 public class NoiseInductiveMiner extends InductiveMiner implements IBenchmarkableMiner {
 
@@ -38,6 +26,7 @@ public class NoiseInductiveMiner extends InductiveMiner implements IBenchmarkabl
 	private HashMap<UUID, MiningResult> processTreeCache = new HashMap<>();
 	private ConformanceInfo conformanceInfo;
 	private MiningResult result;
+
 	private boolean filterPreExecution;
 	//endregion
 
@@ -47,6 +36,12 @@ public class NoiseInductiveMiner extends InductiveMiner implements IBenchmarkabl
 	public NoiseInductiveMiner(String filename, float noiseThreshold, boolean filterPreExecution) throws LogFileNotFoundException {
 		super(filename, new MiningParametersIMf() {{ setNoiseThreshold(noiseThreshold); }});
 		this.filterPreExecution = filterPreExecution;
+		/*
+		this.parameters.setCutFinder(new ArrayList<CutFinder>(Arrays.asList(
+				//new CutFinderIM(),
+				new CutFinderIMf()
+		)));
+		*/
 	}
 	//endregion
 
@@ -72,7 +67,7 @@ public class NoiseInductiveMiner extends InductiveMiner implements IBenchmarkabl
 			res = new FilterResult((XLog)rLog.clone(), 0, rLog.stream().mapToInt(x->x.size()).sum());
 		}
 		else{
-			res = new FilterResult((XLog)rLog.clone(), 0, rLog.stream().mapToInt(x->x.size()).sum());
+			res = new FilterResult(rLog, 0, rLog.stream().mapToInt(x->x.size()).sum());
 			runParams = this.parameters;
 		}
 
@@ -82,7 +77,7 @@ public class NoiseInductiveMiner extends InductiveMiner implements IBenchmarkabl
 	//endregion
 
 
-	public static List<NoiseInductiveMiner> withNoiseThresholds(String filename, boolean filterPreExecution, Float... noiseThreshold) throws LogFileNotFoundException {
+	public static List<NoiseInductiveMiner> withNoiseThresholds(String filename, boolean filterPreExecution, float... noiseThreshold) throws LogFileNotFoundException {
 		ArrayList<NoiseInductiveMiner> miners = new ArrayList<>();
 		for (Float threshold: noiseThreshold){
 			miners.add(new NoiseInductiveMiner(filename, threshold, filterPreExecution));
@@ -134,5 +129,9 @@ public class NoiseInductiveMiner extends InductiveMiner implements IBenchmarkabl
 
 	public MiningResult getResult() {
 		return result;
+	}
+
+	public boolean isFilterPreExecution() {
+		return filterPreExecution;
 	}
 }

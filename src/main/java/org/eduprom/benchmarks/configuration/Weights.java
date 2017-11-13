@@ -1,4 +1,4 @@
-package org.eduprom.benchmarks;
+package org.eduprom.benchmarks.configuration;
 
 import java.util.ArrayList;
 import java.util.List;

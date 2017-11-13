@@ -1,7 +1,6 @@
 package org.eduprom.miners.adaptiveNoise.IntermediateMiners;
 
-import org.eduprom.miners.adaptiveNoise.FilterAlgorithm;
-import org.eduprom.miners.adaptiveNoise.FilterResult;
+import org.eduprom.miners.adaptiveNoise.filters.FilterResult;
 import org.processmining.processtree.ProcessTree;
 
 public class MiningResult {

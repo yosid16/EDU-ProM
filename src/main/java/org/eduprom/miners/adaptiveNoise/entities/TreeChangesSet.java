@@ -1,4 +1,4 @@
-package org.eduprom.miners.adaptiveNoise;
+package org.eduprom.miners.adaptiveNoise.entities;
 
 import java.util.HashSet;
 import java.util.Set;

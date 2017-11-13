@@ -1,4 +1,4 @@
-package org.eduprom.miners.adaptiveNoise;
+package org.eduprom.miners.adaptiveNoise.filters;
 
 import org.deckfour.xes.model.XEvent;
 import org.deckfour.xes.model.XLog;

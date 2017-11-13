@@ -13,18 +13,19 @@ import org.eduprom.miners.AbstractPetrinetMiner;
 import org.eduprom.miners.adaptiveNoise.IntermediateMiners.MiningResult;
 import org.eduprom.miners.adaptiveNoise.IntermediateMiners.NoiseInductiveMiner;
 import org.eduprom.miners.adaptiveNoise.configuration.AdaptiveNoiseConfiguration;
+import org.eduprom.miners.adaptiveNoise.conformance.ConformanceInfo;
 import org.eduprom.miners.adaptiveNoise.conformance.IAdaptiveNoiseConformanceObject;
 import org.eduprom.miners.adaptiveNoise.conformance.IConformanceContext;
+import org.eduprom.miners.adaptiveNoise.entities.Change;
+import org.eduprom.miners.adaptiveNoise.entities.TreeChanges;
+import org.eduprom.miners.adaptiveNoise.entities.TreeChangesSet;
 import org.eduprom.partitioning.ILogSplitter;
-import org.eduprom.partitioning.InductiveCutSplitting;
-import org.eduprom.partitioning.trunk.InductiveLogSplitting;
 import org.eduprom.partitioning.Partitioning;
 import org.eduprom.utils.PetrinetHelper;
 import org.processmining.plugins.petrinet.replayresult.PNRepResult;
 import org.processmining.plugins.pnalignanalysis.conformance.AlignmentPrecGenRes;
 import org.processmining.ptconversions.pn.ProcessTree2Petrinet;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -183,7 +184,7 @@ public class AdaptiveNoiseMiner extends AbstractPetrinetMiner implements IConfor
     }
 
     private Map<String, TreeChanges> generatePossibleTreeChanges(Partitioning pratitioning, Set<Change> changeOptions) throws MiningException {
-        int maxSize = 5;
+        int maxSize = 3;
         Set<Set<Change>> changesSet = Sets.newConcurrentHashSet(changeOptions.stream()
                 .map(x -> {
                     HashSet<Change> s = new HashSet<>();
@@ -447,15 +448,15 @@ public class AdaptiveNoiseMiner extends AbstractPetrinetMiner implements IConfor
             logger.info(format("found %d distinct trees", changes.size()));
 
             calcPsi(this.changes.values(), trainLog, testLog);
-
+            /*
             for(TreeChanges c : treeTochanges.values()){
-                if (c.isBaseline()){
+                if (c.getConformanceInfo().assigned() && c.isBaseline()){
                     logger.info(String.format("BASELINE (noise %f): %s",
                             c.getChanges().getChanges().size() > 0 ?
                                     c.getChanges().getChanges().iterator().next().getMiner().getNoiseThreshold() : 0,
                             c));
                 }
-            }
+            }*/
 
             logger.info("calculated psi for all trees");
             logger.info("OPTIMAL MODEL: " + bestModel.toString());

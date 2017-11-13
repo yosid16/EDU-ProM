@@ -3,7 +3,7 @@ package org.eduprom.tasks;
 import org.eduprom.miners.adaptiveNoise.benchmarks.AdaptiveNoiseBenchmark;
 import org.eduprom.benchmarks.IBenchmark;
 import org.eduprom.miners.adaptiveNoise.benchmarks.AdaptiveNoiseBenchmarkConfiguration;
-import org.eduprom.miners.adaptiveNoise.configuration.AdaptiveNoiseConfiguration;
+import org.eduprom.benchmarks.configuration.NoiseThreshold;
 
 import java.io.FileInputStream;
 import java.util.ArrayList;
@@ -31,26 +31,17 @@ public class DanaFarberValidationSet {
 		//Float[] thresholds = new Float[] { 0.005f, 0.05f, 0.1f, 0.2f, 0.3f, 0.4f, 0.5f, 0.6f, 0.7f, 0.8f, 0.9f, 1.0f };
 
 
-		float min = 0.01f;
-		float max = 1.0f;
-		float increment = 0.01f;
-		List<Float> values = new ArrayList<>();
-		for (float value = min; value <= max; value+=increment){
-			values.add(value);
-		}
-		Float[] thresholds = values.toArray(new Float[0]);
-
 		logManager.readConfiguration(new FileInputStream("./app.properties"));
 		logger.info("started application");
 
 		try {
 			AdaptiveNoiseBenchmarkConfiguration configuration = AdaptiveNoiseBenchmarkConfiguration.getBuilder()
 					.useCrossValidation(false)
-					.setNoiseThresholds(thresholds)
+					.setNoiseThresholds(NoiseThreshold.uniform(0.1f))
 					.addWeights()
 					//.setPartitionNoiseFilter(0.0f)
 					.build();
-			IBenchmark benchmark = new AdaptiveNoiseBenchmark(files, configuration, 10);
+			IBenchmark benchmark = new AdaptiveNoiseBenchmark(configuration, 10);
 			benchmark.run();
 
 		} catch (Exception ex) {

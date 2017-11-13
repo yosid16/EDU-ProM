@@ -1,6 +1,4 @@
-package org.eduprom.miners.adaptiveNoise;
-
-import org.eduprom.exceptions.MiningException;
+package org.eduprom.miners.adaptiveNoise.conformance;
 
 /**
  * Created by ydahari on 9/22/2017.

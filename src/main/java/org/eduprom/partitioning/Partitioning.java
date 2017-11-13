@@ -2,7 +2,7 @@ package org.eduprom.partitioning;
 
 import org.deckfour.xes.model.XEvent;
 import org.deckfour.xes.model.XLog;
-import org.eduprom.miners.adaptiveNoise.ConformanceInfo;
+import org.eduprom.miners.adaptiveNoise.conformance.ConformanceInfo;
 import org.eduprom.miners.adaptiveNoise.IntermediateMiners.MiningResult;
 import org.eduprom.miners.adaptiveNoise.IntermediateMiners.NoiseInductiveMiner;
 import org.eduprom.miners.adaptiveNoise.conformance.IAdaptiveNoiseConformanceObject;

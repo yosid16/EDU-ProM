@@ -1,12 +1,12 @@
 package org.eduprom.tasks;
 
-import org.eduprom.benchmarks.Weights;
+import org.eduprom.benchmarks.configuration.Logs;
+import org.eduprom.benchmarks.configuration.NoiseThreshold;
+import org.eduprom.benchmarks.configuration.Weights;
 import org.eduprom.miners.adaptiveNoise.benchmarks.AdaptiveNoiseBenchmark;
 import org.eduprom.benchmarks.IBenchmark;
 import org.eduprom.miners.adaptiveNoise.benchmarks.AdaptiveNoiseBenchmarkConfiguration;
-import org.eduprom.miners.adaptiveNoise.configuration.AdaptiveNoiseConfiguration;
 import org.eduprom.partitioning.InductiveCutSplitting;
-import org.eduprom.partitioning.trunk.InductiveLogSplitting;
 
 import java.io.FileInputStream;
 import java.util.Arrays;
@@ -22,32 +22,10 @@ public class Benchmark {
 	
 	private static final LogManager logManager = LogManager.getLogManager();
 	private static final Logger logger = Logger.getLogger(Benchmark.class.getName());
+	public static final String dfciApril = "EventLogs\\\\DFCI_Train_April.csv";
+	public static final String dfciMay = "EventLogs\\\\DFCI_Test_May.csv";
 	
     public static void main(String[] args) throws Exception {
-
-		String[] formats =
-				{
-						"EventLogs\\contest_dataset\\training_log_%s.xes"//,
-						//"EventLogs\\contest_2017\\log%s.xes"
-				};
-		Integer[] fileNumbers = new Integer[] { 8 }; // 1 , 2, 3, 4, 5, 6, 7, 8, 9, 10
-		List<String> files = Arrays.stream(fileNumbers).flatMap(x-> Arrays.stream(formats)
-				.map(f -> String.format(f, x))).collect(Collectors.toList());
-		Float[] thresholds = new Float[] { 0.1f, 0.2f, 0.3f, 0.4f, 0.5f, 0.6f, 0.7f, 0.8f, 0.9f, 1.0f };
-		//Float[] thresholds = new Float[] { 0.2f, 0.4f };
-		//Float[] thresholds = new Float[] { 0.005f, 0.05f, 0.1f, 0.2f, 0.3f, 0.4f, 0.5f, 0.6f, 0.7f, 0.8f, 0.9f, 1.0f };
-		Collections.shuffle(files);
-
-		/*
-		float min = 0.001f;
-		float max = 1.0f;
-		float increment = 0.001f;
-		List<Float> values = new ArrayList<>();
-		for (float value = min; value <= max; value+=increment){
-			values.add(value);
-		}
-		Float[] thresholds = values.toArray(new Float[0]);
-		*/
 
     	logManager.readConfiguration(new FileInputStream("./app.properties"));
     	logger.info("started application");
@@ -55,12 +33,16 @@ public class Benchmark {
         try {
 			AdaptiveNoiseBenchmarkConfiguration configuration = AdaptiveNoiseBenchmarkConfiguration.getBuilder()
 					.useCrossValidation(false)
-					.setNoiseThresholds(thresholds)
+					.addLogs(Logs.getBuilder().addNumbers(3).addFormat(Logs.CONTEST_2017).build())
+					//.addLogs(Logs.getBuilder().addNumbers(1, 10).addFormat(dfciApril).build())
+					.setNoiseThresholds(NoiseThreshold.uniform(0.1f))
 					.setPreExecuteFilter(false)
-					.setLogSplitter(InductiveLogSplitting.class)
-					.addWeights(new Weights(0.2, 0.6, 0.2))
+					.setLogSplitter(InductiveCutSplitting.class)
+					.addWeights(Weights.getUniform())
+					//.addWeights(Weights.getRangePrecision(0.2))
+					//.addWeights(new Weights(0.2, 0.6, 0.2))
 					.build();
-			IBenchmark benchmark = new AdaptiveNoiseBenchmark(files, configuration, 10);
+			IBenchmark benchmark = new AdaptiveNoiseBenchmark(configuration, 10);
 			benchmark.run();
 
         } catch (Exception ex) {

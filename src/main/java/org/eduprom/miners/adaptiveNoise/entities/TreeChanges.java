@@ -1,6 +1,7 @@
-package org.eduprom.miners.adaptiveNoise;
+package org.eduprom.miners.adaptiveNoise.entities;
 
 import org.eduprom.exceptions.MiningException;
+import org.eduprom.miners.adaptiveNoise.conformance.ConformanceInfo;
 import org.eduprom.partitioning.Partitioning;
 import org.eduprom.utils.PocessTreeHelper;
 import org.processmining.plugins.petrinet.replayresult.PNRepResult;

@@ -1,11 +1,13 @@
-package org.eduprom.miners.adaptiveNoise;
+package org.eduprom.miners.adaptiveNoise.entities;
 
 import org.deckfour.xes.model.XLog;
 import org.eduprom.exceptions.MiningException;
 import org.eduprom.miners.adaptiveNoise.IntermediateMiners.MiningResult;
 import org.eduprom.miners.adaptiveNoise.IntermediateMiners.NoiseInductiveMiner;
+import org.eduprom.miners.adaptiveNoise.conformance.ConformanceInfo;
 import org.eduprom.miners.adaptiveNoise.conformance.IConformanceContext;
 import org.eduprom.miners.adaptiveNoise.conformance.IAdaptiveNoiseConformanceObject;
+import org.eduprom.miners.adaptiveNoise.entities.TreeChanges;
 import org.eduprom.partitioning.Partitioning;
 import org.processmining.processtree.ProcessTree;
 
