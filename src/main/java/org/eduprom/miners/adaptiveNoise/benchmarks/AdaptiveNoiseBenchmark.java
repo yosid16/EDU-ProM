@@ -37,6 +37,7 @@ public class AdaptiveNoiseBenchmark implements IBenchmark<AdaptiveNoiseMiner, No
 
     protected static final Logger logger = Logger.getLogger(AbstractMiner.class.getName());
     static final String FITNESS_KEY = TRACEFITNESS;
+    private final UUID runId;
     LogHelper logHelper;
     final AdaptiveNoiseBenchmarkConfiguration adaptiveNoiseBenchmarkConfiguration;
     String path;
@@ -117,6 +118,9 @@ public class AdaptiveNoiseBenchmark implements IBenchmark<AdaptiveNoiseMiner, No
         this.adaptiveNoiseBenchmarkConfiguration = adaptiveNoiseBenchmarkConfiguration;
         this.logHelper = new LogHelper();
         this.testSize = testSize;
+        //String format = "./Output/%s.csv";
+        //this.path = String.format(format, this.getName());
+        this.runId = UUID.randomUUID();
         String format = "./Output/%s-%s.csv";
         this.path = String.format(format, this.getName(),
                 new SimpleDateFormat("yyyy-MM-dd HH-mm-ss").format(new Date()));
@@ -172,7 +176,17 @@ public class AdaptiveNoiseBenchmark implements IBenchmark<AdaptiveNoiseMiner, No
 
 
     public void run() throws Exception {
+        logger.info(String.format("run_id: %s, total executions: %d", this.runId,
+                this.adaptiveNoiseBenchmarkConfiguration.getFilenames().size() * this.adaptiveNoiseBenchmarkConfiguration.getWeights().size()));
+
+        int executions = 0;
         for(String filename: adaptiveNoiseBenchmarkConfiguration.getFilenames()){
+            executions++;
+            logger.info(String.format("run_id: %s, started execution %d/%d", this.runId,
+                    executions,
+                    this.adaptiveNoiseBenchmarkConfiguration.getFilenames().size() * this.adaptiveNoiseBenchmarkConfiguration.getWeights().size()));
+
+
             BenchmarkLogs benchmarkLogs = getBenchmarkLogs(filename);
             logger.info(benchmarkLogs.toString());
 
@@ -198,9 +212,7 @@ public class AdaptiveNoiseBenchmark implements IBenchmark<AdaptiveNoiseMiner, No
                 evaluate(nonPreFilterBestBaseline, benchmarkLogs.trainLog, benchmarkLogs.testLog, weights);
 
 
-
-
-                logger.log(Level.INFO, String.format("BEST BASELINE (IMi) (noise %f ): %s, %s",
+                logger.log(Level.INFO, String.format("BEST BASELINE (IMi) (noise %f )          : %s, %s",
                         nonPreFilterBestBaseline.getNoiseThreshold(),
                         nonPreFilterBestBaseline.getConformanceInfo().toString(),
                         nonPreFilterBestBaseline.getResult().getProcessTree().toString()));
@@ -211,9 +223,8 @@ public class AdaptiveNoiseBenchmark implements IBenchmark<AdaptiveNoiseMiner, No
                         preBestBaseline.getResult().getProcessTree().toString()));
 
 
-
-                logger.log(Level.INFO, String.format("BEST AN MODEL (d=IMi): %s", adaptiveNoiseMiner.getConformanceInfo().toString()));
-                logger.log(Level.INFO, String.format("BEST AN MODEL (d=IMi pre filter): %s", adaptiveNoiseMinerPreFilter.getConformanceInfo().toString()));
+                logger.log(Level.INFO, String.format("BEST AN MODEL (d=IMi)                    : %s", adaptiveNoiseMiner.getConformanceInfo().toString()));
+                logger.log(Level.INFO, String.format("BEST AN MODEL (d=IMi pre filter)         : %s", adaptiveNoiseMinerPreFilter.getConformanceInfo().toString()));
                 sendResult(adaptiveNoiseMiner, adaptiveNoiseMinerPreFilter, nonPreFilterBestBaseline, preBestBaseline, filename);
             }
         }
@@ -256,6 +267,7 @@ public class AdaptiveNoiseBenchmark implements IBenchmark<AdaptiveNoiseMiner, No
             CSVWriter csvWriter = new CSVWriter(new FileWriter(path, true));
             String[] schema = new String[]
                     {
+                            "run_id",
                             "group",
                             "filename",
                             "number_of_partitions",
@@ -289,7 +301,8 @@ public class AdaptiveNoiseBenchmark implements IBenchmark<AdaptiveNoiseMiner, No
                             "pre_improvement"
                     };
             String[] data = new String[] {
-                    filename.contains("2017") ? "BPM-2017" : "BPM-2016",
+                    this.runId.toString(),
+                    filename.contains("2017") ? "BPM-2017" : filename.contains("2016") ? "BPM-2016" : "DFCI",
                     filename.replace("EventLogs\\contest_2017\\log", "BPM-2017-Log")
                             .replace("EventLogs\\contest_dataset\\training_log_","BPM-2016-Log")
                             .replace(".xes", ""),

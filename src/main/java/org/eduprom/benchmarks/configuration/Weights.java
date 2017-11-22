@@ -68,4 +68,16 @@ public class Weights {
     }
 
 
+    public static List<Weights> getRangeFitness(double interval){
+        List<Weights> weightsList = new ArrayList<>();
+        double fitness = TOTAL_WEIGHT;
+        while(fitness >= 0){
+            weightsList.add(new Weights(fitness, (TOTAL_WEIGHT - fitness) / 2.0, (TOTAL_WEIGHT - fitness) / 2.0));
+            fitness -= interval;
+        }
+
+        return weightsList;
+    }
+
+
 }

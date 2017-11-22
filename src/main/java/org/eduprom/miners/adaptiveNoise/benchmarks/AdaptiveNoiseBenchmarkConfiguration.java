@@ -3,16 +3,19 @@ package org.eduprom.miners.adaptiveNoise.benchmarks;
 import org.eduprom.benchmarks.configuration.Logs;
 import org.eduprom.benchmarks.configuration.NoiseThreshold;
 import org.eduprom.benchmarks.configuration.Weights;
+import org.eduprom.exceptions.MiningException;
 import org.eduprom.miners.adaptiveNoise.configuration.AdaptiveNoiseConfiguration;
 import org.eduprom.partitioning.ILogSplitter;
+import org.eduprom.partitioning.InductiveCutSplitting;
+import org.eduprom.partitioning.trunk.InductiveLogSplitting;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
 public class AdaptiveNoiseBenchmarkConfiguration {
-
 
     //region private members
 
@@ -20,7 +23,6 @@ public class AdaptiveNoiseBenchmarkConfiguration {
     private final float partitionNoiseFilter;
     private List<Weights> weights;
     private boolean useCrossValidation;
-    private Boolean preExecuteFilter;
     private Class<? extends ILogSplitter> logSplitter;
     private Set<String> filenames;
 
@@ -29,16 +31,19 @@ public class AdaptiveNoiseBenchmarkConfiguration {
     //region builder class
     public static class AdaptiveNoiseBenchmarkConfigurationBuilder {
 
+        private final Class<? extends ILogSplitter> DEFAULT_LOG_SPLITTER =  InductiveCutSplitting.class; //InductiveLogSplitting.class;
+        private final Weights DEFAULT_WEIGHTS = Weights.getUniform();
+        private final NoiseThreshold DEFAULT_NOISE_THRESHOLDS = NoiseThreshold.uniform(0.2f);
+
         private float[] noiseThresholds;
 
         private List<Weights> weights;
         private float partitionNoiseFilter;
-        private Boolean preExecuteFilter;
         private boolean useCrossValidation;
         private Class<? extends ILogSplitter> logSplitter;
         private Logs logs;
 
-        public AdaptiveNoiseBenchmarkConfigurationBuilder(){
+        public AdaptiveNoiseBenchmarkConfigurationBuilder() throws MiningException {
             this.weights = new ArrayList<>();
         }
 
@@ -83,11 +88,6 @@ public class AdaptiveNoiseBenchmarkConfiguration {
             return this;
         }
 
-        public AdaptiveNoiseBenchmarkConfigurationBuilder setPreExecuteFilter(boolean preExecuteFilter) {
-            this.preExecuteFilter = preExecuteFilter;
-            return this;
-        }
-
         public AdaptiveNoiseBenchmarkConfigurationBuilder setLogSplitter(Class<? extends ILogSplitter> logSplitter) {
             this.logSplitter = logSplitter;
             return this;
@@ -101,7 +101,17 @@ public class AdaptiveNoiseBenchmarkConfiguration {
             return useCrossValidation;
         }
 
-        public AdaptiveNoiseBenchmarkConfiguration build(){
+        public AdaptiveNoiseBenchmarkConfiguration build() {
+            if (this.weights.isEmpty()){
+                addWeights(DEFAULT_WEIGHTS);
+            }
+            if (this.noiseThresholds == null || this.noiseThresholds.length == 0) {
+                setNoiseThresholds(DEFAULT_NOISE_THRESHOLDS);
+            }
+            if (this.logSplitter == null){
+                setLogSplitter(DEFAULT_LOG_SPLITTER);
+            }
+
             return new AdaptiveNoiseBenchmarkConfiguration(this);
         }
 
@@ -111,10 +121,6 @@ public class AdaptiveNoiseBenchmarkConfiguration {
 
         public List<Weights> getWeights(){
             return this.weights;
-        }
-
-        public Boolean isPreExecuteFilter() {
-            return preExecuteFilter;
         }
 
         public Class<? extends ILogSplitter> getLogSplitter() {
@@ -129,10 +135,10 @@ public class AdaptiveNoiseBenchmarkConfiguration {
 
     private AdaptiveNoiseBenchmarkConfiguration(AdaptiveNoiseBenchmarkConfigurationBuilder builder){
         this.noiseThresholds = builder.getNoiseThresholds();
-        this.weights = builder.getWeights();
+        this.weights =  builder.getWeights();
+        Collections.shuffle(this.weights);
         this.useCrossValidation = builder.getUseCrossValidation();
         this.partitionNoiseFilter = builder.getPartitionNoiseFilter();
-        this.preExecuteFilter = builder.isPreExecuteFilter();
         this.logSplitter = builder.getLogSplitter();
         this.filenames = builder.getLogs().getFiles();
     }
@@ -153,12 +159,8 @@ public class AdaptiveNoiseBenchmarkConfiguration {
         return partitionNoiseFilter;
     }
 
-    public static AdaptiveNoiseBenchmarkConfigurationBuilder getBuilder(){
+    public static AdaptiveNoiseBenchmarkConfigurationBuilder getBuilder() throws MiningException {
         return new AdaptiveNoiseBenchmarkConfigurationBuilder();
-    }
-
-    public boolean isPreExecuteFilter() {
-        return preExecuteFilter;
     }
 
     public Class<? extends ILogSplitter> getLogSplitterClass() {

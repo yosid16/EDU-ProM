@@ -4,10 +4,13 @@ import org.deckfour.xes.classification.XEventNameClassifier;
 import org.deckfour.xes.model.XLog;
 import org.eduprom.miners.AbstractMiner;
 import org.eduprom.miners.adaptiveNoise.conformance.IConformanceContext;
+import org.eduprom.miners.adaptiveNoise.filters.FilterAlgorithm;
+import org.eduprom.miners.adaptiveNoise.filters.FilterResult;
 import org.eduprom.partitioning.ILogSplitter;
 import org.eduprom.partitioning.MiningParametersLogSplitting;
 import org.eduprom.partitioning.Partitioning;
 import org.processmining.framework.packages.PackageManager;
+import org.processmining.log.parameters.LowFrequencyFilterParameters;
 import org.processmining.plugins.InductiveMiner.conversion.ReduceTree;
 import org.processmining.plugins.InductiveMiner.efficienttree.EfficientTreeReduce;
 import org.processmining.plugins.InductiveMiner.efficienttree.UnknownTreeNodeException;
@@ -41,6 +44,14 @@ public class InductiveLogSplitting implements ILogSplitter {
     private IConformanceContext conformanceContext;
     private MiningParametersLogSplitting parameters;
 
+    private FilterResult filterLog(XLog rLog){
+        int noiseThreshold = Math.round(this.parameters.getNoiseThreshold() * 100);
+        LowFrequencyFilterParameters params = new LowFrequencyFilterParameters(rLog);
+        params.setThreshold(noiseThreshold);
+        //params.setClassifier(getClassifier());
+        return (new FilterAlgorithm()).filter(conformanceContext.getPluginContext(), rLog, params);
+    }
+
     protected static PackageManager.Canceller _canceller = new PackageManager.Canceller() {
 
         @Override
@@ -61,10 +72,11 @@ public class InductiveLogSplitting implements ILogSplitter {
     }
 
     @Override
-    public Partitioning split(XLog xLog) {
-        Partitioning partitioning = new Partitioning(conformanceContext, xLog);
+    public Partitioning split(XLog xlog) {
+        XLog filteredLog = filterLog(xlog).getFilteredLog();
+        Partitioning partitioning = new Partitioning(conformanceContext, filteredLog);
         this.parameters.setLogPartitining(partitioning);
-        IMLog log = new IMLogImpl(xLog, new XEventNameClassifier());
+        IMLog log = new IMLogImpl(filteredLog, new XEventNameClassifier());
         //repair life cycle if necessary
         if (this.parameters.isRepairLifeCycle()) {
             log = LifeCycles.preProcessLog(log);

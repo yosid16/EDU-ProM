@@ -4,7 +4,10 @@ import org.deckfour.xes.classification.XEventNameClassifier;
 import org.deckfour.xes.model.XLog;
 import org.eduprom.miners.AbstractMiner;
 import org.eduprom.miners.adaptiveNoise.conformance.IConformanceContext;
+import org.eduprom.miners.adaptiveNoise.filters.FilterAlgorithm;
+import org.eduprom.miners.adaptiveNoise.filters.FilterResult;
 import org.processmining.framework.packages.PackageManager;
+import org.processmining.log.parameters.LowFrequencyFilterParameters;
 import org.processmining.plugins.InductiveMiner.conversion.ReduceTree;
 import org.processmining.plugins.InductiveMiner.efficienttree.EfficientTreeReduce;
 import org.processmining.plugins.InductiveMiner.efficienttree.UnknownTreeNodeException;
@@ -40,6 +43,14 @@ public class InductiveCutSplitting implements ILogSplitter {
     private IConformanceContext conformanceContext;
     private MiningParametersLogSplitting parameters;
 
+    private FilterResult filterLog(XLog rLog){
+        int noiseThreshold = Math.round(this.parameters.getNoiseThreshold() * 100);
+        LowFrequencyFilterParameters params = new LowFrequencyFilterParameters(rLog);
+        params.setThreshold(noiseThreshold);
+        //params.setClassifier(getClassifier());
+        return (new FilterAlgorithm()).filter(conformanceContext.getPluginContext(), rLog, params);
+    }
+
     protected static PackageManager.Canceller canceller = new PackageManager.Canceller() {
 
         @Override
@@ -57,10 +68,12 @@ public class InductiveCutSplitting implements ILogSplitter {
 
     @Override
     public Partitioning split(XLog xLog) {
-        Partitioning partitioning = new Partitioning(conformanceContext, xLog);
+        XLog filteredLog = filterLog(xLog).getFilteredLog();
+
+        Partitioning partitioning = new Partitioning(conformanceContext, filteredLog);
         this.parameters.setLogPartitining(partitioning);
         parameters.getPostProcessors().add(new PostProcessorPartitioning());
-        IMProcessTree.mineProcessTree(xLog, this.parameters, canceller);
+        IMProcessTree.mineProcessTree(filteredLog, this.parameters, canceller);
         partitioning.setProcessTree(partitioning.getPartitions().values().stream().findAny().get().getNode().getProcessTree());
         return partitioning;
     }

@@ -36,7 +36,6 @@ public class DanaFarber {
 					.addLogs(Logs.getBuilder().addFile(trainFile).build())
 					.addWeights(Weights.getRangePrecision(0.1))
 					//.addWeights(new Weights(0.0, 0.0, 1.0))
-					.setPreExecuteFilter(false)
 					.setLogSplitter(InductiveCutSplitting.class) //InductiveCutSplitting
 					.build();
 			IBenchmark benchmark = new AdaptiveNoiseBenchmarkDfci(testFile, configuration, 10);

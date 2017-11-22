@@ -22,6 +22,7 @@ import org.eduprom.miners.adaptiveNoise.entities.TreeChangesSet;
 import org.eduprom.partitioning.ILogSplitter;
 import org.eduprom.partitioning.Partitioning;
 import org.eduprom.utils.PetrinetHelper;
+import org.processmining.framework.plugin.PluginContext;
 import org.processmining.plugins.petrinet.replayresult.PNRepResult;
 import org.processmining.plugins.pnalignanalysis.conformance.AlignmentPrecGenRes;
 import org.processmining.ptconversions.pn.ProcessTree2Petrinet;
@@ -82,7 +83,7 @@ public class AdaptiveNoiseMiner extends AbstractPetrinetMiner implements IConfor
                     .filter(x -> x != testTraces)
                     .flatMap(x -> x.getLog().stream()).collect(Collectors.toList());
             if (trainTraces.isEmpty()){
-                trainTraces.addAll(testTraces.getLog().stream().collect(Collectors.toList()));
+                trainTraces.addAll(new ArrayList<>(testTraces.getLog()));
             }
 
             XLog trainLog = new XLogImpl(object.getLog().getAttributes());
@@ -184,7 +185,7 @@ public class AdaptiveNoiseMiner extends AbstractPetrinetMiner implements IConfor
     }
 
     private Map<String, TreeChanges> generatePossibleTreeChanges(Partitioning pratitioning, Set<Change> changeOptions) throws MiningException {
-        int maxSize = 3;
+        int maxSize = 5;
         Set<Set<Change>> changesSet = Sets.newConcurrentHashSet(changeOptions.stream()
                 .map(x -> {
                     HashSet<Change> s = new HashSet<>();
@@ -327,7 +328,7 @@ public class AdaptiveNoiseMiner extends AbstractPetrinetMiner implements IConfor
         pruned.set(0);
         progress.set(0);
         treeChanges.stream().sorted(Comparator.comparing(x -> x.getConformanceInfo().minValue(), reverseOrder()))
-                .parallel().forEachOrdered(change -> {
+                .forEachOrdered(change -> {
             int value = progress.incrementAndGet();
             try {
                 ProcessTree2Petrinet.PetrinetWithMarkings res = change.getPetrinetWithMarkings();
@@ -343,7 +344,7 @@ public class AdaptiveNoiseMiner extends AbstractPetrinetMiner implements IConfor
                     stopwatch.stop();
                     info.setGeneralizationDuration(stopwatch.elapsed(TimeUnit.MILLISECONDS));
                 }
-                else{
+                else {
                     info.setGeneralization(0.0);
                     pruned.incrementAndGet();
                     //logger.log(Level.INFO,"pruned");
@@ -481,6 +482,11 @@ public class AdaptiveNoiseMiner extends AbstractPetrinetMiner implements IConfor
     @Override
     public NoiseInductiveMiner getPartitionMiner() {
         return this.partitionMiner;
+    }
+
+    @Override
+    public PluginContext getPluginContext() {
+        return super.getPromPluginContext();
     }
 
     @Override
