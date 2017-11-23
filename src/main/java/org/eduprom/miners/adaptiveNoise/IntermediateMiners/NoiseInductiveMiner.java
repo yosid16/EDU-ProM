@@ -2,10 +2,13 @@ package org.eduprom.miners.adaptiveNoise.IntermediateMiners;
 
 import org.deckfour.xes.model.XLog;
 import org.eduprom.benchmarks.IBenchmarkableMiner;
+import org.eduprom.benchmarks.configuration.Weights;
 import org.eduprom.exceptions.ConformanceCheckException;
 import org.eduprom.exceptions.LogFileNotFoundException;
 import org.eduprom.exceptions.MiningException;
 import org.eduprom.miners.InductiveMiner;
+import org.eduprom.miners.adaptiveNoise.AdaMiner;
+import org.eduprom.miners.adaptiveNoise.benchmarks.AdaBenchmark;
 import org.eduprom.miners.adaptiveNoise.conformance.ConformanceInfo;
 import org.eduprom.miners.adaptiveNoise.filters.FilterAlgorithm;
 import org.eduprom.miners.adaptiveNoise.filters.FilterResult;
@@ -14,10 +17,14 @@ import org.processmining.log.parameters.LowFrequencyFilterParameters;
 import org.processmining.plugins.InductiveMiner.mining.MiningParameters;
 import org.processmining.plugins.InductiveMiner.mining.MiningParametersIMf;
 import org.processmining.plugins.InductiveMiner.plugins.IMProcessTree;
+import org.processmining.plugins.petrinet.replayresult.PNRepResult;
+import org.processmining.plugins.pnalignanalysis.conformance.AlignmentPrecGenRes;
 import org.processmining.processtree.ProcessTree;
 import org.processmining.ptconversions.pn.ProcessTree2Petrinet;
 
 import java.util.*;
+
+import static org.eduprom.miners.adaptiveNoise.AdaptiveNoiseMiner.FITNESS_KEY;
 
 public class NoiseInductiveMiner extends InductiveMiner implements IBenchmarkableMiner {
 
@@ -30,7 +37,20 @@ public class NoiseInductiveMiner extends InductiveMiner implements IBenchmarkabl
 	private boolean filterPreExecution;
 	//endregion
 
+	/*
+	private ConformanceInfo getPsi(ProcessTree processTree, XLog log) throws MiningException {
+		ConformanceInfo info = new ConformanceInfo(Weights.getUniform());
+		ProcessTree2Petrinet.PetrinetWithMarkings res = PetrinetHelper.ConvertToPetrinet(processTree);
+		PNRepResult alignment = petrinetHelper.getAlignment(log, res.petrinet, res.initialMarking, res.finalMarking);
+		double fitness = Double.parseDouble(alignment.getInfo().get(FITNESS_KEY).toString());
+		//this.petrinetHelper.printResults(alignment);
+		info.setFitness(fitness);
 
+		AlignmentPrecGenRes alignmentPrecGenRes = petrinetHelper.getConformance(log, res.petrinet, alignment, res.initialMarking, res.finalMarking);
+		info.setPrecision(alignmentPrecGenRes.getPrecision());
+		info.setGeneralization(alignmentPrecGenRes.getGeneralization());
+		return info;
+	}*/
 	//region constructors
 
 	public NoiseInductiveMiner(String filename, float noiseThreshold, boolean filterPreExecution) throws LogFileNotFoundException {
@@ -72,7 +92,8 @@ public class NoiseInductiveMiner extends InductiveMiner implements IBenchmarkabl
 		}
 
 		ProcessTree processTree = IMProcessTree.mineProcessTree(res.getFilteredLog(), runParams, getCanceller());
-		return new MiningResult(processTree, res);
+		this.result = new  MiningResult(processTree, res);
+		return this.result;
 	}
 	//endregion
 
@@ -86,7 +107,9 @@ public class NoiseInductiveMiner extends InductiveMiner implements IBenchmarkabl
 	}
 
 	@Override
-	public void evaluate() throws ConformanceCheckException {
+	public void evaluate() throws MiningException {
+		setConformanceInfo(AdaBenchmark.getPsi(petrinetHelper, this.result.getProcessTree(), this.log, Weights.getUniform()));
+		logger.info(String.format("Inductive Miner Infrequent - conformance: %s, tree: %s", this.getConformanceInfo(), this.result.getProcessTree()));
 	}
 
 	public float getNoiseThreshold() {
@@ -133,5 +156,10 @@ public class NoiseInductiveMiner extends InductiveMiner implements IBenchmarkabl
 
 	public boolean isFilterPreExecution() {
 		return filterPreExecution;
+	}
+
+	@Override
+	public ProcessTree getProcessTree() {
+		return this.result.getProcessTree();
 	}
 }

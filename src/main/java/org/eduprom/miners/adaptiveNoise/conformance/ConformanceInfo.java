@@ -1,5 +1,7 @@
 package org.eduprom.miners.adaptiveNoise.conformance;
 
+import org.eduprom.benchmarks.configuration.Weights;
+
 /**
  * Created by ydahari on 9/22/2017.
  */
@@ -17,6 +19,9 @@ public class ConformanceInfo {
     private double fitnessWeight;
     private Double generalizationWeight;
 
+    public ConformanceInfo(Weights weights) {
+        this(weights.getFitnessWeight(), weights.getPrecisionWeight(), weights.getGeneralizationWeight());
+    }
 
     public ConformanceInfo(double fitnessWeight, double precisionWeight, double generalizationWeight){
         this.fitnessWeight = fitnessWeight;

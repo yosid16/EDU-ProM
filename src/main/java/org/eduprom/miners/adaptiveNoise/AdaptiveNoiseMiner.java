@@ -25,6 +25,7 @@ import org.eduprom.utils.PetrinetHelper;
 import org.processmining.framework.plugin.PluginContext;
 import org.processmining.plugins.petrinet.replayresult.PNRepResult;
 import org.processmining.plugins.pnalignanalysis.conformance.AlignmentPrecGenRes;
+import org.processmining.processtree.ProcessTree;
 import org.processmining.ptconversions.pn.ProcessTree2Petrinet;
 
 import java.util.*;
@@ -41,7 +42,7 @@ public class AdaptiveNoiseMiner extends AbstractPetrinetMiner implements IConfor
 
     //region static members
 
-    static final String FITNESS_KEY = PNRepResult.TRACEFITNESS;
+    public static final String FITNESS_KEY = PNRepResult.TRACEFITNESS;
 
     //endregion
 
@@ -523,6 +524,11 @@ public class AdaptiveNoiseMiner extends AbstractPetrinetMiner implements IConfor
 
     public void setValidationLog(XLog validationLog){
         this.validationLog = validationLog;
+    }
+
+    @Override
+    public ProcessTree getProcessTree() {
+        return this.bestModel.getModifiedProcessTree();
     }
 
     //endregion

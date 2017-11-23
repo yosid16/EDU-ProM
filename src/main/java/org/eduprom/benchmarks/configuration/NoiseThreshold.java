@@ -19,16 +19,13 @@ public class NoiseThreshold {
         return thresholds;
     }
 
-    public static NoiseThreshold uniform(float interval, float min, float max) throws MiningException {
+    public static NoiseThreshold uniform(float interval, float min, float max) {
         List<Float> values = new ArrayList<>();
         for (float value = min; value <= max; value+=interval){
             values.add(value);
         }
         //values.add(1.0f);
         Float[] thresholds = values.toArray(new Float[0]);
-        if (thresholds.length == 0) {
-            throw new MiningException("No thresholds could be derived from given interval");
-        }
         final float[] result = new float[thresholds.length];
         for (int i = 0; i < thresholds.length; i++) {
             result[i] = thresholds[i].floatValue();
@@ -37,8 +34,8 @@ public class NoiseThreshold {
         return new NoiseThreshold(result);
     }
 
-    public static NoiseThreshold uniform(float interval) throws MiningException {
-        return uniform(interval, interval, MAX_THRESHOLD);
+    public static NoiseThreshold uniform(float interval)  {
+        return uniform(interval, 0.0f, MAX_THRESHOLD);
     }
 
     public static NoiseThreshold single(float interval){

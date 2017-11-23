@@ -3,6 +3,7 @@ package org.eduprom.tasks;
 import org.eduprom.benchmarks.configuration.Logs;
 import org.eduprom.benchmarks.configuration.NoiseThreshold;
 import org.eduprom.benchmarks.configuration.Weights;
+import org.eduprom.miners.adaptiveNoise.benchmarks.AdaBenchmark;
 import org.eduprom.miners.adaptiveNoise.benchmarks.AdaptiveNoiseBenchmark;
 import org.eduprom.benchmarks.IBenchmark;
 import org.eduprom.miners.adaptiveNoise.benchmarks.AdaptiveNoiseBenchmarkConfiguration;
@@ -33,16 +34,16 @@ public class Benchmark {
     	    	    	
         try {
 			AdaptiveNoiseBenchmarkConfiguration configuration = AdaptiveNoiseBenchmarkConfiguration.getBuilder()
-					.addLogs(Logs.getBuilder().addNumbers(3).addFormat(Logs.CONTEST_2017).build())
-					.setLogSplitter(InductiveLogSplitting.class)
+					.addLogs(Logs.getBuilder().addNumbers(1).addFormat(Logs.CONTEST_2017).build())
+					//.setLogSplitter(InductiveLogSplitting.class)
 					//.addLogs(Logs.getBuilder().addNumbers(1, 10).addFormat(dfciApril).build())
 					//.setNoiseThresholds(NoiseThreshold.uniform(0.02f))
-					//.addWeights(Weights.getUniform())
+					.addWeights(new Weights(0.2, 0.4, 0.4))
 					//.addWeights(Weights.getRange(0.1))
-					.setPartitionNoiseFilter(0.2f)
+					//.setPartitionNoiseFilter(0.2f)
 					//.addWeights(new Weights(0.2, 0.4, 0.4))
 					.build();
-			IBenchmark benchmark = new AdaptiveNoiseBenchmark(configuration, 10);
+			IBenchmark benchmark = new AdaBenchmark(configuration, 10);
 			benchmark.run();
 
         } catch (Exception ex) {

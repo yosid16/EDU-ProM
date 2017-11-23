@@ -169,6 +169,7 @@ public class PetrinetHelper {
         parameters.setGUIMode(false);
         parameters.setCreateConn(false);
         parameters.setNumThreads(4);
+
         ((CostBasedCompleteParam) parameters).setMaxNumOfStates(5000);
 
         PNRepResult result = null;

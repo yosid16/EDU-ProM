@@ -20,7 +20,7 @@ public class Partitioning {
     	    	    	
         try {
 
-			//ILogSplitter logSplitter = new InductiveLogSplitting();
+			//ILogSplitter logSplitter = new AdaMiner();
 			//LogHelper helper = new LogHelper();
 			//XLog log = helper.read(filename);
 			//org.eduprom.partitioning.Partitioning pratitioning = logSplitter.split(log);

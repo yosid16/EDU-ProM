@@ -1,5 +1,6 @@
 package org.eduprom.miners.adaptiveNoise;
 
+import javafx.util.Pair;
 import org.deckfour.xes.classification.XEventNameClassifier;
 import org.deckfour.xes.model.XLog;
 import org.eduprom.benchmarks.configuration.NoiseThreshold;
@@ -7,21 +8,11 @@ import org.eduprom.exceptions.LogFileNotFoundException;
 import org.eduprom.exceptions.MiningException;
 import org.eduprom.miners.AbstractMiner;
 import org.eduprom.miners.AbstractPetrinetMiner;
-import org.eduprom.miners.adaptiveNoise.conformance.IConformanceContext;
-import org.eduprom.miners.adaptiveNoise.filters.FilterAlgorithm;
-import org.eduprom.miners.adaptiveNoise.filters.FilterResult;
-import org.eduprom.partitioning.ILogSplitter;
-import org.eduprom.partitioning.MiningParametersLogSplitting;
-import org.eduprom.partitioning.Partitioning;
 import org.processmining.framework.packages.PackageManager;
-import org.processmining.log.parameters.LowFrequencyFilterParameters;
-import org.processmining.plugins.InductiveMiner.conversion.ReduceTree;
-import org.processmining.plugins.InductiveMiner.efficienttree.EfficientTreeReduce;
 import org.processmining.plugins.InductiveMiner.efficienttree.UnknownTreeNodeException;
 import org.processmining.plugins.InductiveMiner.mining.IMLogInfo;
 import org.processmining.plugins.InductiveMiner.mining.MinerState;
 import org.processmining.plugins.InductiveMiner.mining.MinerStateBase;
-import org.processmining.plugins.InductiveMiner.mining.MiningParameters;
 import org.processmining.plugins.InductiveMiner.mining.MiningParametersIMf;
 import org.processmining.plugins.InductiveMiner.mining.baseCases.BaseCaseFinder;
 import org.processmining.plugins.InductiveMiner.mining.cuts.Cut;
@@ -43,23 +34,19 @@ import org.processmining.processtree.impl.ProcessTreeImpl;
 import org.processmining.ptconversions.pn.ProcessTree2Petrinet;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-
-import static java.util.stream.Collectors.toMap;
 
 
-public class AdaptiveNoiseExhaustive extends AbstractPetrinetMiner {
+public class AdaptiveNoiseExhaustive2 extends AbstractPetrinetMiner {
 
     protected final static Logger logger = Logger.getLogger(AbstractMiner.class.getName());
+    private final MinerState minerState;
 
-    //private NoiseThreshold noiseThreshold;
+    private NoiseThreshold noiseThreshold;
     private Map<Float, MinerState> parametersIMfMap;
     private MiningParametersIMf parameters;
 
@@ -73,14 +60,16 @@ public class AdaptiveNoiseExhaustive extends AbstractPetrinetMiner {
         }
     };
 
-    public AdaptiveNoiseExhaustive(String filename, NoiseThreshold noiseThreshold) throws LogFileNotFoundException {
+    public AdaptiveNoiseExhaustive2(String filename, NoiseThreshold noiseThreshold) throws LogFileNotFoundException {
         super(filename);
-        //this.noiseThreshold = noiseThreshold;
+        this.noiseThreshold = noiseThreshold;
         this.parametersIMfMap = new HashMap<>();
         float[] thresholds = noiseThreshold.getThresholds();
         this.parameters = new MiningParametersIMf();
+        this.minerState = new MinerState(this.parameters, this.canceller);
         for (float threshold: thresholds) {
-            this.parametersIMfMap.put(threshold,new MinerState(new MiningParametersIMf() {{ setNoiseThreshold(threshold);}}, _canceller));
+            MinerState minerState = new MinerState(new MiningParametersIMf() {{ setNoiseThreshold(threshold);}}, _canceller);
+            this.parametersIMfMap.put(threshold, minerState);
         }
     }
 
@@ -99,8 +88,7 @@ public class AdaptiveNoiseExhaustive extends AbstractPetrinetMiner {
 
 
         MinerState minerState = new MinerState(this.parameters, _canceller);
-        List<ProcessTree> trees = mineNode(log, new ProcessTreeImpl(), minerState)
-                .stream().map(Node::getProcessTree).collect(Collectors.toList());
+        List<ProcessTree> trees = discover(log, new ProcessTreeImpl());
 
         if (_canceller.isCancelled()) {
             minerState.shutdownThreadPools();
@@ -130,46 +118,82 @@ public class AdaptiveNoiseExhaustive extends AbstractPetrinetMiner {
         return this.petrinetHelper.ConvertToPetrinet(discover(this.log));
     }
 
-    public List<Node> mineNode(IMLog log, ProcessTree tree, MinerState minerState) {
+
+    public List<ProcessTree> discover(IMLog log, ProcessTree baseProcessTree){
+
+        //construct basic information about log
+        IMLogInfo logInfo = minerState.parameters.getLog2LogInfo().createLogInfo(log);
+        Map<MinerState, Pair<LogSplitter.LogSplitResult, Cut>> cuts = mineCuts(log, logInfo);
+
+        List<Node> nodes = new ArrayList<>();
+        for(Map.Entry<MinerState, Pair<LogSplitter.LogSplitResult, Cut>> entry : cuts.entrySet()){
+            Cut cut = entry.getValue().getValue();
+            LogSplitter.LogSplitResult splitResult = entry.getValue().getKey();
+
+            if (splitResult != null){
+                ProcessTree tree = baseProcessTree.toTree();
+                for(IMLog sublog: splitResult.sublogs){
+                    Node node = mineNode(sublog, tree, entry.getKey());
+                    nodes.add(node);
+                    discover(sublog.toXLog());
+                }
+            }
+            else {
+                ProcessTree tree = baseProcessTree.toTree();
+                Node node = mineNode(log, tree, entry.getKey());
+            }
+        }
+
+        return null;
+    }
+
+
+    public Map<MinerState, Pair<LogSplitter.LogSplitResult, Cut>> mineCuts(IMLog log, IMLogInfo logInfo) {
+
+
+        //endregion
+        Map<MinerState, Pair<LogSplitter.LogSplitResult, Cut>> cuts = new HashMap<>();
+        for(Map.Entry<Float, MinerState> mfEntry: parametersIMfMap.entrySet()) {
+            Cut cut = findCut(log, logInfo, mfEntry.getValue());
+            LogSplitter.LogSplitResult splitResult = null;
+            if (cut != null && cut.isValid()) {
+                splitResult = splitLog(log, logInfo, cut, mfEntry.getValue());
+            }
+
+
+            //List<Node> cutNode = handleCut(log, logInfo, cut, mfEntry.getValue(), minerState, tree);
+            cuts.put(minerState, new Pair<>(splitResult, cut));
+        }
+
+        return cuts;
+    }
+
+    public static Node mineNode(IMLog log, ProcessTree tree, MinerState minerState) {
         //construct basic information about log
         IMLogInfo logInfo = minerState.parameters.getLog2LogInfo().createLogInfo(log);
 
+        //output information about the log
+        debug("\nmineProcessTree epsilon=" + logInfo.getDfg().getNumberOfEmptyTraces() + ", " + logInfo.getActivities(),
+                minerState);
         //debug(log, minerState);
 
-        //region base cases
-
+        //find base cases
         Node baseCase = findBaseCases(log, logInfo, tree, minerState);
         if (baseCase != null) {
-            Node node = postProcess(baseCase, log, logInfo, minerState);
-            return new ArrayList<Node>() {{ add(node); }};
+
+            baseCase = postProcess(baseCase, log, logInfo, minerState);
+
+            debug(" discovered node " + baseCase, minerState);
+            return baseCase;
         }
 
-        //endregion
-        ArrayList<Node> nodes = new ArrayList<Node>();
-        for(Map.Entry<Float, MinerState> mfEntry: parametersIMfMap.entrySet()) {
-            Cut cut = findCut(log, logInfo, mfEntry.getValue());
-            ProcessTree clonedTree = tree.getRoot() != null ? tree.toTree() : tree;
-            List<Node> cutNode = handleCut(log, logInfo, cut, mfEntry.getValue(), tree);
-            nodes.addAll(cutNode);
-        }
-
-        return nodes;
-    }
-
-    private Block getNewNode(ProcessTree tree, Cut cut){
-        //make node
-        Block newNode;
-        try {
-            newNode = newNode(cut.getOperator());
-        } catch (UnknownTreeNodeException e) {
-            e.printStackTrace();
+        if (minerState.isCancelled()) {
             return null;
         }
-        addNode(tree, newNode);
-        return newNode;
-    }
 
-    private List<Node> handleCut(IMLog log, IMLogInfo logInfo, Cut cut, MinerState minerState, ProcessTree originalTree) {
+        //find cut
+        Cut cut = findCut(log, logInfo, minerState);
+
         if (minerState.isCancelled()) {
             return null;
         }
@@ -177,7 +201,7 @@ public class AdaptiveNoiseExhaustive extends AbstractPetrinetMiner {
         if (cut != null && cut.isValid()) {
             //cut is valid
 
-            //region split log by cut, add node to tree
+            debug(" chosen cut: " + cut, minerState);
 
             //split logs
             LogSplitter.LogSplitResult splitResult = splitLog(log, logInfo, cut, minerState);
@@ -186,103 +210,93 @@ public class AdaptiveNoiseExhaustive extends AbstractPetrinetMiner {
                 return null;
             }
 
+            //make node
+            Block newNode;
+            try {
+                newNode = newNode(cut.getOperator());
+            } catch (UnknownTreeNodeException e) {
+                e.printStackTrace();
+                return null;
+            }
+            addNode(tree, newNode);
 
-            //endregion
-
-            List<Node> nodes = new ArrayList<>();
             //recurse
             if (cut.getOperator() != Cut.Operator.loop) {
-
-                //region valid cut, no loop
                 for (IMLog sublog : splitResult.sublogs) {
-                    for(Node child : mineNode(sublog, originalTree, minerState)){
-                        ProcessTree tree = originalTree.getRoot() != null ? originalTree.toTree() : new ProcessTreeImpl();
-                        Block newNode = getNewNode(tree, cut);
-                        if (minerState.isCancelled()) {
-                            return null;
-                        }
+                    Node child = mineNode(sublog, tree, minerState);
 
-                        addChild(newNode, child, minerState);
-                        nodes.add(child);
+                    if (minerState.isCancelled()) {
+                        return null;
                     }
+
+                    addChild(newNode, child, minerState);
                 }
-                //endregion
             } else {
-
-                //region loop
-
                 //loop needs special treatment:
                 //ProcessTree requires a ternary loop
                 Iterator<IMLog> it = splitResult.sublogs.iterator();
 
+                //mine body
                 IMLog firstSublog = it.next();
-                for(Node firstChild : mineNode(firstSublog, originalTree, minerState)){
-                    ProcessTree tree = originalTree.getRoot() != null ? originalTree.toTree() : new ProcessTreeImpl();
-                    //mine redo parts by, if necessary, putting them under an xor
-                    while (it.hasNext()) {
-                        IMLog sublog = it.next();
-                        List<Node> child = mineNode(sublog, tree, minerState);
+                {
+                    Node firstChild = mineNode(firstSublog, tree, minerState);
 
-                        if (minerState.isCancelled()) {
-                            return null;
-                        }
-                        Block newNode = getNewNode(tree, cut);
-                        Node node = mineLoop(firstChild, child, newNode, minerState, cut, splitResult);
-                        nodes.add(node);
+                    if (minerState.isCancelled()) {
+                        return null;
                     }
+
+                    addChild(newNode, firstChild, minerState);
                 }
 
-                //endregion
+                //mine redo parts by, if necessary, putting them under an xor
+                Block redoXor;
+                if (splitResult.sublogs.size() > 2) {
+                    redoXor = new AbstractBlock.Xor("");
+                    addNode(tree, redoXor);
+                    addChild(newNode, redoXor, minerState);
+                } else {
+                    redoXor = newNode;
+                }
+                while (it.hasNext()) {
+                    IMLog sublog = it.next();
+                    Node child = mineNode(sublog, tree, minerState);
+
+                    if (minerState.isCancelled()) {
+                        return null;
+                    }
+
+                    addChild(redoXor, child, minerState);
+                }
+
+                //add tau as third child
+                {
+                    Node tau = new AbstractTask.Automatic("tau");
+                    addNode(tree, tau);
+                    addChild(newNode, tau, minerState);
+                }
             }
-            nodes.forEach(x-> postProcess(x, log, logInfo, minerState));
-            return nodes;
+
+            Node result = postProcess(newNode, log, logInfo, minerState);
+
+            debug(" discovered node " + result, minerState);
+            return result;
 
         } else {
-
-            //region cut is not valid; fall through
-            ProcessTree tree = originalTree.getRoot() != null ? originalTree.toTree() : new ProcessTreeImpl();
+            //cut is not valid; fall through
             Node result = findFallThrough(log, logInfo, tree, minerState);
 
             result = postProcess(result, log, logInfo, minerState);
 
-            ArrayList<Node> res = new ArrayList<>();
-            res.add(result);
-            return res;
-
-            //endregion
+            debug(" discovered node " + result, minerState);
+            return result;
         }
     }
 
-    private Node mineLoop(Node firstChild, List<Node> second, Block newNode, MinerState minerState, Cut cut, LogSplitter.LogSplitResult splitResult){
-
-
-        addChild(newNode, firstChild, minerState);
-
-
-        //mine redo parts by, if necessary, putting them under an xor
-        Block redoXor;
-        if (splitResult.sublogs.size() > 2) {
-            redoXor = new AbstractBlock.Xor("");
-            addNode(newNode.getProcessTree(), redoXor);
-            addChild(newNode, redoXor, minerState);
-        } else {
-            redoXor = newNode;
+    public static void debug(Object x, MinerState minerState) {
+        if (minerState.parameters.isDebug()) {
+            System.out.println(x.toString());
         }
-
-        for (Node child : second) {
-            addChild(redoXor, child, minerState);
-        }
-
-        //add tau as third child
-        {
-            Node tau = new AbstractTask.Automatic("tau");
-            addNode(newNode.getProcessTree(), tau);
-            addChild(newNode, tau, minerState);
-        }
-        return newNode;
     }
-
-
     //region inductive methods
 
     private static Node postProcess(Node newNode, IMLog log, IMLogInfo logInfo, MinerState minerState) {

@@ -58,7 +58,7 @@ public abstract class AbstractPetrinetMiner extends AbstractMiner {
     }
 
     @Override
-    public void evaluate() throws ConformanceCheckException {
+    public void evaluate() throws MiningException {
         logger.info("Checking conformance");
         alignment = petrinetHelper.getAlignment(log, petrinetWithMarkings.petrinet, petrinetWithMarkings.initialMarking, petrinetWithMarkings.finalMarking);
         petrinetHelper.printResults(alignment);

@@ -27,7 +27,7 @@ public interface IMiner {
      * Evaluates the process model quality. For example may print fitness, precision information.
      * @throws Exception
      */
-    void evaluate() throws ConformanceCheckException;
+    void evaluate() throws MiningException;
 
     /***
      * Exports the process model (for example - serialize and persists the process model, or export an image)

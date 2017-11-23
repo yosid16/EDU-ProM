@@ -31,7 +31,7 @@ public class AdaptiveNoiseBenchmarkConfiguration {
     //region builder class
     public static class AdaptiveNoiseBenchmarkConfigurationBuilder {
 
-        private final Class<? extends ILogSplitter> DEFAULT_LOG_SPLITTER =  InductiveCutSplitting.class; //InductiveLogSplitting.class;
+        private final Class<? extends ILogSplitter> DEFAULT_LOG_SPLITTER =  InductiveCutSplitting.class; //AdaMiner.class;
         private final Weights DEFAULT_WEIGHTS = Weights.getUniform();
         private final NoiseThreshold DEFAULT_NOISE_THRESHOLDS = NoiseThreshold.uniform(0.2f);
 
