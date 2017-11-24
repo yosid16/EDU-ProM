@@ -12,10 +12,29 @@ import org.eduprom.miners.adaptiveNoise.benchmarks.AdaBenchmark;
 import org.eduprom.miners.adaptiveNoise.conformance.ConformanceInfo;
 import org.eduprom.miners.adaptiveNoise.filters.FilterAlgorithm;
 import org.eduprom.miners.adaptiveNoise.filters.FilterResult;
+import org.eduprom.partitioning.Partitioning;
 import org.eduprom.utils.PetrinetHelper;
 import org.processmining.log.parameters.LowFrequencyFilterParameters;
+import org.processmining.plugins.InductiveMiner.dfgOnly.log2logInfo.IMLog2IMLogInfoDefault;
 import org.processmining.plugins.InductiveMiner.mining.MiningParameters;
 import org.processmining.plugins.InductiveMiner.mining.MiningParametersIMf;
+import org.processmining.plugins.InductiveMiner.mining.MiningParametersIMfa;
+import org.processmining.plugins.InductiveMiner.mining.baseCases.BaseCaseFinder;
+import org.processmining.plugins.InductiveMiner.mining.baseCases.BaseCaseFinderIM;
+import org.processmining.plugins.InductiveMiner.mining.baseCases.BaseCaseFinderIMi;
+import org.processmining.plugins.InductiveMiner.mining.cuts.CutFinder;
+import org.processmining.plugins.InductiveMiner.mining.cuts.IMf.CutFinderIMf;
+import org.processmining.plugins.InductiveMiner.mining.fallthrough.FallThrough;
+import org.processmining.plugins.InductiveMiner.mining.fallthrough.FallThroughIM;
+import org.processmining.plugins.InductiveMiner.mining.logSplitter.LogSplitterCombination;
+import org.processmining.plugins.InductiveMiner.mining.logSplitter.LogSplitterLoop;
+import org.processmining.plugins.InductiveMiner.mining.logSplitter.LogSplitterMaybeInterleaved;
+import org.processmining.plugins.InductiveMiner.mining.logSplitter.LogSplitterOr;
+import org.processmining.plugins.InductiveMiner.mining.logSplitter.LogSplitterParallel;
+import org.processmining.plugins.InductiveMiner.mining.logSplitter.LogSplitterSequenceFiltering;
+import org.processmining.plugins.InductiveMiner.mining.logSplitter.LogSplitterXorFiltering;
+import org.processmining.plugins.InductiveMiner.mining.postprocessor.PostProcessor;
+import org.processmining.plugins.InductiveMiner.mining.postprocessor.PostProcessorInterleaved;
 import org.processmining.plugins.InductiveMiner.plugins.IMProcessTree;
 import org.processmining.plugins.petrinet.replayresult.PNRepResult;
 import org.processmining.plugins.pnalignanalysis.conformance.AlignmentPrecGenRes;
@@ -28,6 +47,56 @@ import static org.eduprom.miners.adaptiveNoise.AdaptiveNoiseMiner.FITNESS_KEY;
 
 public class NoiseInductiveMiner extends InductiveMiner implements IBenchmarkableMiner {
 
+	public static class MiningParametersIMipre extends MiningParametersIMf {
+
+		private Partitioning logPartitining;
+
+		public MiningParametersIMipre() {
+
+			setLog2LogInfo(new IMLog2IMLogInfoDefault());
+
+			setBaseCaseFinders(new ArrayList<BaseCaseFinder>(Arrays.asList(
+					new BaseCaseFinderIMi(),
+					new BaseCaseFinderIM()
+			)));
+
+			setCutFinder(new ArrayList<CutFinder>(Arrays.asList(
+					//new CutFinderIM(),
+					new CutFinderIMf()
+			)));
+
+			setLogSplitter(new LogSplitterCombination(
+					new LogSplitterXorFiltering(),
+					new LogSplitterSequenceFiltering(),
+					new LogSplitterParallel(),
+					new LogSplitterLoop(),
+					new LogSplitterMaybeInterleaved(),
+					new LogSplitterParallel(),
+					new LogSplitterOr()));
+
+			setFallThroughs(new ArrayList<FallThrough>(Arrays.asList(
+					new FallThroughIM()
+			)));
+
+			setPostProcessors(new ArrayList<PostProcessor>(Arrays.asList(
+					new PostProcessorInterleaved()
+			)));
+
+			//set parameters
+			setNoiseThreshold((float) 0.0);
+
+			getReduceParameters().setReduceToOr(false);
+		}
+
+		public Partitioning getLogPartitining() {
+			return logPartitining;
+		}
+
+		public void setLogPartitining(Partitioning logPartitining) {
+			this.logPartitining = logPartitining;
+		}
+	}
+
 
 	//region private members
 	private HashMap<UUID, MiningResult> processTreeCache = new HashMap<>();
@@ -35,33 +104,22 @@ public class NoiseInductiveMiner extends InductiveMiner implements IBenchmarkabl
 	private MiningResult result;
 
 	private boolean filterPreExecution;
+	private static MiningParameters getMiningParameters(boolean filterPreExecution, float noiseThreshold){
+		if (filterPreExecution){
+			return new MiningParametersIMipre() {{ setNoiseThreshold(noiseThreshold); }};
+		}
+		else{
+			return new MiningParametersIMf() {{ setNoiseThreshold(noiseThreshold); }};
+		}
+	}
+
 	//endregion
 
-	/*
-	private ConformanceInfo getPsi(ProcessTree processTree, XLog log) throws MiningException {
-		ConformanceInfo info = new ConformanceInfo(Weights.getUniform());
-		ProcessTree2Petrinet.PetrinetWithMarkings res = PetrinetHelper.ConvertToPetrinet(processTree);
-		PNRepResult alignment = petrinetHelper.getAlignment(log, res.petrinet, res.initialMarking, res.finalMarking);
-		double fitness = Double.parseDouble(alignment.getInfo().get(FITNESS_KEY).toString());
-		//this.petrinetHelper.printResults(alignment);
-		info.setFitness(fitness);
-
-		AlignmentPrecGenRes alignmentPrecGenRes = petrinetHelper.getConformance(log, res.petrinet, alignment, res.initialMarking, res.finalMarking);
-		info.setPrecision(alignmentPrecGenRes.getPrecision());
-		info.setGeneralization(alignmentPrecGenRes.getGeneralization());
-		return info;
-	}*/
 	//region constructors
 
 	public NoiseInductiveMiner(String filename, float noiseThreshold, boolean filterPreExecution) throws LogFileNotFoundException {
-		super(filename, new MiningParametersIMf() {{ setNoiseThreshold(noiseThreshold); }});
+		super(filename, getMiningParameters(filterPreExecution, noiseThreshold));
 		this.filterPreExecution = filterPreExecution;
-		/*
-		this.parameters.setCutFinder(new ArrayList<CutFinder>(Arrays.asList(
-				//new CutFinderIM(),
-				new CutFinderIMf()
-		)));
-		*/
 	}
 	//endregion
 
@@ -77,21 +135,8 @@ public class NoiseInductiveMiner extends InductiveMiner implements IBenchmarkabl
 	}
 
 	public MiningResult mineProcessTree(XLog rLog) throws MiningException {
-		FilterResult res = null;
-		MiningParameters runParams = null;
-		if (filterPreExecution){
-			res = filterLog(rLog);
-			runParams = new MiningParametersIMf() {{ setNoiseThreshold(0); }};
-		}
-		else if (rLog.isEmpty()){
-			res = new FilterResult((XLog)rLog.clone(), 0, rLog.stream().mapToInt(x->x.size()).sum());
-		}
-		else{
-			res = new FilterResult(rLog, 0, rLog.stream().mapToInt(x->x.size()).sum());
-			runParams = this.parameters;
-		}
-
-		ProcessTree processTree = IMProcessTree.mineProcessTree(res.getFilteredLog(), runParams, getCanceller());
+		FilterResult res = new FilterResult(rLog, 0, rLog.stream().mapToInt(x->x.size()).sum());
+		ProcessTree processTree = IMProcessTree.mineProcessTree(rLog, this.parameters, getCanceller());
 		this.result = new  MiningResult(processTree, res);
 		return this.result;
 	}

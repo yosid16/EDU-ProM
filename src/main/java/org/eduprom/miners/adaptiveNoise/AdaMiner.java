@@ -5,6 +5,7 @@ import org.deckfour.xes.model.XLog;
 import org.eduprom.benchmarks.IBenchmarkableMiner;
 import org.eduprom.benchmarks.configuration.NoiseThreshold;
 import org.eduprom.benchmarks.configuration.Weights;
+import org.eduprom.entities.CrossValidationPartition;
 import org.eduprom.exceptions.LogFileNotFoundException;
 import org.eduprom.exceptions.MiningException;
 import org.eduprom.miners.AbstractMiner;
@@ -142,15 +143,15 @@ public class AdaMiner extends AbstractPetrinetMiner implements IBenchmarkableMin
 
         Map<ProcessTree, ConformanceInfo> treeConformanceInfoEntry = discoveredTrees.values().stream().collect(Collectors.toMap(x->x, x -> {
             try {
-                return AdaBenchmark.getPsi(petrinetHelper, x, xlog, weights);
+                return AdaBenchmark.getPsi(petrinetHelper, x, xlog, xlog, weights);
             } catch (MiningException e) {
                 throw new RuntimeException();
             }
         }));
 
-        //for(Map.Entry<ProcessTree, ConformanceInfo> t : discoveredTrees.entrySet()){
-        //    logger.info(String.format("discovered tree: %s, details: %s",t.getValue(), t.getKey().toString()));
-        //}
+        for(String treeRepresentation : discoveredTrees.keySet()){
+            logger.info(String.format("discovered tree: %s", treeRepresentation));
+        }
         Map.Entry<ProcessTree, ConformanceInfo> bestModel = treeConformanceInfoEntry.entrySet().stream()
                 .max(Comparator.comparing(x->x.getValue().getPsi())).get();
         this.bestTree = bestModel.getKey();
@@ -186,6 +187,48 @@ public class AdaMiner extends AbstractPetrinetMiner implements IBenchmarkableMin
 
     private Map<String, ProcessTree> discoveredTrees = new HashMap<>();
 
+    private Map.Entry<Float, MinerState> obtainMinerState(IMLog log) throws MiningException {
+        ConformanceInfo bestCutConformanceInfo = null;
+        Map.Entry<Float, MinerState> bestCut = null;
+        for(Map.Entry<Float, MinerState> mfEntry: parametersIMfMap.entrySet()) {
+            NoiseInductiveMiner miner = new NoiseInductiveMiner(filename, mfEntry.getKey(), adaptiveNoiseConfiguration.isPreExecuteFilter());
+            XLog cLog = log.toXLog();
+            /*
+            int partitionSize = (int)Math.round(log.size() / 10.0);
+            if (partitionSize == 0){
+                partitionSize = 1;
+            }
+            List<CrossValidationPartition> origin =  this.logHelper.crossValidationSplit(cLog, partitionSize);
+            CrossValidationPartition[] validationPartitions = CrossValidationPartition.take(origin, 1);
+            origin = CrossValidationPartition.exclude(origin, validationPartitions);
+
+            XLog validationLog = CrossValidationPartition.bind(validationPartitions).getLog();
+            XLog trainingLog = partitionSize > 1 ? CrossValidationPartition.bind(origin).getLog() : validationLog;
+            */
+
+            List<CrossValidationPartition> origin =  this.logHelper.crossValidationSplit(cLog, 10);
+            CrossValidationPartition[] validationPartitions = CrossValidationPartition.take(origin, 1);
+            origin = CrossValidationPartition.exclude(origin, validationPartitions);
+
+            XLog validationLog = CrossValidationPartition.bind(validationPartitions).getLog();
+            XLog trainingLog = CrossValidationPartition.bind(origin).getLog();
+
+            ProcessTree subLogTree = miner.mineProcessTree(trainingLog).getProcessTree();
+            //logger.info(String.format("evaluating conformance for noise threshold: %f", mfEntry.getKey()));
+            ConformanceInfo conformanceInfo = AdaBenchmark.getPsi(petrinetHelper, subLogTree, trainingLog, validationLog, adaptiveNoiseConfiguration.getWeights());
+            //logger.info(String.format("finished evaluating conformance for noise threshold: %f", mfEntry.getKey()));
+            logger.info(String.format("%f threshold, conformance info: %s, tree: %s",  mfEntry.getKey(), conformanceInfo, subLogTree.toString()));
+            //discoveredTrees.putIfAbsent(subLogTree.toString(), subLogTree);
+
+            if (bestCut == null || conformanceInfo.getPsi() > bestCutConformanceInfo.getPsi()){
+                bestCutConformanceInfo = conformanceInfo;
+                bestCut = mfEntry;
+            }
+        }
+
+        return bestCut;
+    }
+
     public Node mineNode(IMLog log, ProcessTree tree, MinerState minerState) throws MiningException {
         //construct basic information about log
         IMLogInfo logInfo = minerState.parameters.getLog2LogInfo().createLogInfo(log);
@@ -209,24 +252,9 @@ public class AdaMiner extends AbstractPetrinetMiner implements IBenchmarkableMin
             return null;
         }
 
-        ConformanceInfo bestCutConformanceInfo = null;
-        Map.Entry<Float, MinerState> bestCut = null;
+        Map.Entry<Float, MinerState> bestCut = obtainMinerState(log);
         logger.info("started evaluating miners");
 
-        for(Map.Entry<Float, MinerState> mfEntry: parametersIMfMap.entrySet()) {
-            NoiseInductiveMiner miner = new NoiseInductiveMiner(filename, mfEntry.getKey(), adaptiveNoiseConfiguration.isPreExecuteFilter());
-            ProcessTree subLogTree = miner.mineProcessTree(log.toXLog()).getProcessTree();
-            //logger.info(String.format("evaluating conformance for noise threshold: %f", mfEntry.getKey()));
-            ConformanceInfo conformanceInfo = AdaBenchmark.getPsi(petrinetHelper, subLogTree, log.toXLog(), adaptiveNoiseConfiguration.getWeights());
-            //logger.info(String.format("finished evaluating conformance for noise threshold: %f", mfEntry.getKey()));
-            //logger.info(String.format("%f threshold, conformance info: %s",  mfEntry.getKey(), conformanceInfo));
-            discoveredTrees.putIfAbsent(subLogTree.toString(), subLogTree);
-
-            if (bestCut == null || conformanceInfo.getPsi() > bestCutConformanceInfo.getPsi()){
-                bestCutConformanceInfo = conformanceInfo;
-                bestCut = mfEntry;
-            }
-        }
         logger.info(String.format("Best cut of %f noise threshold", bestCut.getKey()));
         Cut cut = findCut(log, logInfo, bestCut.getValue());
         return handleCut(bestCut.getValue(), cut, logInfo, log, tree);
@@ -321,15 +349,16 @@ public class AdaMiner extends AbstractPetrinetMiner implements IBenchmarkableMin
             return result;
 
         } else {
+            Map.Entry<Float, MinerState> fallThroughMinerState = obtainMinerState(log);
+            logger.info(String.format("FallThrough noise: %f", fallThroughMinerState.getKey()));
             //cut is not valid; fall through
-            Node result = findFallThrough(log, logInfo, tree, minerState);
+            Node result = findFallThrough(log, logInfo, tree, fallThroughMinerState.getValue());
 
-            result = postProcess(result, log, logInfo, minerState);
+            result = postProcess(result, log, logInfo, fallThroughMinerState.getValue());
 
-            debug(" discovered node " + result, minerState);
+            debug(" discovered node " + result, fallThroughMinerState.getValue());
             return result;
         }
-
     }
 
     private static Node postProcess(Node newNode, IMLog log, IMLogInfo logInfo, MinerState minerState) {
@@ -402,6 +431,7 @@ public class AdaMiner extends AbstractPetrinetMiner implements IBenchmarkableMin
     }
 
     public static Node findFallThrough(IMLog log, IMLogInfo logInfo, ProcessTree tree, MinerState minerState) {
+
         Node n = null;
         Iterator<FallThrough> it = minerState.parameters.getFallThroughs().iterator();
         while (n == null && it.hasNext()) {
@@ -412,6 +442,7 @@ public class AdaMiner extends AbstractPetrinetMiner implements IBenchmarkableMin
 
             n = it.next().fallThrough(log, logInfo, tree, minerState);
         }
+        logger.info(String.format("Fall Through: %s", n));
         return n;
     }
 

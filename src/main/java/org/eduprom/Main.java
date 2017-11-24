@@ -28,7 +28,7 @@ public class Main {
 		//String filename = "EventLogs\\log1.xes";
 		//String filename = "EventLogs\\contest_dataset\\training_log_2.xes";
         //String filename = "EventLogs\\test4.csv";
-		String filename = "EventLogs\\contest_2017\\log5.xes";
+		String filename = "EventLogs\\contest_2017\\log4.xes";
 
     	logManager.readConfiguration(new FileInputStream("./app.properties"));
     	logger.info("started application");
@@ -41,6 +41,7 @@ public class Main {
 					.build();
 			IMiner miner = new AdaMiner(filename, adaptiveNoiseConfiguration);
         	miner.mine();
+        	logger.info(String.format("ADA - "));
         	miner.export();
 
 			for(Float f : NoiseThreshold.uniform(0.1f).getThresholds()){

@@ -31,14 +31,16 @@ public class Benchmark {
 
     	logManager.readConfiguration(new FileInputStream("./app.properties"));
     	logger.info("started application");
-    	    	    	
+
+    	//2017 good:
+
         try {
 			AdaptiveNoiseBenchmarkConfiguration configuration = AdaptiveNoiseBenchmarkConfiguration.getBuilder()
-					.addLogs(Logs.getBuilder().addNumbers(1).addFormat(Logs.CONTEST_2017).build())
+					.addLogs(Logs.getBuilder().addNumbers(1, 10).addFormat(Logs.CONTEST_2017).build())
 					//.setLogSplitter(InductiveLogSplitting.class)
 					//.addLogs(Logs.getBuilder().addNumbers(1, 10).addFormat(dfciApril).build())
-					//.setNoiseThresholds(NoiseThreshold.uniform(0.02f))
-					.addWeights(new Weights(0.2, 0.4, 0.4))
+					//.setNoiseThresholds(NoiseThreshold.uniform(0.2f))
+					//.addWeights(new Weights(0.2, 0.4, 0.4))
 					//.addWeights(Weights.getRange(0.1))
 					//.setPartitionNoiseFilter(0.2f)
 					//.addWeights(new Weights(0.2, 0.4, 0.4))

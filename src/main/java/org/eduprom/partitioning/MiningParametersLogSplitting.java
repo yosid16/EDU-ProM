@@ -32,7 +32,7 @@ public class MiningParametersLogSplitting extends MiningParametersIMf {
         )));
 
         setCutFinder(new ArrayList<CutFinder>(Arrays.asList(
-                new CutFinderIM(),
+                //new CutFinderIM(),
                 new CutFinderIMf()
         )));
 
