@@ -1,10 +1,5 @@
 package org.eduprom.tasks;
 
-import org.deckfour.xes.model.XLog;
-import org.eduprom.partitioning.ILogSplitter;
-import org.eduprom.partitioning.InductiveLogSplitting;
-import org.eduprom.utils.LogHelper;
-
 import java.io.FileInputStream;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
@@ -25,11 +20,11 @@ public class Partitioning {
     	    	    	
         try {
 
-			ILogSplitter logSplitter = new InductiveLogSplitting();
-			LogHelper helper = new LogHelper();
-			XLog log = helper.read(filename);
-			org.eduprom.partitioning.Partitioning pratitioning = logSplitter.split(log);
-			logger.info(pratitioning.toString());
+			//ILogSplitter logSplitter = new AdaMiner();
+			//LogHelper helper = new LogHelper();
+			//XLog log = helper.read(filename);
+			//org.eduprom.partitioning.Partitioning pratitioning = logSplitter.split(log);
+			//logger.info(pratitioning.toString());
 
         } catch (Exception ex) {
         	logger.log(Level.SEVERE, "exception when trying to train/evaluate the miner", ex);;

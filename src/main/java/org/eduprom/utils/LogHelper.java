@@ -5,12 +5,16 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
+import org.eduprom.entities.CrossValidationPartition;
 import org.eduprom.entities.Trace;
 import org.apache.commons.io.FilenameUtils;
 import org.deckfour.xes.in.XUniversalParser;
@@ -149,6 +153,17 @@ public class LogHelper {
 								Function.identity(), Collectors.counting()
 						)
 				);
+		//s.entrySet().stream().filter(x->x.getValue() > 1).collect(Collectors.toList())
+		//s.entrySet().stream().sorted(Map.Entry::getValue).forEach(x -> logger.info(x.toString()));
 		logger.log(level, String.format("Log: %s", s));
+	}
+
+	public List<CrossValidationPartition> crossValidationSplit(XLog log, int k){
+		Collections.shuffle(log);
+		int partitionSize = log.size() / k;
+
+		List<CrossValidationPartition> partitions = Lists.partition(log, partitionSize)
+				.stream().map(x -> new CrossValidationPartition(x, log.getAttributes())).collect(Collectors.toList());
+		return partitions;
 	}
 }

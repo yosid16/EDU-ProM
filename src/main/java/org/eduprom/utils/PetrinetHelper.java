@@ -1,5 +1,8 @@
 package org.eduprom.utils;
 
+import com.google.common.collect.Lists;
+import org.deckfour.xes.model.XTrace;
+import org.deckfour.xes.model.impl.XLogImpl;
 import org.eduprom.exceptions.ConformanceCheckException;
 import org.eduprom.exceptions.ExportFailedException;
 import org.eduprom.exceptions.ProcessTreeConversionException;
@@ -10,6 +13,7 @@ import org.deckfour.xes.classification.XEventClassifier;
 import org.deckfour.xes.info.XLogInfo;
 import org.deckfour.xes.info.XLogInfoFactory;
 import org.deckfour.xes.model.XLog;
+import org.eduprom.miners.adaptiveNoise.IntermediateMiners.NoiseInductiveMiner;
 import org.processmining.datapetrinets.DataPetriNet;
 import org.processmining.framework.connections.ConnectionCannotBeObtained;
 import org.processmining.framework.plugin.PluginContext;
@@ -44,6 +48,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 public class PetrinetHelper {
 
@@ -163,7 +168,8 @@ public class PetrinetHelper {
 
         parameters.setGUIMode(false);
         parameters.setCreateConn(false);
-        parameters.setNumThreads(3);
+        parameters.setNumThreads(4);
+
         ((CostBasedCompleteParam) parameters).setMaxNumOfStates(5000);
 
         PNRepResult result = null;
@@ -199,6 +205,30 @@ public class PetrinetHelper {
         }
 
         return res.ap;
+    }
+
+    public double getGeneralization(XLog log, ProcessTree2Petrinet.PetrinetWithMarkings pt) throws ConformanceCheckException, ProcessTreeConversionException {
+        List<List<XTrace>> partitions = Lists.partition((XLogImpl)log, log.size() / 10);
+
+        List<Double> values = new ArrayList<>();
+        for(List<XTrace> testTraces: partitions){
+            List<XTrace> trainTraces = partitions.stream()
+                    .filter(x -> x != testTraces)
+                    .flatMap(Collection::stream).collect(Collectors.toList());
+            XLog trainLog = new XLogImpl(log.getAttributes());
+            trainLog.addAll(trainTraces);
+
+            XLog testLog = new XLogImpl(log.getAttributes());
+            trainLog.addAll(testTraces);
+
+            //ProcessTree2Petrinet.PetrinetWithMarkings pt = ConvertToPetrinet(processTree);
+
+            PNRepResult alignment = getAlignment(testLog, pt.petrinet, pt.initialMarking, pt.finalMarking);
+            double fitness = Double.parseDouble(alignment.getInfo().get("Move-Model Fitness").toString());
+            values.add(fitness);
+        }
+
+        return values.stream().mapToDouble(x->x.floatValue()).sum() / values.size();
     }
 
     public void printResults(PNRepResult results){
